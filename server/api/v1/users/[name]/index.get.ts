@@ -1,6 +1,7 @@
 import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
+import { setResponseHeaders } from "h3";
 
 import { getIdentity } from "#server/utils/auth";
 import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
@@ -9,6 +10,12 @@ import { canAccess, getPrivacySettings, getRelationshipStatus } from "~~/server/
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
+
+	setResponseHeaders(event, {
+		"Cache-Control": "no-store, no-cache, must-revalidate, private",
+		"Pragma": "no-cache",
+		"Expires": "0",
+	});
 
 	const name = event.context.params?.name;
 
@@ -20,6 +27,10 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "Missing username",
 		});
 	}
+
+	// Quête de Noël : faire un tour sur le profil de @ghost (9)
+	if (identity && name === "ghost")
+		await triggerQuests(event, identity.profileId, [9]);
 
 	const [profile] = await db
 		.select()
@@ -33,10 +44,6 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "User not found",
 		});
 	}
-
-	// Quête de Noël : faire un tour sur le profil de @ghost (9)
-	if (identity && profile.name === "ghost" && identity.profileId !== profile.id)
-		await triggerQuests(event, identity.profileId, [9]);
 
 	const data = await retrieveCleanProfile(event, identity, profile);
 	const relationships = await getRelationshipStatus(event, identity, profile);

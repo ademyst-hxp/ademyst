@@ -11,7 +11,7 @@ defineProps<{
 </script>
 <template>
 	<Box>
-		<div class="flex items-end justify-between gap-4">
+		<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
 			<div class="flex flex-col">
 				<span
 					class="text-4xl font-bold font-title tabular-nums text-primary"
@@ -22,7 +22,7 @@ defineProps<{
 					Total des points gagnés
 				</span>
 			</div>
-			<div class="flex flex-col items-end">
+			<div class="flex flex-col items-end text-right">
 				<span class="text-2xl font-bold font-title tabular-nums">
 					{{ summary.completed }} / {{ summary.total }}
 				</span>

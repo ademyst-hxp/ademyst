@@ -57,11 +57,25 @@ const followersRequestKey = computed(
 	() => `followers-${name.value ?? "missing"}`,
 );
 
-const { data, pending } = await useAsyncData(requestKey, async () => {
-	if (!name.value) throw createError({ statusCode: 400 });
+const { data, pending, refresh: refreshProfile } = await useAsyncData(
+	requestKey,
+	async () => {
+		if (!name.value) throw createError({ statusCode: 400 });
 
-	return $api<ProfileResponse>(`/users/${encodeURIComponent(name.value)}`);
-});
+		return $api<ProfileResponse>(
+			`/users/${encodeURIComponent(name.value)}`,
+			{
+				cache: "no-store",
+				query: { _: Date.now() },
+			},
+		);
+	},
+);
+
+watch(
+	() => route.fullPath,
+	() => refreshProfile(),
+);
 
 const PAGE_SIZE = 20;
 

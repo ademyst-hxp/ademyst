@@ -66,7 +66,7 @@ const refresh = async () => {
 	}
 };
 
-await useAsyncData("christmas-quests", refresh);
+await refresh();
 </script>
 <template>
 	<Teleport to="#header">
@@ -92,6 +92,16 @@ await useAsyncData("christmas-quests", refresh);
 		:started="report.campaign.started"
 		:ended="report.campaign.ended"
 	/>
+
+	<div v-if="report" class="flex justify-end">
+		<Button
+			label="Actualiser"
+			size="small"
+			variant="secondary"
+			:disabled="loading"
+			:handler="refresh"
+		/>
+	</div>
 
 	<p v-if="loading" class="p-6 text-center text-muted" role="status">
 		Chargement des quêtes…

@@ -28,7 +28,7 @@ const meta = computed(() => LEVELS[props.level]);
 </script>
 <template>
 	<span
-		class="inline-flex items-center gap-1.5 w-fit rounded-full bg-surface/60 px-2.5 py-0.5 text-xs font-semibold text-surface-text"
+		class="inline-flex items-center gap-1.5 w-fit rounded-full bg-muted-background px-2.5 py-0.5 text-xs font-semibold text-surface-text"
 	>
 		<span
 			class="h-2 w-2 rounded-full"

@@ -72,6 +72,8 @@ export const dayStart = (day: number) =>
 	new Date(Date.UTC(CHRISTMAS_YEAR, 11, day));
 export const dayEnd = (day: number) =>
 	new Date(Date.UTC(CHRISTMAS_YEAR, 11, day + 1));
+export const dayUnlock = (day: number) =>
+	new Date(dayStart(day).getTime() - 4 * 60 * 60 * 1000);
 
 type Db = ReturnType<typeof useDb>;
 

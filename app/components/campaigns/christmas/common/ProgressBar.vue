@@ -27,7 +27,7 @@ const percent = computed(() => {
 			:aria-valuemin="0"
 			:aria-valuemax="max"
 			:aria-valuenow="Math.min(value, max)"
-			class="grow h-2.5 rounded-full bg-white/15 overflow-hidden"
+			class="grow h-2.5 rounded-full bg-muted-background overflow-hidden"
 		>
 			<div
 				class="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
@@ -36,7 +36,7 @@ const percent = computed(() => {
 		</div>
 		<span
 			v-if="showValue"
-			class="shrink-0 text-sm font-semibold tabular-nums text-surface-text/70"
+			class="shrink-0 text-sm font-semibold tabular-nums text-surface-text-muted"
 		>
 			{{ value }} / {{ max }}
 		</span>

@@ -11,6 +11,7 @@ import {
 	currentQuestDay,
 	dayEnd,
 	dayStart,
+	dayUnlock,
 	getQuestProgress,
 	questTarget,
 } from "~~/server/jobs/campaigns/christmas";
@@ -119,8 +120,9 @@ export function requireQuestDay(value: unknown): number {
 export function questPhase(
 	day: number,
 	now: Date = new Date(),
-): "upcoming" | "today" | "past" {
-	if (now < dayStart(day)) return "upcoming";
+): "upcoming" | "tomorrow" | "today" | "past" {
+	if (now < dayUnlock(day)) return "upcoming";
+	if (now < dayStart(day)) return "tomorrow";
 	if (now < dayEnd(day)) return "today";
 
 	return "past";
@@ -170,9 +172,11 @@ export async function getQuestsReport(
 			? "completed"
 			: phase === "upcoming"
 				? "locked"
-				: phase === "today"
-					? "in_progress"
-					: "missed";
+				: phase === "tomorrow"
+					? "tomorrow"
+					: phase === "today"
+						? "in_progress"
+						: "missed";
 
 		const reward = LEVEL_REWARDS[quest.level];
 
@@ -203,6 +207,9 @@ export async function getQuestsReport(
 			}
 		}
 
+		// Les quêtes strictement verrouillées restent anonymes pour leur
+		// titulaire. À partir du révélateur de 20 h, « Demain » expose déjà
+		// uniquement le contenu prévu pour le lendemain.
 		const hidden = status === "locked" && !revealLocked;
 
 		data.push({

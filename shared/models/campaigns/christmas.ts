@@ -57,6 +57,7 @@ export type LeaderboardResponse = {
 
 export type QuestStatus =
 	| "locked" // jour pas encore arrivé
+	| "tomorrow" // révélée la veille à 20 h UTC
 	| "in_progress" // c'est le jour de la quête, pas encore validée
 	| "completed"
 	| "missed"; // jour passé sans validation
