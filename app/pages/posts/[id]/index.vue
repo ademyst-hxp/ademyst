@@ -166,6 +166,7 @@ const preparingPost = ref<Post>(
 	(() => {
 		const _post = emptyPost();
 		_post.profile = session.value!.profile;
+		_post.parentId = postId;
 		return _post;
 	})(),
 );
