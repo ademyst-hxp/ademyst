@@ -79,7 +79,7 @@ switch (props.variant) {
 		_class += " bg-button text-button-text hover:bg-button-hover";
 		break;
 	case "primary":
-		_class += " bg-primary text-white hover:bg-secondary";
+		_class += " bg-accent text-white hover:bg-accent-darkened";
 		break;
 	case "secondary":
 		_class += " bg-secondary text-white";
