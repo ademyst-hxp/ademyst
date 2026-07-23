@@ -1,27 +1,26 @@
 <script setup lang="ts">
 import Navbar from "~/components/layout/Navbar.vue";
 import PostBox from "~/components/interactions/Post.vue";
-
-import type { Post } from "~~/shared/models/interactions";
+import Menu from "~/components/Menu.vue";
 
 import {
-	ArrowLeftIcon,
-	ArrowRightIcon,
-	PlusCircleIcon,
-	UserIcon,
-	PaperAirplaneIcon,
-	NoSymbolIcon,
-} from "@heroicons/vue/24/solid";
+	GlobeAltIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
+	HeartIcon,
+	EyeSlashIcon,
+} from "@heroicons/vue/24/outline";
 
-import type { Status } from "~~/shared/models/interactions";
+import type { Post } from "~~/shared/models/interactions";
+import Box from "~/components/base/Box.vue";
 
-const { session, refresh: refreshSession } = useAuthSession();
-const { statuses, posts, users, refresh } = useFeed();
-const { blockUser } = useRelations();
-
+const { $api } = useNuxtApp();
+const { session, refresh } = useAuthSession();
 await refresh();
 
-await refreshSession();
+if (!session.value) {
+	navigateTo("/auth/login");
+}
 
 definePageMeta({
 	title: "Écrire un post | Beam",
@@ -71,6 +70,35 @@ const preparingPost = ref<Post>({
 		answers: 0,
 	},
 });
+
+const isVisibilityMenuOpen = ref(false);
+
+const visibilityLabels: Record<string, string> = {
+	outside: "Essai (extérieur)",
+	everyone: "Tout le monde",
+	followers: "Abonnés",
+	friends: "Amis",
+	me: "Privé",
+};
+
+const isInLimit = computed(() => {
+	return preparingPost.value.content.length <= 5000;
+});
+
+const isGood = computed(() => {
+	return preparingPost.value.content.length > 0 && isInLimit.value;
+});
+
+const handlePublish = async () => {
+	if (!isGood.value) return;
+
+	try {
+		await $api("/posts/new", { method: "POST", body: preparingPost.value });
+		await navigateTo("/discover");
+	} catch (error) {
+		console.error("Erreur lors de la publication du post:", error);
+	}
+};
 </script>
 <template>
 	<Navbar />
@@ -79,26 +107,86 @@ const preparingPost = ref<Post>({
 			<!-- Vide -->
 		</aside>
 		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
+			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
 		>
 			<header class="flex flex-col gap-4">
 				<h1 class="text-2xl font-bold px-8">Écrire une publication</h1>
-				<div class="px-8">
+				<div class="flex flex-col gap-2 px-8">
 					<Input
 						v-model="isPrev"
 						label="Prévisualiser la publication"
 						type="checkbox"
 					/>
+					<p>
+						Visibilité:
+						<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
+						(<u
+							class="cursor-pointer text-primary underline"
+							@click="isVisibilityMenuOpen = true"
+							>Changer</u
+						>)
+					</p>
 				</div>
 			</header>
 			<main class="flex flex-col gap-4 overflow-visible">
 				<PostBox :data="preparingPost" :editable="!isPrev" />
+				<section class="flex flex-col gap-2 px-8">
+					<Button
+						label="Publier"
+						variant="primary"
+						:disabled="!isGood"
+						:handler="handlePublish"
+					/>
+				</section>
 			</main>
 		</section>
 		<aside
-			class="basis-1/3 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
+			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
 		>
 			<!-- Profils -->
 		</aside>
 	</div>
+	<Menu
+		v-if="isVisibilityMenuOpen"
+		@close="isVisibilityMenuOpen = false"
+		:title="'Visibilité de la publication'"
+		:actions="[
+			{
+				label: 'Essai',
+				description: 'Tout le monde sauf vos abonnés',
+				icon: RocketLaunchIcon,
+				handler: () => {
+					preparingPost.visibility = 'outside';
+				},
+			},
+			{
+				label: 'Tout le monde',
+				icon: GlobeAltIcon,
+				handler: () => {
+					preparingPost.visibility = 'everyone';
+				},
+			},
+			{
+				label: 'Abonnés',
+				icon: UserGroupIcon,
+				handler: () => {
+					preparingPost.visibility = 'followers';
+				},
+			},
+			{
+				label: 'Amis',
+				icon: HeartIcon,
+				handler: () => {
+					preparingPost.visibility = 'friends';
+				},
+			},
+			{
+				label: 'Privé',
+				icon: EyeSlashIcon,
+				handler: () => {
+					preparingPost.visibility = 'me';
+				},
+			},
+		]"
+	/>
 </template>
