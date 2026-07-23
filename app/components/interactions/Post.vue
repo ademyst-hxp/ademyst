@@ -6,13 +6,13 @@ import Box from "../base/Box.vue";
 import ProfileRow from "../profile/ProfileRow.vue";
 
 import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
 	EllipsisVerticalIcon,
 	HeartIcon as HeartSolidIcon,
 } from "@heroicons/vue/24/solid";
 import {
+	FlagIcon,
+	TrashIcon,
+	PencilIcon,
 	HeartIcon,
 	ChatBubbleOvalLeftEllipsisIcon,
 	PaperAirplaneIcon,
@@ -35,6 +35,7 @@ const { session } = useAuthSession();
 const actions = computed(() => {
 	const actions: {
 		label: string;
+		description?: string;
 		icon: any;
 		danger?: boolean;
 		handler: () => void;
@@ -43,6 +44,7 @@ const actions = computed(() => {
 	if (props.data.profile?.id == session.value?.profile?.id) {
 		actions.push({
 			label: "Supprimer la publication",
+			description: "Cette action est irréversible.",
 			icon: TrashIcon,
 			danger: true,
 			handler: () => {},
@@ -51,7 +53,6 @@ const actions = computed(() => {
 		actions.push({
 			label: "Modifier la publication",
 			icon: PencilIcon,
-			danger: true,
 			handler: () => {},
 		});
 	} else {
@@ -113,7 +114,10 @@ const rendered = computed(() => {
 			</div>
 		</div>
 
-		<div class="flex items-center gap-4">
+		<div
+			class="flex items-center gap-4"
+			:class="editable ? 'opacity-50' : ''"
+		>
 			<div class="flex items-center gap-1">
 				<HeartIcon class="h-6 w-6 cursor-pointer" />
 				<span class="text-lg">{{
