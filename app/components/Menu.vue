@@ -6,6 +6,7 @@ const props = defineProps<{
 	title?: string;
 	actions?: {
 		label: string;
+		description?: string;
 		icon?: Component;
 		danger?: boolean;
 		handler: string | (() => void | Promise<void>);
@@ -39,22 +40,34 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 				{{ title || "Menu" }}
 			</h2>
 			<div
-				class="flex flex-col items-center gap-4 text-xl divide-y divide-surface-border overflow-y-auto"
+				class="flex flex-col items-start gap-4 text-xl divide-y divide-surface-border overflow-y-auto w-full"
 			>
 				<div
 					v-for="action in actions"
 					:key="action.label"
 					:class="[
-						'flex items-center gap-2 transition-colors duration-200 hover:underline cursor-pointer',
-						action.danger ? 'text-danger' : ''
+						'group flex items-center gap-2 transition-colors duration-200 cursor-pointer',
+						action.danger ? 'text-danger' : '',
 					]"
 					@click="handleSelect(action.handler)"
 				>
-					<component :is="action.icon" v-if="action.icon" class="w-6 h-6" />
-					{{ action.label }}
+					<component
+						:is="action.icon"
+						v-if="action.icon"
+						class="w-8 h-8"
+					/>
+					<div class="flex flex-col -space-y-1">
+						<span class="font-medium group-hover:underline">{{ action.label }}</span>
+						<p
+							v-if="action.description"
+							class="text-sm text-surface-text-muted"
+						>
+							{{ action.description }}
+						</p>
+					</div>
 				</div>
 				<div
-					class="flex items-center gap-2 transition-colors duration-200 hover:underline cursor-pointer"
+					class="flex items-center self-center gap-2 font-medium transition-colors duration-200 hover:underline cursor-pointer"
 					@click="close()"
 				>
 					Fermer
