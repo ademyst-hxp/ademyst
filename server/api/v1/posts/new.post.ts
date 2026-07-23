@@ -18,10 +18,10 @@ export default defineEventHandler(async (event) => {
 
 	const quotedPostId = normalizeId(event.context.params?.id);
 
-	if (!quotedPostId) {
+	if (event.context.params?.id && !quotedPostId) {
 		throw createError({
 			statusCode: 400,
-			statusMessage: "Invalid post id",
+			statusMessage: "Invalid quoted post id",
 		});
 	}
 
