@@ -1,0 +1,21 @@
+@font-face {
+	font-family: "SN Pro";
+	src: url("/fonts/SNPro-VariableFont_wght.ttf") format("truetype");
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: "SN Pro";
+	src: url("/fonts/SNPro-Italic-VariableFont_wght.ttf") format("truetype");
+	font-style: italic;
+	font-weight: 100 900;
+	font-display: swap;
+}
+
+/** DECLA **/
+
+:root {
+	--font-sans: "SN Pro", Verdana, sans-serif;
+}

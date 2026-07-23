@@ -1,0 +1,251 @@
+@import url("./fonts.css");
+@import url("./colors.css");
+@import "tailwindcss";
+
+@theme {
+	--color-primary: var(--clr-primary);
+	--color-secondary: var(--clr-secondary);
+	--color-tertiary: var(--clr-tertiary);
+
+	--color-danger: var(--clr-danger);
+	--color-danger-shaded: var(--clr-danger-shaded);
+
+	--color-warning: var(--clr-warning);
+	--color-warning-shaded: var(--clr-warning-shaded);
+
+	--color-success: var(--clr-success);
+	--color-success-shaded: var(--clr-success-shaded);
+
+	--color-accent: var(--clr-accent);
+	--color-accent-shaded: var(--clr-accent-shaded);
+
+	--color-background-1: var(--clr-background-1);
+	--color-background-2: var(--clr-background-2);
+	--color-background-3: var(--clr-background-3);
+	--color-page: var(--clr-page);
+
+	--color-text: var(--clr-text);
+	--color-muted: var(--clr-muted);
+
+	--color-surface: var(--clr-surface);
+	--color-surface-text: var(--clr-surface-text);
+	--color-surface-border: var(--clr-surface-border);
+	--color-surface-text-muted: var(--clr-surface-text-muted);
+
+	--color-widget: var(--clr-widget);
+	--color-widget-text: var(--clr-widget-text);
+	--color-widget-border: var(--clr-widget-border);
+	--color-widget-text-muted: var(--clr-widget-text-muted);
+
+	--color-button: var(--clr-button);
+	--color-button-text: var(--clr-button-text);
+
+	--color-button-hover: var(--clr-button-hover);
+	--color-button-hover-text: var(--clr-button-hover-text);
+
+	--color-button-active: var(--clr-button-active);
+	--color-button-active-text: var(--clr-button-active-text);
+
+	--color-input: var(--clr-input);
+	--color-input-text: var(--clr-input-text);
+	--color-input-focus-ring: var(--clr-input-focus-ring);
+
+	--font-sans: var(--font-sans);
+}
+
+html {
+	font-family: var(--font-sans);
+	background-image: linear-gradient(
+		45deg,
+		var(--color-background-1),
+		var(--color-background-2),
+		var(--color-background-3)
+	);
+	background-attachment: fixed;
+}
+
+#__nuxt {
+	background-color: var(--color-page);
+	color: var(--color-text);
+	min-height: 100vh;
+}
+
+#__nuxt > *:not(._no_container) {
+	@apply container mx-auto;
+}
+
+.post-content > * + * {
+	@apply mt-4;
+}
+
+.post-content > *:not(pre) > * + * {
+	@apply mt-2;
+}
+
+.post-content > h1 {
+	@apply text-2xl font-bold;
+}
+
+.post-content > h2 {
+	@apply text-xl font-bold;
+}
+
+.post-content > h3 {
+	@apply text-lg font-bold;
+}
+
+.post-content > h4 {
+	@apply font-bold;
+}
+
+.post-content > a {
+	@apply text-accent hover:underline;
+}
+
+:root {
+	--code-bg: var(--color-input);
+	--code-text: var(--color-input-text);
+}
+
+.post-content pre.hljs {
+	background: var(--code-bg);
+	color: var(--code-text);
+	@apply px-6 py-4 rounded-xl overflow-x-auto;
+}
+
+.post-content > *:not(pre) {
+	@apply px-4;
+}
+
+/* base code */
+.post-content pre.hljs code {
+	color: inherit;
+}
+
+/* highlight.js tokens */
+.hljs {
+	color: var(--color-text);
+	background: transparent;
+}
+
+/* keywords */
+.hljs-keyword {
+	color: #2daccc;
+}
+
+/* strings */
+.hljs-string {
+	color: #0cb68b;
+	font-weight: bold;
+}
+
+/* numbers */
+.hljs-number {
+	color: #0cb68b;
+	font-weight: bold;
+}
+
+/* literals: true, false, null */
+.hljs-literal {
+	color: #0cb68b;
+	font-weight: bold;
+}
+
+/* comments */
+.hljs-comment {
+	color: var(--color-muted);
+	font-style: italic;
+}
+
+/* functions / titles */
+.hljs-title {
+	color: #ad19ec;
+	font-weight: bold;
+}
+
+.hljs-function {
+	color: #678aea;
+	font-weight: bold;
+}
+
+/* attributes (HTML, JSON keys, etc.) */
+.hljs-attr {
+	color: #678aea;
+	font-weight: bold;
+}
+
+.hljs-attribute {
+	color: #2daccc;
+}
+
+/* variables */
+.hljs-variable {
+	color: #ff49cf;
+	font-weight: bold;
+}
+
+/* types (TS, classes, etc.) */
+.hljs-type {
+	color: #ad19ec;
+	font-weight: bold;
+}
+
+.hljs-class {
+	color: #ad19ec;
+	font-weight: bold;
+}
+
+/* built-in functions / objects */
+.hljs-built_in {
+	color: #ff9f43;
+	font-weight: bold;
+}
+
+/* operators */
+.hljs-operator {
+	color: #c422ff;
+	opacity: 0.8;
+}
+
+/* punctuation */
+.hljs-punctuation {
+	color: #c422ff;
+	opacity: 0.6;
+}
+
+/* tags (HTML / XML) */
+.hljs-tag {
+	color: #0cb68b;
+	font-weight: bold;
+}
+
+.hljs-name {
+	color: #2daccc;
+	font-weight: bold;
+}
+
+/* meta (imports, decorators, etc.) */
+.hljs-meta {
+	color: #ff7edb;
+}
+
+/* params */
+.hljs-params {
+	color: #ff49cf;
+	font-weight: bold;
+}
+
+/* section titles (rare but useful) */
+.hljs-section {
+	color: #ad19ec;
+	font-weight: bold;
+}
+
+/* deletion / addition (diffs) */
+.hljs-deletion {
+	background: rgba(255, 0, 0, 0.15);
+}
+
+.hljs-addition {
+	background: rgba(0, 255, 120, 0.15);
+}

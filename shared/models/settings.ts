@@ -1,0 +1,25 @@
+export type Visibility =
+	| "outside"
+	| "everyone"
+	| "followers"
+	| "friends"
+	| "me";
+
+export type UiDensity = "compact" | "comfortable" | "auto";
+
+export type AppearanceSettings = {
+	theme: string;
+	highContrast: boolean;
+	dyslexiaFriendly: boolean;
+	fontSize: number;
+	uiDensity: UiDensity;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+export type PrivacySettings = {
+	profileVisibility: Visibility;
+	birthdayVisibility: Visibility;
+	createdAt: Date;
+	updatedAt: Date;
+};

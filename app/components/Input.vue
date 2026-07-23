@@ -1,0 +1,204 @@
+<script setup lang="ts">
+import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/solid";
+
+const props = withDefaults(
+	defineProps<{
+		label?: string;
+		icon?: Component;
+		modelValue?: string | number | boolean;
+		type?: string;
+		size?: "small" | "medium" | "large";
+		placeholder?: string;
+		validate?: RegExp;
+		disabled?: boolean;
+		invalid?: boolean;
+		required?: boolean;
+	}>(),
+	{
+		modelValue: "",
+		type: "text",
+		size: "medium",
+		placeholder: "",
+		disabled: false,
+		invalid: false,
+		required: false,
+	},
+);
+
+const emit = defineEmits<{
+	(e: "update:modelValue", value: string | number | boolean): void;
+	(e: "focus", event: FocusEvent): void;
+	(e: "blur", event: FocusEvent): void;
+	(e: "enter", value: string): void;
+}>();
+
+const focused = ref<boolean>(false);
+const valid = ref<boolean>(true);
+const missing = ref<boolean>(false);
+
+const rootClass = computed(() => {
+	let value =
+		"bg-input text-input-text w-full text-medium font-medium outline-2 transition";
+
+	switch (props.size) {
+		case "small":
+			value += " px-3 py-2 text-sm rounded-lg";
+			break;
+		case "large":
+			value += " px-6 py-3 text-lg rounded-full";
+			break;
+		case "medium":
+		default:
+			value += " px-4 py-3 rounded-xl";
+	}
+
+	if (props.disabled) {
+		value += " opacity-50 cursor-not-allowed";
+	} else {
+		value += " cursor-text";
+	}
+
+	if (!valid.value || missing.value) {
+		value += " outline-danger";
+	} else if (focused.value) {
+		value += " outline-input-focus-ring";
+	} else {
+		value += " outline-transparent";
+	}
+
+	return value;
+});
+
+const isPwdVisible = ref(false);
+
+const isValid = computed(() => {
+	if (props.required && !props.modelValue) return false;
+
+	if (props.validate) {
+		return props.validate.test(props.modelValue as string);
+	}
+
+	return !props.invalid;
+});
+
+const isFilled = computed(() => {
+	return !!props.modelValue;
+});
+
+function onInput(event: Event) {
+	const target = event.target as HTMLInputElement;
+	const value = target.value;
+
+	emit("update:modelValue", value);
+}
+
+function onFocus(event: FocusEvent) {
+	emit("focus", event);
+	valid.value = true;
+	focused.value = true;
+	missing.value = false;
+}
+
+function onBlur(event: FocusEvent) {
+	emit("blur", event);
+	focused.value = false;
+
+	if (props.modelValue) {
+		valid.value = isValid.value;
+	} else {
+		valid.value = true;
+	}
+}
+
+function onEnter(event: KeyboardEvent) {
+	const target = event.target as HTMLInputElement;
+	emit("enter", target.value);
+
+	focused.value = false;
+
+	if (props.modelValue) {
+		valid.value = isValid.value;
+	} else {
+		valid.value = true;
+	}
+
+	missing.value = props.required && !isFilled.value;
+}
+</script>
+<template>
+	<div
+		v-if="type == 'checkbox'"
+		class="flex items-center cursor-pointer gap-2"
+		@click="
+			() => {
+				if (!disabled)
+					$emit('update:modelValue', !(modelValue as boolean));
+			}
+		"
+	>
+		<div
+			class="flex items-center cursor-pointer bg-surface rounded-lg w-10 h-4"
+		>
+			<div
+				:class="(modelValue as boolean) ? 'w-full' : 'w-0'"
+				class="transform-all duration-200"
+			></div>
+			<div class="bg-primary shrink-0 rounded-full p-3"></div>
+		</div>
+		<span class="font-semibold text-muted">{{ label }}</span>
+	</div>
+	<div v-else class="flex flex-col gap-1 text-sm">
+		<span v-if="label" class="text-sm text-muted px-4">
+			{{ label }} <span v-if="required" class="text-danger">*</span>
+		</span>
+		<div class="flex items-center gap-1 text-base" :class="rootClass">
+			<component
+				:is="props.icon"
+				v-if="props.icon"
+				class="w-5 h-5 text-muted"
+			/>
+			<input
+				:type="
+					type === 'password'
+						? isPwdVisible
+							? 'text'
+							: 'password'
+						: type
+				"
+				class="grow outline-none"
+				:value="modelValue"
+				:placeholder="placeholder"
+				:disabled="disabled"
+				@input="onInput"
+				@focus="onFocus"
+				@blur="onBlur"
+				@keydown.enter="onEnter"
+			/>
+			<EyeIcon
+				v-if="type === 'password' && isPwdVisible"
+				class="cursor-pointer w-5 h-5 text-muted"
+				@click="isPwdVisible = !isPwdVisible"
+			/>
+			<EyeSlashIcon
+				v-else-if="type === 'password'"
+				class="cursor-pointer w-5 h-5 text-muted"
+				@click="isPwdVisible = !isPwdVisible"
+			/>
+		</div>
+		<div
+			v-if="missing"
+			class="flex flex-col gap-1 text-sm text-danger px-4"
+		>
+			Ce champ est obligatoire.
+		</div>
+		<div
+			v-if="$slots.error && !valid"
+			class="flex flex-col gap-1 text-sm text-danger px-4"
+		>
+			<slot name="error">Entrée invalide.</slot>
+		</div>
+		<div v-if="$slots.indications" class="flex flex-col gap-1 text-sm px-4">
+			<slot name="indications" />
+		</div>
+	</div>
+</template>

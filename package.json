@@ -1,0 +1,42 @@
+{
+	"name": "www-v3",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"generate": "nuxt generate",
+		"db:push": "node server/db/scripts/fix-level-id.mjs && drizzle-kit push --force",
+		"preview": "nuxt preview",
+		"postinstall": "nuxt prepare"
+	},
+	"dependencies": {
+		"@capacitor/android": "^8.3.4",
+		"@capacitor/core": "^8.3.4",
+		"@capacitor/ios": "^8.3.4",
+		"@heroicons/vue": "^2.2.0",
+		"@tailwindcss/vite": "^4.3.0",
+		"drizzle-orm": "^0.45.2",
+		"highlight.js": "^11.11.1",
+		"jose": "^5.2.4",
+		"markdown-it": "^14.3.0",
+		"motion-v": "^2.2.1",
+		"nuxt": "^4.4.5",
+		"postgres": "^3.4.9",
+		"rate-limiter-flexible": "^11.2.0",
+		"resend": "^6.12.3",
+		"shiki": "^4.3.1",
+		"socket.io": "^4.8.3",
+		"socket.io-client": "^4.8.3",
+		"tailwindcss": "^4.3.0",
+		"vite-svg-loader": "^5.1.1",
+		"vue": "^3.5.34",
+		"vue-router": "^5.0.6"
+	},
+	"devDependencies": {
+		"@capacitor/cli": "^8.3.4",
+		"@types/markdown-it": "^14.1.2",
+		"@types/node": "^25.8.0",
+		"drizzle-kit": "^0.31.10"
+	}
+}
