@@ -3,11 +3,14 @@ import Logo from "~/assets/logo.svg";
 
 import {
 	FireIcon,
+} from "@heroicons/vue/24/solid";
+
+import {
 	UserIcon,
 	Cog6ToothIcon,
 	ArrowsRightLeftIcon,
 	ArrowRightEndOnRectangleIcon,
-} from "@heroicons/vue/24/solid";
+} from "@heroicons/vue/24/outline";
 
 import Menu from "../Menu.vue";
 

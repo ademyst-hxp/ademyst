@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UserPlusIcon } from "@heroicons/vue/24/solid";
+import { UserPlusIcon } from "@heroicons/vue/24/outline";
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
 
