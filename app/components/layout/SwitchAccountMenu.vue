@@ -37,7 +37,7 @@ const handleAddAccount = async () => {
 				Changer de compte
 			</h2>
 			<div
-				class="flex flex-col items-center gap-4 text-xl divide-y divide-surface-border overflow-y-auto"
+				class="flex flex-col items-start gap-4 text-xl overflow-y-auto w-full"
 			>
 				<div
 					v-for="session in sessions"
@@ -59,7 +59,7 @@ const handleAddAccount = async () => {
 					Ajouter un compte
 				</div>
 				<div
-					class="flex items-center gap-2 transition-colors duration-200 hover:underline cursor-pointer"
+					class="flex items-center self-center font-medium gap-2 transition-colors duration-200 hover:underline cursor-pointer"
 					@click="close()"
 				>
 					Fermer

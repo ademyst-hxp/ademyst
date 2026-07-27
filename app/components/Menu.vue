@@ -40,13 +40,13 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 				{{ title || "Menu" }}
 			</h2>
 			<div
-				class="flex flex-col items-start gap-4 text-xl divide-y divide-surface-border overflow-y-auto w-full"
+				class="flex flex-col items-start gap-4 text-xl overflow-y-auto w-full"
 			>
-				<div
+				<a
 					v-for="action in actions"
 					:key="action.label"
 					:class="[
-						'group flex items-center gap-2 transition-colors duration-200 cursor-pointer',
+						'group flex items-center gap-2 transition-colors duration-200 w-full cursor-pointer',
 						action.danger ? 'text-danger' : '',
 					]"
 					@click="handleSelect(action.handler)"
@@ -65,13 +65,13 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 							{{ action.description }}
 						</p>
 					</div>
-				</div>
-				<div
+				</a>
+				<a
 					class="flex items-center self-center gap-2 font-medium transition-colors duration-200 hover:underline cursor-pointer"
 					@click="close()"
 				>
 					Fermer
-				</div>
+				</a>
 			</div>
 		</Box>
 	</Popup>
