@@ -63,6 +63,11 @@ const preparingPost = ref<Post>({
 	createdAt: new Date(),
 	attachments: [],
 	flags: [],
+	interaction: {
+		liked: false,
+		reported: false,
+		saved: false,
+	},
 	stats: {
 		reactions: {
 			like: 0,
