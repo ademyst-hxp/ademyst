@@ -6,6 +6,7 @@ import { posts } from "~~/server/db/schema/interactions";
 import { retrieveCleanPost } from "#server/utils/converters/interactions";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
+import { getInteractionStatus } from "~~/server/utils/helpers/interaction";
 
 export default defineEventHandler(async (event) => {
 	const identity = await getIdentity(event);
@@ -18,20 +19,20 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const post = (await db.select()
-		.from(posts)
-		.where(eq(posts.id, postId))
-		.limit(1))[0];
+	const [candidate] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
 
-	if (!post) {
+	if (!candidate) {
 		throw createError({
 			statusCode: 404,
 			statusMessage: "Post not found",
 		});
 	}
 
-	return retrieveCleanPost(
-		identity,
-		post,
-	);
+	const post = retrieveCleanPost(identity, candidate);
+
+	return {
+		status: "ok",
+		data: post,
+		interaction: await getInteractionStatus(identity, candidate),
+	};
 });
