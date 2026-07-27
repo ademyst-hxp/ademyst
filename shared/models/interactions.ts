@@ -34,10 +34,15 @@ export type Post = {
 	createdAt: Date;
 	attachments: Attachment[];
 	flags: PostFlag[];
+	interaction: {
+		liked: boolean;
+		reported: boolean;
+		saved: false;
+	};
 	stats: {
 		reactions: Record<PostReactionType, number>;
 		answers: number;
-	}
+	};
 };
 
 export type PostReaction = {
