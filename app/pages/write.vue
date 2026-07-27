@@ -18,6 +18,9 @@ const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
 await refresh();
 
+const route = useRoute();
+const { parent: parentPostId, quote: quotedPostId } = route.query as { parent?: string; quote?: string };
+
 if (!session.value) {
 	navigateTo("/auth/login");
 }
@@ -57,7 +60,7 @@ const isPrev = ref<boolean>(false);
 const preparingPost = ref<Post>({
 	id: "0",
 	profile: session.value!.profile,
-	parentId: null,
+	parentId: parentPostId || null,
 	visibility: "everyone",
 	content: "",
 	createdAt: new Date(),
@@ -147,7 +150,6 @@ const handlePublish = async () => {
 		<aside
 			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
 		>
-			<!-- Profils -->
 		</aside>
 	</div>
 	<Menu
