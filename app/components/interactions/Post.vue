@@ -18,6 +18,7 @@ import {
 	PaperAirplaneIcon,
 	BookmarkIcon,
 } from "@heroicons/vue/24/outline";
+import PostCard from "../cards/PostCard.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -83,6 +84,7 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
+		<PostCard :data="data" class="-mx-2" />
 		<textarea
 			v-if="editable"
 			v-model="data.content"
@@ -90,7 +92,8 @@ const rendered = computed(() => {
 		></textarea>
 		<div
 			v-else
-			class="break-after-all wrap-break-word post-content -mx-2 max-h-144 overflow-x-visible overflow-y-auto"
+			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
+			:class="data.parentId ? 'max-h-96' : 'max-h-144'"
 			v-html="rendered || '<em>Vide.</em>'"
 		/>
 		<div class="flex flex-col gap-2" v-if="data.flags.length > 0">
