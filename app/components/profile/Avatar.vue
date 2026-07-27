@@ -4,7 +4,7 @@ import Ring from "./Ring.vue";
 const props = withDefaults(
 	defineProps<{
 		src?: string;
-		color?: string[] | string;
+		color?: string[] | string | null;
 		size?: "sm" | "md" | "lg" | "xl" | number;
 	}>(),
 	{
@@ -31,7 +31,9 @@ const globalSize = computed<number>(() => {
 });
 
 const globalGradient = computed<string[]>(() => {
-	if (Array.isArray(props.color)) {
+	if (props.color == null) {
+		return [];
+	} else if (Array.isArray(props.color)) {
 		return props.color;
 	} else if (typeof props.color === "string") {
 		return [props.color, props.color];
