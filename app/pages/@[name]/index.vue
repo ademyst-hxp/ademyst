@@ -91,7 +91,6 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 });
 </script>
 <template>
-	<Navbar />
 	<div class="mx-auto max-w-7xl lg:flex lg:gap-8">
 		<header
 			class="p-6 px-8 space-y-6 md:p-8 lg:w-1/2 xl:w-1/3 lg:sticky lg:top-24 lg:self-start"

@@ -101,7 +101,6 @@ const handlePublish = async () => {
 };
 </script>
 <template>
-	<Navbar />
 	<div class="md:flex">
 		<aside class="basis-1/4 max-xl:hidden">
 			<!-- Vide -->
