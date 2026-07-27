@@ -1,12 +1,10 @@
-import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { desc } from "drizzle-orm/sql/expressions/select";
 
 import { db } from "#server/db";
-import { profiles } from "#server/db/schema/profiles";
 import { posts } from "#server/db/schema/interactions";
 
 import { requireAuth } from "#server/utils/middleware/auth";
-import { retrieveCleanPost } from "#server/utils/converters/interactions";
+import { retrieveSeveralCleanPosts } from "#server/utils/converters/interactions";
 
 export default defineEventHandler(async (event) => {
 	const identity = await requireAuth(event);
@@ -23,26 +21,20 @@ export default defineEventHandler(async (event) => {
 		.limit(limit)
 		.offset(offset);
 
-	const resolvedPosts = await Promise.all(
-		rawPosts.map(async (post) => {
-			const authors = await db
-				.select()
-				.from(profiles)
-				.where(eq(profiles.id, post.profileId));
+	const resolvedPosts = await retrieveSeveralCleanPosts(identity, rawPosts);
 
-			const author = authors[0];
+	const filteredPosts = resolvedPosts
+		.filter((post): post is NonNullable<typeof post> => post !== null)
+		.sort((a, b) => {
+			let score = 0;
+			score += b.createdAt.getTime() - a.createdAt.getTime() > 0 ? 1 : -1;
+			score +=
+				b.stats.reactions.like - a.stats.reactions.like > 0 ? 6 : -6;
+			score +=
+				(b.profile.level ?? 0) - (a.profile.level ?? 0) > 0 ? 3 : -3;
 
-			if (!author) {
-				return null;
-			}
-
-			return await retrieveCleanPost(identity, post);
-		}),
-	);
-
-	const filteredPosts = resolvedPosts.filter(
-		(post): post is NonNullable<typeof post> => post !== null,
-	);
+			return score;
+		});
 
 	return {
 		status: "ok",

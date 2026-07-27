@@ -5,8 +5,11 @@ export const useFeed = () => {
 	const { $api } = useNuxtApp();
 
 	const statuses = useState<Status[]>("statuses", () => []);
-	const posts = useState<Post[]>("posts", () => []);
 	const users = useState<Profile[]>("users", () => []);
+
+	const suggestions = useState<Post[]>("suggestions", () => []);
+	const hits = useState<Post[]>("hits", () => []);
+	const following = useState<Post[]>("following", () => []);
 
 	const error = useState<string | null>("feedError", () => null);
 	const loading = useState<boolean>("feedLoading", () => false);
@@ -16,15 +19,19 @@ export const useFeed = () => {
 		error.value = null;
 
 		try {
-			const [statusesResponse, postsResponse, usersResponse] =
+			const [statusesResponse, suggestionsResponse, hitsResponse, followingResponse, usersResponse] =
 				await Promise.all([
 					$api<{ statuses: Status[] }>("/api/v1/feed/statuses"),
-					$api<{ posts: Post[] }>("/api/v1/feed/posts"),
+					$api<{ posts: Post[] }>("/api/v1/feed/posts/suggestions"),
+					$api<{ posts: Post[] }>("/api/v1/feed/posts/hits"),
+					$api<{ posts: Post[] }>("/api/v1/feed/posts/following"),
 					$api<{ users: Profile[] }>("/api/v1/feed/users"),
 				]);
 
 			statuses.value = statusesResponse.statuses;
-			posts.value = postsResponse.posts;
+			suggestions.value = suggestionsResponse.posts;
+			hits.value = hitsResponse.posts;
+			following.value = followingResponse.posts;
 			users.value = usersResponse.users;
 		} catch (err) {
 			error.value = err instanceof Error ? err.message : String(err);
@@ -35,7 +42,9 @@ export const useFeed = () => {
 
 	return {
 		statuses,
-		posts,
+		suggestions,
+		hits,
+		following,
 		users,
 		error,
 		loading,
