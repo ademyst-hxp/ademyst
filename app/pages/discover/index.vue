@@ -15,7 +15,7 @@ import {
 
 import type { Status } from "~~/shared/models/interactions";
 
-const { statuses, posts, users, refresh } = useFeed();
+const { statuses, suggestions, hits, following, users, refresh } = useFeed();
 const { blockUser } = useRelations();
 
 await refresh();
@@ -48,7 +48,7 @@ useHead({
 	],
 });
 
-const tab = ref<"suggest" | "following" | "top" | "new">("suggest");
+const tab = ref<"suggest" | "following" | "hits">("suggest");
 const focusedStatus = ref<Status | null>(null);
 </script>
 <template>
@@ -85,27 +85,31 @@ const focusedStatus = ref<Status | null>(null);
 					:tabs="[
 						{ name: 'Suggestions', value: 'suggest' },
 						{ name: 'Abonné', value: 'following' },
-						{ name: 'Hit Beams', value: 'top' },
-						{ name: 'Écrire', value: 'new' },
+						{ name: 'Hit Beams', value: 'hits' },
 					]"
 					class="md:w-fit md:mx-auto"
 				/>
 			</header>
 			<main class="flex flex-col gap-4 overflow-visible" v-if="tab === 'suggest'">
-				<h2 class="text-2xl font-bold px-8">Feed</h2>
-				<PostBox v-for="post in posts" :data="post" />
+				<div class="flex flex-col -space-y-1 px-8">
+					<h2 class="text-2xl font-bold">Feed</h2>
+					<p class="text-muted">Publications tendances en ce moment</p>
+				</div>
+				<PostBox v-for="post in suggestions" :data="post" />
 			</main>
 			<main class="flex flex-col gap-4 overflow-visible" v-if="tab === 'following'">
-				<h2 class="text-2xl font-bold px-8">Abonné</h2>
-				<PostBox v-for="post in posts" :data="post" />
+				<div class="flex flex-col -space-y-1 px-8">
+					<h2 class="text-2xl font-bold">Abonnés</h2>
+					<p class="text-muted">Publications des personnes que vous suivez</p>
+				</div>
+				<PostBox v-for="post in following" :data="post" />
 			</main>
-			<main class="flex flex-col gap-4 overflow-visible" v-if="tab === 'top'">
-				<h2 class="text-2xl font-bold px-8">Hit Beams</h2>
-				<PostBox v-for="post in posts" :data="post" />
-			</main>
-			<main class="flex flex-col gap-4 overflow-visible" v-if="tab === 'new'">
-				<h2 class="text-2xl font-bold px-8">Écrire une publication</h2>
-				<PostBox v-for="post in posts" :data="post" />
+			<main class="flex flex-col gap-4 overflow-visible" v-if="tab === 'hits'">
+				<div class="flex flex-col -space-y-1 px-8">
+					<h2 class="text-2xl font-bold">Hit Beams</h2>
+					<p class="text-muted">Publications qui ont crevé les stats</p>
+				</div>
+				<PostBox v-for="post in hits" :data="post" />
 			</main>
 		</section>
 		<aside
