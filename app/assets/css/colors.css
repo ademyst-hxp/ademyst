@@ -23,25 +23,25 @@
 	--clr-accent-darkened: #ff603c;
 
 	/* PAGE */
-	--clr-background-1: #3d0b4f;
-	--clr-background-2: #3d0b4f;
-	--clr-background-3: #3d0b4f;
-	--clr-page: #3d0b4f;
+	--clr-background-1: #0053ec;
+	--clr-background-2: #18ff9f;
+	--clr-background-3: #d518ff;
+	--clr-page: #f6f6f6ef;
 
-	--clr-text: #ffffff;
-	--clr-muted: #dddddf;
+	--clr-text: #102030;
+	--clr-muted: #102030c0;
 
 	/* BOXES */
-	--clr-surface: #581071;
-	--clr-surface-text: #ffffff;
-	--clr-surface-border: transparent;
-	--clr-surface-text-muted: #dddddf;
+	--clr-surface: #fdfdfdbd;
+	--clr-surface-text: #304050;
+	--clr-surface-border: #dedede;
+	--clr-surface-text-muted: #304050c0;
 
 	/* WIDGETS */
-	--clr-widget: #ffb38b;
-	--clr-widget-text: #290e00;
-	--clr-widget-border: #ff7050;
-	--clr-widget-text-muted: #501c00;
+	--clr-widget: #efe8f9;
+	--clr-widget-text: #552696;
+	--clr-widget-border: #cfb9ee;
+	--clr-widget-text-muted: #552696c0;
 
 	/* BUTTONS */
 	--clr-button: var(--clr-accent);
@@ -50,11 +50,11 @@
 	--clr-button-hover: var(--clr-accent-darkened);
 	--clr-button-hover-text: #ffffff;
 
-	--clr-button-active: #fff;
-	--clr-button-active-text: #000;
+	--clr-button-active: #fdfdfd;
+	--clr-button-active-text: #102030;
 
 	/* INPUTS */
-	--clr-input: #0000000f;
-	--clr-input-text: #ffffff;
+	--clr-input: #00000006;
+	--clr-input-text: #102030;
 	--clr-input-focus-ring: var(--clr-accent);
 }
