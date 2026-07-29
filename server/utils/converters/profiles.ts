@@ -4,7 +4,9 @@ import { eq, count, inArray } from "drizzle-orm";
 
 import type { Profile } from "~~/shared/models/profiles";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
+import type { H3Event } from "h3";
+
 import { profileLinks, profiles } from "#server/db/schema/profiles";
 import { follows } from "#server/db/schema/relations";
 
@@ -15,11 +17,14 @@ import {
 } from "~~/server/utils/helpers/privacy";
 
 export async function retrieveCleanProfile(
+	event: H3Event,
 	identity: Identity | null | undefined,
 	profile: PartialProfile,
 ): Promise<Profile> {
-	const relationships = await getRelationshipStatus(identity, profile);
-	const privacy = await getPrivacySettings(profile);
+	const db = useDb(event);
+
+	const relationships = await getRelationshipStatus(event, identity, profile);
+	const privacy = await getPrivacySettings(event, profile);
 	const access = await canAccess(privacy, relationships);
 
 	const { blocked, friended, ...r } = relationships;
@@ -91,14 +96,18 @@ export async function retrieveCleanProfile(
 }
 
 export async function retrieveSeveralCleanProfiles(
+	event: H3Event,
 	identity: Identity | null | undefined,
 	_profiles: PartialProfile[],
 ): Promise<Profile[]> {
+	const db = useDb(event);
+
 	const relationships = await getSeveralRelationshipStatus(
+		event,
 		identity,
 		_profiles,
 	);
-	const privacy = await getSeveralPrivacySettings(_profiles);
+	const privacy = await getSeveralPrivacySettings(event, _profiles);
 
 	let accesses: Record<
 		Profile["id"],

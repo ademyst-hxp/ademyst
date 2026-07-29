@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
 	if (!relationships.following) {
 		setResponseStatus(event, 204);

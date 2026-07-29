@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const data = await retrieveCleanProfile(identity, profile);
+	const data = await retrieveCleanProfile(event, identity, profile);
 
 	return {
 		status: "ok",

@@ -27,7 +27,6 @@ export default defineEventHandler(async (event) => {
 	// Get the identity of the user making the request
 	const identity = await requireAuth(event, { min_level: 2 });
 
-
 	// Get the profile of the user to follow
 	const [profile] = await db
 		.select()
@@ -44,7 +43,7 @@ export default defineEventHandler(async (event) => {
 
 	// Check the relationship status between the two users, and the privacy settings of the user to follow
 	const relationships = identity
-		? await getRelationshipStatus(identity, profile)
+		? await getRelationshipStatus(event, identity, profile)
 		: {
 				me: false,
 				following: false,
@@ -62,7 +61,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const privacy = await getPrivacySettings(profile);
+	const privacy = await getPrivacySettings(event, profile);
 	const access = canAccess(privacy, relationships);
 
 	if (relationships.following) {
@@ -73,7 +72,6 @@ export default defineEventHandler(async (event) => {
 			message: "Already following this user",
 		};
 	}
-
 
 	// Init the request to follow the user, or send a follow request if the user's profile is private
 	const [request] = await db

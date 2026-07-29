@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const profile = await retrieveCleanProfile(identity, _profile);
+	const profile = await retrieveCleanProfile(event, identity, _profile);
 
 	return {
 		claims: identity,

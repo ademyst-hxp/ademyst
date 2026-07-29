@@ -23,7 +23,11 @@ export default defineEventHandler(async (event) => {
 		.limit(limit)
 		.offset(offset);
 
-	const resolvedPosts = await retrieveSeveralCleanPosts(identity, rawPosts);
+	const resolvedPosts = await retrieveSeveralCleanPosts(
+		event,
+		identity,
+		rawPosts,
+	);
 
 	const filteredPosts = resolvedPosts
 		.filter((post): post is NonNullable<typeof post> => post !== null)

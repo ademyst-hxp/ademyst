@@ -3,13 +3,9 @@ import { desc } from "drizzle-orm/sql/expressions/select";
 
 import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
-import {
-	posts,
-} from "~~/server/db/schema/interactions";
+import { posts } from "~~/server/db/schema/interactions";
 
-import {
-	getRelationshipStatus,
-} from "~~/server/utils/helpers/privacy";
+import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 
 import { getIdentity } from "#server/utils/auth";
 import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
@@ -57,7 +53,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
 	if (relationships.blocked) {
 		throw createError({
@@ -74,14 +70,7 @@ export default defineEventHandler(async (event) => {
 		.limit(limit)
 		.offset(offset);
 
-	const _posts = await Promise.all(
-		dbPosts.map(async (post) => {
-			return retrieveCleanPost(
-				identity,
-				post
-			);
-		}),
-	);
+	const _posts = await retrieveSeveralCleanPosts(event, identity, dbPosts);
 
 	return {
 		status: "ok",

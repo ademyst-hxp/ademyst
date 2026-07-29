@@ -9,7 +9,7 @@ import {
 } from "~~/server/utils/helpers/privacy";
 
 import { getIdentity } from "#server/utils/auth";
-import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
+import { retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -54,7 +54,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
 	if (!relationships.me) {
 		setResponseStatus(event, 206);
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
 
 	const _friends = await Promise.all(
 		friends.map(async ({ friend }) => {
-			return retrieveCleanProfile(identity, friend);
+			return retrieveCleanProfile(event, identity, friend);
 		}),
 	);
 

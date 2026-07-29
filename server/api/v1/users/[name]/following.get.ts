@@ -11,7 +11,7 @@ import {
 } from "~~/server/utils/helpers/privacy";
 
 import { getIdentity } from "#server/utils/auth";
-import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
+import { retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -56,9 +56,9 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
-	const privacy = await getPrivacySettings(profile);
+	const privacy = await getPrivacySettings(event, profile);
 	const access = await canAccess(privacy, relationships);
 
 	if (!access.profile) {
@@ -82,8 +82,10 @@ export default defineEventHandler(async (event) => {
 
 	return {
 		status: "ok",
-		following: following.map(({ profile }) =>
-			retrieveCleanProfile(identity, profile),
+		following: retrieveSeveralCleanProfiles(
+			event,
+			identity,
+			following.map((row) => row.profile),
 		),
 		next: offset + limit,
 		hasNext: following.length === limit,

@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
 	const resolvedStatuses = await Promise.all(
 		rawStatuses.map(async (status) => {
-			return await retrieveCleanStatus(identity, status);
+			return await retrieveCleanStatus(event, identity, status);
 		}),
 	);
 

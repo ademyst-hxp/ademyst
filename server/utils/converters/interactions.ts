@@ -1,4 +1,6 @@
-import { db } from "~~/server/db";
+import { useDb } from "~~/server/db";
+import type { H3Event } from "h3";
+
 import { eq, inArray, count } from "drizzle-orm";
 
 import {
@@ -29,9 +31,12 @@ import { Profile } from "~~/shared/models/profiles";
 import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
 
 export async function retrieveCleanPost(
+	event: H3Event,
 	identity: Identity | null | undefined,
 	post: DbPost,
 ): Promise<Post> {
+	const db = useDb(event);
+
 	const author = await db.query.profiles.findFirst({
 		where: (profile, { eq }) => eq(profile.id, post.profileId),
 	});
@@ -40,10 +45,10 @@ export async function retrieveCleanPost(
 		throw new Error("Author not found");
 	}
 
-	const profile = await retrieveCleanProfile(identity, author);
+	const profile = await retrieveCleanProfile(event, identity, author);
 
-	const relationships = await getRelationshipStatus(identity, author);
-	const privacy = await getPrivacySettings(author);
+	const relationships = await getRelationshipStatus(event, identity, author);
+	const privacy = await getPrivacySettings(event, author);
 	const access = await canAccessEntity(
 		privacy,
 		relationships,
@@ -91,13 +96,21 @@ export async function retrieveCleanPost(
 			),
 			answers: answers?.count || 0,
 		},
+		interaction: {
+			liked: reactions.some((reaction) => reaction.profileId === identity?.profileId && reaction.reaction === 'like'),
+			reported: false,
+			saved: false,
+		},
 	};
 }
 
 export async function retrieveSeveralCleanPosts(
+	event: H3Event,
 	identity: Identity | null | undefined,
 	dbPosts: DbPost[],
 ): Promise<Post[]> {
+	const db = useDb(event);
+
 	if (dbPosts.length === 0) {
 		return [];
 	}
@@ -111,6 +124,7 @@ export async function retrieveSeveralCleanPosts(
 		.where(inArray(profiles.id, authorIds));
 
 	const authors_list = await retrieveSeveralCleanProfiles(
+		event,
 		identity,
 		_dbauthors,
 	);
@@ -122,10 +136,11 @@ export async function retrieveSeveralCleanPosts(
 
 	// Relations & accès
 	const all_relationships = await getSeveralRelationshipStatus(
+		event,
 		identity,
 		_dbauthors,
 	);
-	const all_privacy = await getSeveralPrivacySettings(_dbauthors);
+	const all_privacy = await getSeveralPrivacySettings(event, _dbauthors);
 
 	// Pièces jointes
 	const allAttachments = await db
@@ -203,6 +218,15 @@ export async function retrieveSeveralCleanPosts(
 				),
 				answers: answersMap.get(post.id) ?? 0,
 			},
+			interaction: {
+				liked: reactions.some(
+					(reaction) =>
+						reaction.profileId === identity?.profileId &&
+						reaction.reaction === "like",
+				),
+				reported: false,
+				saved: false,
+			},
 		};
 	});
 }
@@ -233,9 +257,12 @@ export function convertPostFlag(flag: DbPostFlag): PostFlag {
 }
 
 export async function retrieveCleanStatus(
+	event: H3Event,
 	identity: Identity | null | undefined,
 	status: DbStatus,
 ): Promise<Status> {
+	const db = useDb(event);
+
 	const author = await db.query.profiles.findFirst({
 		where: (profile, { eq }) => eq(profile.id, status.profileId),
 	});
@@ -244,10 +271,10 @@ export async function retrieveCleanStatus(
 		throw new Error("Author not found");
 	}
 
-	const profile = await retrieveCleanProfile(identity, author);
+	const profile = await retrieveCleanProfile(event, identity, author);
 
-	const relationships = await getRelationshipStatus(identity, author);
-	const privacy = await getPrivacySettings(author);
+	const relationships = await getRelationshipStatus(event, identity, author);
+	const privacy = await getPrivacySettings(event, author);
 	const access = await canAccessEntity(
 		privacy,
 		relationships,

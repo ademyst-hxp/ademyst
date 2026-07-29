@@ -28,12 +28,14 @@ export default defineEventHandler(async (event) => {
 		.offset(offset);
 
 	const resolvedPosts = await retrieveSeveralCleanPosts(
+		event,
 		identity,
 		rawPosts.map((row) => row.posts),
 	);
 
-	const filteredPosts = resolvedPosts
-		.filter((post): post is NonNullable<typeof post> => post !== null)
+	const filteredPosts = resolvedPosts.filter(
+		(post): post is NonNullable<typeof post> => post !== null,
+	);
 
 	return {
 		status: "ok",

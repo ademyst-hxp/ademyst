@@ -1,6 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
+import type { H3Event } from "h3";
 
 import { blocks, follows, friendships } from "#server/db/schema/relations";
 import { Profile, profiles } from "#server/db/schema/profiles";
@@ -19,10 +20,13 @@ export type Relationship = {
 };
 
 export const getRelationshipStatus = async (
+	event: H3Event,
 	A?: Profile | Identity | null,
 	B?: Profile | null,
 ): Promise<Relationship> => {
 	// Relation from A to B (e.g. A following B, A followed by B...)
+
+	const db = useDb(event);
 
 	const relationships: Relationship = {
 		me: false,
@@ -168,8 +172,11 @@ export const getRelationshipStatus = async (
 };
 
 export const getPrivacySettings = async (
+	event: H3Event,
 	profile: Profile,
 ): Promise<PrivacySettings | null> => {
+	const db = useDb(event);
+
 	const [privacy] = await db
 		.select()
 		.from(privacy_settings)
@@ -278,10 +285,12 @@ export const canAccessEntity = (
 // For multiple profiles
 
 export const getSeveralRelationshipStatus = async (
+	event: H3Event,
 	A: Profile | Identity | null | undefined,
 	B: Profile[],
 ): Promise<Record<Profile["id"], Relationship>> => {
 	// Relation from A to B (e.g. A following B, A followed by B...)
+	const db = useDb(event);
 
 	const base: Relationship = {
 		me: false,
@@ -455,8 +464,11 @@ export const getSeveralRelationshipStatus = async (
 };
 
 export const getSeveralPrivacySettings = async (
+	event: H3Event,
 	_profiles: Profile[],
 ): Promise<Record<string, PrivacySettings>> => {
+	const db = useDb(event);
+
 	const privacy = await db
 		.select()
 		.from(privacy_settings)

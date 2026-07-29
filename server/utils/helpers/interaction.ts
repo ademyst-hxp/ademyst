@@ -1,6 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
+import type { H3Event } from "h3";
 
 import { Post, postReactions } from "~~/server/db/schema/interactions";
 import { post_reports } from "~~/server/db/schema/reports";
@@ -14,9 +15,12 @@ export type Interaction = {
 };
 
 export const getInteractionStatus = async (
+	event: H3Event,
 	identity: Identity | null,
 	post: Post | null,
 ): Promise<Interaction> => {
+	const db = useDb(event);
+
 	const interactions: Interaction = {
 		liked: false,
 		saved: false,
@@ -62,9 +66,12 @@ export const getInteractionStatus = async (
 
 
 export const getSeveralInteractionStatus = async (
+	event: H3Event,
 	identity: Identity | null,
 	_posts: Post[],
 ): Promise<Record<string, Interaction>> => {
+	const db = useDb(event);
+
 	const base: Interaction = {
 		liked: false,
 		saved: false,

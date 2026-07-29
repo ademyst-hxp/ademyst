@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const post = await retrieveCleanPost(identity, createdPost);
+	const post = await retrieveCleanPost(event, identity, createdPost);
 
 	return {
 		status: "ok",

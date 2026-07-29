@@ -30,11 +30,11 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const post = retrieveCleanPost(identity, candidate);
+	const post = retrieveCleanPost(event, identity, candidate);
 
 	return {
 		status: "ok",
 		data: post,
-		interaction: await getInteractionStatus(identity, candidate),
+		interaction: await getInteractionStatus(event, identity, candidate),
 	};
 });

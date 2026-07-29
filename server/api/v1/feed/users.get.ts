@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
 	).map((row) => row.profiles);
 
 	const resolvedProfiles = await retrieveSeveralCleanProfiles(
+		event,
 		identity,
 		rawProfiles,
 	);

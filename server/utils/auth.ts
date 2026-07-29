@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 
-import { db } from "../db";
+import { useDb } from "../db";
+import type { H3Event } from "h3";
+
 import { profiles, Profile } from "../db/schema/profiles";
 import { accounts, Account, sessions } from "../db/schema/accounts";
 
@@ -14,7 +16,9 @@ export interface UserIdentity extends Identity {
 	account: Account;
 }
 
-export const getIdentity = async (event: any): Promise<Identity | null> => {
+export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
+	const db = useDb(event);
+
 	const authorization = getHeader(event, "Authorization");
 	const accessTokenCookie = getCookie(event, "accessToken");
 
@@ -46,7 +50,9 @@ export const getIdentity = async (event: any): Promise<Identity | null> => {
 	}
 };
 
-export const getUser = async (identity: Identity): Promise<UserIdentity | null> => {
+export const getUser = async (event: H3Event, identity: Identity): Promise<UserIdentity | null> => {
+	const db = useDb(event);
+
 	const [profile] = await db
 		.select()
 		.from(profiles)

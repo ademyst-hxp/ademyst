@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
 	if (relationships.blocked) {
 		throw createError({
@@ -75,6 +75,7 @@ export default defineEventHandler(async (event) => {
 	const _statuses = await Promise.all(
 		dbStatuses.map(async (status) =>
 			retrieveCleanStatus(
+				event,
 				identity,
 				status,
 			),

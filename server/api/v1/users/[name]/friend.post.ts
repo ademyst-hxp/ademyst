@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
 
 	// Check the relationship status between the two users, and the privacy settings of the user to follow
 	const relationships = identity
-		? await getRelationshipStatus(identity, profile)
+		? await getRelationshipStatus(event, identity, profile)
 		: {
 				me: false,
 				following: false,
