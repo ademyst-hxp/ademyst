@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { desc } from "drizzle-orm/sql/expressions/select";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { posts } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
 
@@ -9,6 +9,8 @@ import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanPosts } from "#server/utils/converters/interactions";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event);
 
 	const query = getQuery(event);

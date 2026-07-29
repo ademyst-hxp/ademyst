@@ -1,7 +1,7 @@
 import { getCookie, setCookie, readBody } from "h3";
 import { eq } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { sessions } from "#server/db/schema/accounts";
 
 import {
@@ -11,6 +11,8 @@ import {
 } from "#server/utils/jwt";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 	const refreshToken =
 		typeof body?.refreshToken === "string" &&

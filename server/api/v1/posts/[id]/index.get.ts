@@ -1,4 +1,4 @@
-import { db } from "~~/server/db";
+import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
 
 import { posts } from "~~/server/db/schema/interactions";
@@ -9,6 +9,8 @@ import { normalizeId } from "#server/utils/normalizers/ids";
 import { getInteractionStatus } from "~~/server/utils/helpers/interaction";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await getIdentity(event);
 	const postId = normalizeId(event.context.params?.id);
 

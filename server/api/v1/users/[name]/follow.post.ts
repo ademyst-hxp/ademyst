@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
 import { follows, requests } from "~~/server/db/schema/relations";
 
@@ -13,6 +13,8 @@ import {
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const name = event.context.params?.name;
 
 	if (!name) {

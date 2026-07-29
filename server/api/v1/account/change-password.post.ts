@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { and, eq, isNull } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { accounts, passwordResetTokens } from "#server/db/schema/accounts";
 import { hashPassword } from "#server/utils/password";
 
@@ -45,6 +45,8 @@ function getAppUrl(): string {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 
 	const token = normalizeToken(body?.token);

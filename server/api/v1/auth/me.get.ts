@@ -1,11 +1,13 @@
 import { eq } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { profiles } from "#server/db/schema/profiles";
 
 import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event);
 
 	if (!identity) {

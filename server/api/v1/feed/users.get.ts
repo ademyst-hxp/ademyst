@@ -1,6 +1,6 @@
 import { eq, inArray, desc } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 
 import { profiles } from "#server/db/schema/profiles";
 import { follows } from "~~/server/db/schema/relations";
@@ -9,6 +9,8 @@ import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanProfiles } from "#server/utils/converters/profiles";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event);
 
 	const query = getQuery(event);

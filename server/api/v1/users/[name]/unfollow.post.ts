@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
 import { requests, follows, friendships } from "~~/server/db/schema/relations";
 
@@ -9,8 +9,9 @@ import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
-	const identity = await requireAuth(event);
+	const db = useDb(event);
 
+	const identity = await requireAuth(event);
 
 	const name = event.context.params?.name;
 

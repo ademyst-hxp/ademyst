@@ -1,7 +1,7 @@
 import { appearance_settings } from "#server/db/schema/settings";
 import type { AppearanceSettings } from "#shared/models/settings";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
@@ -18,6 +18,8 @@ function generateDefaultAppearanceSettings(): AppearanceSettings {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event);
 
 	const [settings] = await db

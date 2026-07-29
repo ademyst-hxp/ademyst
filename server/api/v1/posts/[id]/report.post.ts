@@ -1,6 +1,6 @@
 import { createError, readBody } from "h3";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { post_reports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -11,6 +11,8 @@ import {
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event);
 
 	const postId = normalizeId(event.context.params?.id);

@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { createError, getHeader, getRequestIP, readBody } from "h3";
 import { eq } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import {
 	accountDeletionTokens,
 	accounts,
@@ -36,6 +36,8 @@ function generateToken(): string {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 
 	const action = event.context.params?.action;

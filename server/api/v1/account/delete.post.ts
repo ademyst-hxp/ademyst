@@ -1,7 +1,7 @@
 import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { accountDeletionTokens, accounts } from "#server/db/schema/accounts";
 
 function normalizeToken(value: unknown): string | null {
@@ -13,6 +13,8 @@ function normalizeToken(value: unknown): string | null {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 
 	const token = normalizeToken(body?.token);

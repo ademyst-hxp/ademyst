@@ -1,3 +1,4 @@
+import type { H3Event } from "h3";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 
@@ -13,10 +14,41 @@ const schema = {
 	...relationsSchema,
 };
 
-const client = postgres(process.env.DATABASE_URL!, {
-	prepare: false,
-});
+type Database = ReturnType<typeof createDb>;
 
-export const db = drizzle(client, {
-	schema,
-});
+function createDb(connectionString: string) {
+	const client = postgres(connectionString, {
+		prepare: false,
+	});
+
+	return drizzle(client, {
+		schema,
+	});
+}
+
+let db: Database | undefined;
+
+export function useDb(event: H3Event): Database {
+	if (db) {
+		return db;
+	}
+
+	// Cloudflare Pages / Production
+	const hyperdriveUrl =
+		event.context.cloudflare?.env?.HYPERDRIVE?.connectionString;
+
+	// Local development
+	const databaseUrl = process.env.DATABASE_URL;
+
+	const connectionString = hyperdriveUrl ?? databaseUrl;
+
+	if (!connectionString) {
+		throw new Error(
+			"No database connection found (HYPERDRIVE or DATABASE_URL)",
+		);
+	}
+
+	db = createDb(connectionString);
+
+	return db;
+}

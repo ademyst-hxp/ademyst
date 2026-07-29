@@ -1,6 +1,6 @@
 import { createError, readBody } from "h3";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { posts } from "#server/db/schema/interactions";
 import { generateHexId } from "#server/utils/ids";
 
@@ -14,6 +14,8 @@ import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const identity = await requireAuth(event, { min_level: 2 });
 
 	const quotedPostId = normalizeId(event.context.params?.id);

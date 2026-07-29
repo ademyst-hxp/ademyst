@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { accounts, sessions } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
@@ -23,6 +23,8 @@ function normalizePassword(value: unknown): string | null {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 
 	const email = normalizeEmail(body?.email);

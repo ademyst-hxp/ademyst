@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { setCookie } from "h3";
 
-import { db } from "#server/db";
+import { useDb } from "#server/db";
 import { accounts, sessions } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
 import { appearance_settings, privacy_settings } from "#server/db/schema/settings";
@@ -51,6 +51,8 @@ function normalizeOptionalString(value: unknown): string | null {
 }
 
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const body = await readBody(event);
 
 	const email = normalizeEmail(body?.email);
