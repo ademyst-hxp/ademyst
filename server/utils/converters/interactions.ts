@@ -306,6 +306,102 @@ export async function retrieveCleanStatus(
 	};
 }
 
+export async function retrieveSeveralCleanStatuses(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	dbStatuses: DbStatus[],
+): Promise<Status[]> {
+	const db = useDb(event);
+
+	if (dbStatuses.length === 0) {
+		return [];
+	}
+
+	const authorIds = [...new Set(dbStatuses.map((s) => s.profileId))];
+
+	// Auteurs
+	const dbAuthors = await db
+		.select()
+		.from(profiles)
+		.where(inArray(profiles.id, authorIds));
+
+	const authorsList = await retrieveSeveralCleanProfiles(
+		event,
+		identity,
+		dbAuthors,
+	);
+
+	const authors: Record<string, Profile> = {};
+
+	for (const author of authorsList) {
+		authors[author.id] = author;
+	}
+
+	// Relations & confidentialité
+	const allRelationships = await getSeveralRelationshipStatus(
+		event,
+		identity,
+		dbAuthors,
+	);
+
+	const allPrivacy = await getSeveralPrivacySettings(event, dbAuthors);
+
+	// Images
+	const imageIds = [
+		...new Set(
+			dbStatuses
+				.map((status) => status.image)
+				.filter((id): id is string => id !== null),
+		),
+	];
+
+	const dbImages =
+		imageIds.length > 0
+			? await db
+					.select()
+					.from(attachments)
+					.where(inArray(attachments.id, imageIds))
+			: [];
+
+	const images = new Map(dbImages.map((image) => [image.id, image]));
+
+	return dbStatuses.map((status) => {
+		const author = authors[status.profileId];
+
+		if (!author) {
+			throw new Error("Author not found");
+		}
+
+		const relationship = allRelationships[author.id]!;
+		const privacy = allPrivacy[author.id]!;
+
+		const access = canAccessEntity(
+			privacy,
+			relationship,
+			status.visibility,
+		);
+
+		const shouldTruncate = !access;
+
+		const image = status.image ? (images.get(status.image) ?? null) : null;
+
+		return {
+			id: status.id,
+			profile: author,
+			content: shouldTruncate ? "" : status.content,
+			image: image
+				? convertAttachment(image, {
+						truncate: shouldTruncate,
+					})
+				: null,
+			color: status.color,
+			textColor: status.textColor,
+			visibility: status.visibility,
+			createdAt: status.createdAt,
+		};
+	});
+}
+
 export function convertStatusReaction(
 	reaction: DbStatusReaction,
 ): StatusReaction {
