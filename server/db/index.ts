@@ -28,11 +28,15 @@ function createDb(connectionString: string) {
 	});
 }
 
-let db: Database | undefined;
+// Cloudflare Workers can't reuse I/O objects (sockets) across requests, so the
+// db client must be created fresh per request instead of cached at module scope.
+const dbByEvent = new WeakMap<H3Event, Database>();
 
 export function useDb(event: H3Event): Database {
-	if (db) {
-		return db;
+	const cached = dbByEvent.get(event);
+
+	if (cached) {
+		return cached;
 	}
 
 	// Cloudflare Pages / Production
@@ -45,23 +49,14 @@ export function useDb(event: H3Event): Database {
 	const connectionString = hyperdriveUrl ?? databaseUrl;
 
 	if (!connectionString) {
-		console.error(
-			"[db] No connection string found.",
-			"cloudflare context present:",
-			Boolean(event.context.cloudflare),
-			"HYPERDRIVE binding present:",
-			Boolean(event.context.cloudflare?.env?.HYPERDRIVE),
-			"DATABASE_URL set:",
-			Boolean(databaseUrl),
-		);
 		throw new Error(
 			"No database connection found (HYPERDRIVE or DATABASE_URL)",
 		);
 	}
 
-	console.log("[db] Using", hyperdriveUrl ? "HYPERDRIVE" : "DATABASE_URL");
+	const db = createDb(connectionString);
 
-	db = createDb(connectionString);
+	dbByEvent.set(event, db);
 
 	return db;
 }
