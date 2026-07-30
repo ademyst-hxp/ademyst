@@ -19,7 +19,7 @@ export const requireAuth = async (
 		});
 	}
 
-	const user = await getUser(identity);
+	const user = await getUser(event, identity);
 
 	if (!user) {
 		throw createError({
