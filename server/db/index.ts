@@ -14,7 +14,7 @@ const schema = {
 	...relationsSchema,
 };
 
-type Database = ReturnType<typeof createDb>;
+type Database = ReturnType<typeof createDb>["db"];
 
 function createDb(connectionString: string) {
 	const client = postgres(connectionString, {
@@ -23,9 +23,12 @@ function createDb(connectionString: string) {
 		fetch_types: false,
 	});
 
-	return drizzle(client, {
-		schema,
-	});
+	return {
+		client,
+		db: drizzle(client, {
+			schema,
+		}),
+	};
 }
 
 // Cloudflare Workers can't reuse I/O objects (sockets) across requests, so the
@@ -54,7 +57,12 @@ export function useDb(event: H3Event): Database {
 		);
 	}
 
-	const db = createDb(connectionString);
+	const { client, db } = createDb(connectionString);
+
+	// Release the connection once this request's queries are done, instead of
+	// leaking it — otherwise repeated requests exhaust Hyperdrive's pool since
+	// each request opens its own fresh connection (see WeakMap comment above).
+	event.waitUntil(client.end());
 
 	dbByEvent.set(event, db);
 
