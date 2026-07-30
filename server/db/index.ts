@@ -47,18 +47,14 @@ export function useDb(event: H3Event): Database {
 		return cached;
 	}
 
-	// Cloudflare Pages / Production
-	const hyperdriveUrl =
-		event.context.cloudflare?.env?.HYPERDRIVE?.connectionString;
-
 	// Local development
 	const databaseUrl = process.env.DATABASE_URL;
 
-	const connectionString = hyperdriveUrl ?? databaseUrl;
+	const connectionString = databaseUrl;
 
 	if (!connectionString) {
 		throw new Error(
-			"No database connection found (HYPERDRIVE or DATABASE_URL)",
+			"No database connection found (DATABASE_URL)",
 		);
 	}
 
