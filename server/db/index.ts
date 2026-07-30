@@ -19,6 +19,8 @@ type Database = ReturnType<typeof createDb>;
 function createDb(connectionString: string) {
 	const client = postgres(connectionString, {
 		prepare: false,
+		max: 5,
+		fetch_types: false,
 	});
 
 	return drizzle(client, {
@@ -43,10 +45,21 @@ export function useDb(event: H3Event): Database {
 	const connectionString = hyperdriveUrl ?? databaseUrl;
 
 	if (!connectionString) {
+		console.error(
+			"[db] No connection string found.",
+			"cloudflare context present:",
+			Boolean(event.context.cloudflare),
+			"HYPERDRIVE binding present:",
+			Boolean(event.context.cloudflare?.env?.HYPERDRIVE),
+			"DATABASE_URL set:",
+			Boolean(databaseUrl),
+		);
 		throw new Error(
 			"No database connection found (HYPERDRIVE or DATABASE_URL)",
 		);
 	}
+
+	console.log("[db] Using", hyperdriveUrl ? "HYPERDRIVE" : "DATABASE_URL");
 
 	db = createDb(connectionString);
 
