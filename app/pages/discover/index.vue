@@ -10,11 +10,22 @@ import {
 	UserIcon,
 	PaperAirplaneIcon,
 	NoSymbolIcon,
+	ChatBubbleBottomCenterTextIcon,
+	ArrowPathIcon,
 } from "@heroicons/vue/24/solid";
+
+import {
+	GlobeAltIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
+	HeartIcon,
+	EyeSlashIcon,
+} from "@heroicons/vue/24/outline";
 
 import type { Whisper } from "~~/shared/models/interactions";
 import Popup from "~/components/base/Popup.vue";
-import { W } from "vue-router/dist/useApi-D6ckOsFy.js";
+
+const { $api } = useNuxtApp();
 
 const { session, refresh: refreshSession } = useAuthSession();
 const { whispers, suggestions, hits, following, users, refresh } = useFeed();
@@ -54,13 +65,42 @@ useHead({
 const tab = ref<"suggest" | "following" | "hits">("suggest");
 const focusedWhisper = ref<Whisper | null>(null);
 
-const whisperColors = ref<{ text: string; background: string }[]>([
-	{ text: "#ffffff", background: "#000000" },
-	{ text: "#000000", background: "#ffffff" },
-	{ text: "#ff0000", background: "#00ff00" },
-	{ text: "#00ff00", background: "#0000ff" },
-	{ text: "#0000ff", background: "#ff00ff" },
+const isVisibilityMenuOpen = ref(false);
+const visibilityOptions = ref({
+	outside: {
+		label: "Essai",
+		description: "Tout le monde sauf vos abonnés",
+		icon: RocketLaunchIcon,
+	},
+	everyone: {
+		label: "Tout le monde",
+		icon: GlobeAltIcon,
+	},
+	followers: {
+		label: "Abonnés",
+		icon: UserGroupIcon,
+	},
+	friends: {
+		label: "Amis",
+		icon: HeartIcon,
+	},
+	me: {
+		label: "Privé",
+		icon: EyeSlashIcon,
+	},
+});
+
+const whisperColors = ref<{ background: string; text: string }[]>([
+	{ background: "#fbd1d1", text: "#eb3030" },
+	{ background: "#ffeacf", text: "#ffa732" },
+	{ background: "#def8ea", text: "#2ed07c" },
+	{ background: "#dbf7f8", text: "#29ced2" },
+	{ background: "#d8e0ff", text: "#2757ff" },
+	{ background: "#f2d8ff", text: "#b627ff" },
+	{ background: "#ffd8fb", text: "#ff27e8" },
 ]);
+
+const revertColors = ref<boolean>(false);
 
 const editingWhisper = ref<boolean>(false);
 
@@ -74,6 +114,50 @@ const newWhisper = ref<Whisper>({
 	visibility: "everyone",
 	createdAt: new Date(),
 });
+
+const handleNewWhisper = async () => {
+	if (!newWhisper.value.content.trim()) return;
+	if (newWhisper.value.content.length > 200) return;
+
+	await $api("/whispers/new", {
+		method: "POST",
+		body: {
+			content: newWhisper.value.content,
+			color: newWhisper.value.color,
+			textColor: newWhisper.value.textColor,
+			image: newWhisper.value.image,
+			visibility: newWhisper.value.visibility,
+		},
+	});
+
+	newWhisper.value.content = "";
+	newWhisper.value.color = null;
+	newWhisper.value.textColor = null;
+	newWhisper.value.image = null;
+	newWhisper.value.visibility = "everyone";
+
+	await refresh();
+};
+
+watch(
+	() => editingWhisper,
+	(newVal) => {
+		if (newVal.value === true) {
+			focusedWhisper.value = null;
+		}
+	},
+);
+
+watch(
+	() => focusedWhisper,
+	(newVal) => {
+		console.log("Focused whisper changed:", newVal.value?.id);
+
+		if (newVal.value) {
+			editingWhisper.value = false;
+		}
+	},
+);
 </script>
 <template>
 	<div class="md:flex">
@@ -84,9 +168,9 @@ const newWhisper = ref<Whisper>({
 			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
 		>
 			<header class="flex flex-col gap-4">
-				<h2 class="text-2xl font-bold px-8">Mises à jour récentes</h2>
+				<h2 class="text-2xl font-bold px-8">Pensées récentes</h2>
 				<div
-					class="flex justify-start items-stretch gap-4 rounded-3xl overflow-x-auto scrollbar-none w-full h-24"
+					class="flex justify-start items-stretch gap-2 rounded-3xl overflow-x-auto scrollbar-none w-full h-24 sm:gap-4"
 				>
 					<div
 						class="shrink-0 flex items-center justify-center bg-surface text-surface-text-muted border border-dashed border-surface-border rounded-3xl w-36 p-4 md:w-48 md:p-8 cursor-pointer transition-all duration-150 hover:scale-98"
@@ -101,7 +185,11 @@ const newWhisper = ref<Whisper>({
 						:data="whisper"
 						minified
 						class="h-full"
-						@click="focusedWhisper = whisper"
+						@click="
+							() => {
+								focusedWhisper = whisper;
+							}
+						"
 					/>
 				</div>
 				<TabBar
@@ -215,25 +303,129 @@ const newWhisper = ref<Whisper>({
 		@close="editingWhisper = false"
 		title="Publier une pensée"
 	>
+		<h2 class="text-xl font-bold">Exprimer une pensée</h2>
 		<WhisperBox
 			:key="'whisper-' + newWhisper.id + '-edit'"
 			:data="newWhisper"
 			editable
-		/>
-		<div class="grid grid-cols-6 gap-2 w-full max-w-lg">
+		>
+			<template #actions>
+				<div
+					class="cursor-pointer flex items-center gap-1 text-surface-text hover:underline"
+					:style="{ color: newWhisper.textColor || undefined }"
+					@click="isVisibilityMenuOpen = true"
+				>
+					<Component
+						:is="visibilityOptions[newWhisper.visibility].icon"
+						class="w-6 h-6"
+					/>
+					<span>
+						{{ visibilityOptions[newWhisper.visibility].label }}
+					</span>
+				</div>
+				<div class="grow"></div>
+				<div
+					class="cursor-pointer flex items-center gap-1 text-surface-text hover:underline"
+					:style="{ color: newWhisper.textColor || undefined }"
+					@click="handleNewWhisper"
+				>
+					<PaperAirplaneIcon class="w-6 h-6" />
+				</div>
+			</template>
+		</WhisperBox>
+		<div class="flex items-center gap-2 w-full max-w-lg px-8 py-1 overflow-x-auto scrollbar-none">
+			<div
+				key="whisper-color-default"
+				class="shrink-0 flex items-center justify-center bg-surface text-surface-text h-10 p-2.5 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
+				:style="{
+					backgroundColor: revertColors ? '#102030' : undefined,
+					color: revertColors ? '#ffffff' : undefined,
+				}"
+				@click="() => revertColors = !revertColors"
+				"
+			>
+				<ArrowPathIcon class="w-full h-full" />
+			</div>
+			<div
+				key="whisper-color-default"
+				class="shrink-0 flex items-center justify-center bg-surface text-surface-text h-10 p-2 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
+				:style="{
+					backgroundColor: revertColors ? '#102030' : undefined,
+					color: revertColors ? '#ffffff' : undefined,
+				}"
+				@click="
+					newWhisper.color = revertColors ? '#102030' : null;
+					newWhisper.textColor = revertColors ? '#ffffff' : null;
+				"
+			>
+				<ChatBubbleBottomCenterTextIcon class="w-full h-full" />
+			</div>
 			<div
 				v-for="color in whisperColors"
 				:key="'whisper-color-' + color.text + '-' + color.background"
-				class="w-full aspect-square rounded-full cursor-pointer transition-all duration-150 hover:scale-105"
+				class="shrink-0 flex items-center justify-center h-10 p-2 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
 				:style="{
-					backgroundColor: color.background,
-					border: (newWhisper?.color === color.background) ? '4px solid ' + color.text : 'none',
+					backgroundColor: revertColors
+						? color.text
+						: color.background,
+					color: revertColors ? color.background : color.text,
 				}"
 				@click="
-					newWhisper!.color = color.background;
-					newWhisper!.textColor = color.text;
+					newWhisper.color = revertColors
+						? color.text
+						: color.background;
+					newWhisper.textColor = revertColors
+						? color.background
+						: color.text;
 				"
-			></div>
+			>
+				<ChatBubbleBottomCenterTextIcon class="w-full h-full" />
+			</div>
 		</div>
 	</Popup>
+
+	<!-- Menu de visibilité -->
+	<Menu
+		v-if="isVisibilityMenuOpen"
+		@close="isVisibilityMenuOpen = false"
+		:title="'Visibilité de votre pensée'"
+		:actions="[
+			{
+				label: 'Essai',
+				description: 'Tout le monde sauf vos abonnés',
+				icon: RocketLaunchIcon,
+				handler: () => {
+					newWhisper.visibility = 'outside';
+				},
+			},
+			{
+				label: 'Tout le monde',
+				icon: GlobeAltIcon,
+				handler: () => {
+					newWhisper.visibility = 'everyone';
+				},
+			},
+			{
+				label: 'Abonnés',
+				icon: UserGroupIcon,
+				handler: () => {
+					newWhisper.visibility = 'followers';
+				},
+			},
+			{
+				label: 'Amis',
+				icon: HeartIcon,
+				handler: () => {
+					newWhisper.visibility = 'friends';
+				},
+			},
+			{
+				label: 'Privé',
+				icon: EyeSlashIcon,
+				handler: () => {
+					newWhisper.visibility = 'me';
+				},
+			},
+		]"
+	/>
 </template>

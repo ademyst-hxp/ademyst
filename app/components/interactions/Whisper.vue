@@ -10,6 +10,10 @@ const props = defineProps<{
 	minified?: boolean;
 	editable?: boolean;
 }>();
+
+const slots = defineSlots<{
+	actions: () => void;
+}>();
 </script>
 <template>
 	<Box
@@ -35,10 +39,20 @@ const props = defineProps<{
 						`@${data.profile.name}` ||
 						"@ghost"
 					}}
+					<span v-if="!minified">
+						|
+						{{
+							new Date(data.createdAt).toLocaleTimeString("fr-FR", {
+								hour: "2-digit",
+								minute: "2-digit",
+							})
+						}}</span
+					>
 				</h3>
 				<textarea
 					v-if="editable"
 					v-model="data.content"
+					placeholder="Exprimez-vous..."
 					class="w-full bg-transparent resize-none outline-none"
 					:class="
 						minified ? 'break-all wrap-anywhere line-clamp-1' : ''
@@ -54,6 +68,9 @@ const props = defineProps<{
 					{{ data.content }}
 				</p>
 			</div>
+		</div>
+		<div v-if="!minified && slots.actions" class="flex items-center gap-2">
+			<slot name="actions" />
 		</div>
 	</Box>
 </template>

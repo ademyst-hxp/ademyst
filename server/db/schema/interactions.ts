@@ -105,7 +105,7 @@ export const whisperVisibilityEnum = pgEnum("whisper_visibility", [
 ]);
 
 export const whispers = pgTable("whispers", {
-	id: uuid("id").defaultRandom().primaryKey(),
+	id: varchar("id", { length: 10 }).primaryKey(),
 
 	profileId: varchar("profile_id", { length: 10 })
 		.notNull()
@@ -121,14 +121,16 @@ export const whispers = pgTable("whispers", {
 		.default("everyone"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	check("whispers_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
+]).enableRLS();
 
 export type Whisper = typeof whispers.$inferSelect;
 
 export const whisperReactions = pgTable("whisper_reactions", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
-	whisperId: uuid("whisper_id")
+	whisperId: varchar("whisper_id", { length: 10 })
 		.notNull()
 		.references(() => whispers.id, { onDelete: "cascade" }),
 

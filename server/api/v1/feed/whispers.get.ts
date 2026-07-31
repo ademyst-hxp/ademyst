@@ -1,10 +1,10 @@
-import { desc } from "drizzle-orm/sql/expressions/select";
+import { desc, gt } from "drizzle-orm";
 
 import { useDb } from "#server/db";
 import { whispers } from "#server/db/schema/interactions";
 
 import { requireAuth } from "#server/utils/middleware/auth";
-import { retrieveCleanWhisper } from "#server/utils/converters/interactions";
+import { retrieveSeveralCleanWhispers } from "#server/utils/converters/interactions";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -19,14 +19,20 @@ export default defineEventHandler(async (event) => {
 	const rawWhispers = await db
 		.select()
 		.from(whispers)
+		.where(
+			gt(
+				whispers.createdAt,
+				new Date(new Date().getTime() - 1000 * 60 * 60 * 24),
+			),
+		)
 		.orderBy(desc(whispers.createdAt))
 		.limit(limit)
 		.offset(offset);
 
-	const resolvedWhispers = await Promise.all(
-		rawWhispers.map(async (whisper) => {
-			return await retrieveCleanWhisper(event, identity, whisper);
-		}),
+	const resolvedWhispers = await retrieveSeveralCleanWhispers(
+		event,
+		identity,
+		rawWhispers,
 	);
 
 	const filteredWhispers = resolvedWhispers.filter(

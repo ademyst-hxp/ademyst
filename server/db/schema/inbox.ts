@@ -44,7 +44,7 @@ export const notifications = pgTable("notifications", {
 		onDelete: "cascade",
 	}),
 
-	whisperId: uuid("whisper_id").references(() => whispers.id, {
+	whisperId: varchar("whisper_id", { length: 10 }).references(() => whispers.id, {
 		onDelete: "cascade",
 	}),
 

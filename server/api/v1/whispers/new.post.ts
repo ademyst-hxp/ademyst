@@ -20,6 +20,9 @@ export default defineEventHandler(async (event) => {
 	const body = await readBody(event);
 	const content = normalizeOptionalText(body?.content) ?? "";
 	const visibility = normalizeVisibility(body?.visibility) ?? "everyone";
+	const textColor = body?.textColor ?? null;
+	const color = body?.color ?? null;
+
 	const id = generateHexId();
 
 	const [createdWhisper] = await db
@@ -29,6 +32,8 @@ export default defineEventHandler(async (event) => {
 			profileId: identity.profileId,
 			content,
 			visibility,
+			textColor,
+			color,
 		})
 		.returning();
 

@@ -67,7 +67,7 @@ export const whisperReports = pgTable("whisper_reports", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "restrict" }),
 
-	reportedWhisperId: uuid("reported_whisper_id")
+	reportedWhisperId: varchar("reported_whisper_id", { length: 10 })
 		.notNull()
 		.references(() => whispers.id, { onDelete: "restrict" }),
 
