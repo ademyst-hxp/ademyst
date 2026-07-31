@@ -201,7 +201,7 @@ const tab = ref<string>("posts");
 				<TabBar
 					:tabs="[
 						{ name: 'Publications', value: 'posts' },
-						{ name: 'Status', value: 'status' },
+						{ name: 'Pensées', value: 'whispers' },
 					]"
 					v-model="tab"
 				/>

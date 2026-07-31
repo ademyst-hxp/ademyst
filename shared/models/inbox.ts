@@ -1,4 +1,4 @@
-import type { Post, Status } from "./interactions";
+import type { Post, Whisper } from "./interactions";
 import type { Profile } from "./profiles";
 
 export type NotificationType =
@@ -8,15 +8,15 @@ export type NotificationType =
 	| "mention"
 	| "reply"
 	| "reaction"
-	| "status_update"
-	| "status_mention"
-	| "status_reaction";
+	| "whisper_update"
+	| "whisper_mention"
+	| "whisper_reaction";
 
 export type Notification = {
 	id: string;
 	issuer: Profile | null;
 	post: Post | null;
-	status: Status | null;
+	whisper: Whisper | null;
 	type: NotificationType;
 	read: boolean;
 	createdAt: Date;

@@ -96,7 +96,7 @@ export type PostFlag = typeof postsFlags.$inferSelect;
 
 /************************************************/
 
-export const statusVisibilityEnum = pgEnum("status_visibility", [
+export const whisperVisibilityEnum = pgEnum("whisper_visibility", [
 	"outside",
 	"everyone",
 	"followers",
@@ -104,7 +104,7 @@ export const statusVisibilityEnum = pgEnum("status_visibility", [
 	"me",
 ]);
 
-export const statuses = pgTable("statuses", {
+export const whispers = pgTable("whispers", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	profileId: varchar("profile_id", { length: 10 })
@@ -113,27 +113,27 @@ export const statuses = pgTable("statuses", {
 
 	content: text("content").notNull(),
 	image: text("image"), // URL to the image
-	color: varchar("color", { length: 7 }), // Hex code for the status color
+	color: varchar("color", { length: 7 }), // Hex code for the whisper color
 
 	textColor: varchar("text_color", { length: 7 })
 		.notNull()
 		.default("#ffffff"), // Hex code for the text color
 
-	visibility: statusVisibilityEnum("visibility")
+	visibility: whisperVisibilityEnum("visibility")
 		.notNull()
 		.default("everyone"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export type Status = typeof statuses.$inferSelect;
+export type Whisper = typeof whispers.$inferSelect;
 
-export const statusReactions = pgTable("status_reactions", {
+export const whisperReactions = pgTable("whisper_reactions", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
-	statusId: uuid("status_id")
+	whisperId: uuid("whisper_id")
 		.notNull()
-		.references(() => statuses.id, { onDelete: "cascade" }),
+		.references(() => whispers.id, { onDelete: "cascade" }),
 
 	profileId: varchar("profile_id", { length: 10 })
 		.notNull()
@@ -144,4 +144,4 @@ export const statusReactions = pgTable("status_reactions", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export type StatusReaction = typeof statusReactions.$inferSelect;
+export type WhisperReaction = typeof whisperReactions.$inferSelect;

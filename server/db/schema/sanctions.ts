@@ -1,7 +1,7 @@
 import { pgTable, uuid, timestamp, text, pgEnum } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
-import { profile_reports, post_reports, status_reports } from "./reports";
+import { profile_reports, post_reports, whisper_reports } from "./reports";
 
 export const sanctionTypeEnum = pgEnum("sanction_type", [
 	"ban", // niveau 0
@@ -35,8 +35,8 @@ export const sanctions = pgTable("sanctions", {
 	postReportId: uuid("post_report_id").references(() => post_reports.id, {
 		onDelete: "set null",
 	}),
-	statusReportId: uuid("status_report_id").references(
-		() => status_reports.id,
+	whisperReportId: uuid("whisper_report_id").references(
+		() => whisper_reports.id,
 		{ onDelete: "set null" },
 	),
 

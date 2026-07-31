@@ -18,7 +18,7 @@ export type PostFlagType =
 	| "suspicious"
 	| "suicide";
 
-export type StatusVisibility =
+export type WhisperVisibility =
 	| "outside"
 	| "everyone"
 	| "followers"
@@ -60,20 +60,20 @@ export type PostFlag = {
 	createdAt: Date;
 };
 
-export type Status = {
+export type Whisper = {
 	id: string;
 	profile: Profile;
 	content: string;
 	image: Attachment | null;
 	color: string | null;
 	textColor: string;
-	visibility: StatusVisibility;
+	visibility: WhisperVisibility;
 	createdAt: Date;
 };
 
-export type StatusReaction = {
+export type WhisperReaction = {
 	id: string;
-	statusId: string;
+	whisperId: string;
 	profileId: string;
 	reaction: string;
 	createdAt: Date;

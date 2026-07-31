@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { Status } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
 
 import Box from "../base/Box.vue";
 
 import Avatar from "../profile/Avatar.vue";
 
 const props = defineProps<{
-	data: Status;
+	data: Whisper;
 	minified?: boolean
 }>();
 </script>
 <template>
 	<Box
-		:key="'status-' + data.id"
+		:key="'whisper-' + data.id"
 		:customColor="data.color || undefined"
 		class="shrink-0"
 		:class="minified ? 'w-48 cursor-pointer transition-all duration-150 hover:scale-97' : 'w-full sm:w-lg'"

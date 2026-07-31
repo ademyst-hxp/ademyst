@@ -77,7 +77,7 @@ const tab = ref("posts");
 const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
 		{ name: "Publications", value: "posts" },
-		{ name: "Updates", value: "status" },
+		{ name: "Pensées", value: "whispers" },
 		{ name: "Suivis", value: "follows" },
 		{ name: "Abonnés", value: "followers" },
 	];

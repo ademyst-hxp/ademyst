@@ -1,10 +1,10 @@
-import type { Post, Status } from "~~/shared/models/interactions";
+import type { Post, Whisper } from "~~/shared/models/interactions";
 import type { Profile } from "~~/shared/models/profiles";
 
 export const useFeed = () => {
 	const { $api } = useNuxtApp();
 
-	const statuses = useState<Status[]>("statuses", () => []);
+	const whispers = useState<Whisper[]>("whispers", () => []);
 	const users = useState<Profile[]>("users", () => []);
 
 	const suggestions = useState<Post[]>("suggestions", () => []);
@@ -19,16 +19,16 @@ export const useFeed = () => {
 		error.value = null;
 
 		try {
-			const [statusesResponse, suggestionsResponse, hitsResponse, followingResponse, usersResponse] =
+			const [whispersResponse, suggestionsResponse, hitsResponse, followingResponse, usersResponse] =
 				await Promise.all([
-					$api<{ statuses: Status[] }>("/api/v1/feed/statuses"),
+					$api<{ whispers: Whisper[] }>("/api/v1/feed/whispers"),
 					$api<{ posts: Post[] }>("/api/v1/feed/posts/suggestions"),
 					$api<{ posts: Post[] }>("/api/v1/feed/posts/hits"),
 					$api<{ posts: Post[] }>("/api/v1/feed/posts/following"),
 					$api<{ users: Profile[] }>("/api/v1/feed/users"),
 				]);
 
-			statuses.value = statusesResponse.statuses;
+			whispers.value = whispersResponse.whispers;
 			suggestions.value = suggestionsResponse.posts;
 			hits.value = hitsResponse.posts;
 			following.value = followingResponse.posts;
@@ -41,7 +41,7 @@ export const useFeed = () => {
 	};
 
 	return {
-		statuses,
+		whispers,
 		suggestions,
 		hits,
 		following,

@@ -7,8 +7,8 @@ import {
 	type Post as DbPost,
 	type PostReaction as DbPostReaction,
 	type PostFlag as DbPostFlag,
-	type Status as DbStatus,
-	type StatusReaction as DbStatusReaction,
+	type Whisper as DbWhisper,
+	type WhisperReaction as DbWhisperReaction,
 	postReactions,
 	postsFlags,
 } from "~~/server/db/schema/interactions";
@@ -22,8 +22,8 @@ import type {
 	PostFlag,
 	PostReaction,
 	PostReactionType,
-	Status,
-	StatusReaction,
+	Whisper,
+	WhisperReaction,
 } from "~~/shared/models/interactions";
 
 import { Profile } from "~~/shared/models/profiles";
@@ -256,15 +256,15 @@ export function convertPostFlag(flag: DbPostFlag): PostFlag {
 	return flag;
 }
 
-export async function retrieveCleanStatus(
+export async function retrieveCleanWhisper(
 	event: H3Event,
 	identity: Identity | null | undefined,
-	status: DbStatus,
-): Promise<Status> {
+	whisper: DbWhisper,
+): Promise<Whisper> {
 	const db = useDb(event);
 
 	const author = await db.query.profiles.findFirst({
-		where: (profile, { eq }) => eq(profile.id, status.profileId),
+		where: (profile, { eq }) => eq(profile.id, whisper.profileId),
 	});
 
 	if (!author) {
@@ -278,46 +278,46 @@ export async function retrieveCleanStatus(
 	const access = await canAccessEntity(
 		privacy,
 		relationships,
-		status.visibility,
+		whisper.visibility,
 	);
 
 	const shouldTruncate = !access;
 
-	const image = status.image
+	const image = whisper.image
 		? (
 				await db
 					.select()
 					.from(attachments)
-					.where(eq(attachments.id, status.image))
+					.where(eq(attachments.id, whisper.image))
 			)[0]
 		: null;
 
 	return {
-		id: status.id,
+		id: whisper.id,
 		profile,
-		content: shouldTruncate ? "" : status.content,
+		content: shouldTruncate ? "" : whisper.content,
 		image: image
 			? convertAttachment(image, { truncate: shouldTruncate })
 			: null,
-		color: status.color,
-		textColor: status.textColor,
-		visibility: status.visibility,
-		createdAt: status.createdAt,
+		color: whisper.color,
+		textColor: whisper.textColor,
+		visibility: whisper.visibility,
+		createdAt: whisper.createdAt,
 	};
 }
 
-export async function retrieveSeveralCleanStatuses(
+export async function retrieveSeveralCleanWhispers(
 	event: H3Event,
 	identity: Identity | null | undefined,
-	dbStatuses: DbStatus[],
-): Promise<Status[]> {
+	dbWhispers: DbWhisper[],
+): Promise<Whisper[]> {
 	const db = useDb(event);
 
-	if (dbStatuses.length === 0) {
+	if (dbWhispers.length === 0) {
 		return [];
 	}
 
-	const authorIds = [...new Set(dbStatuses.map((s) => s.profileId))];
+	const authorIds = [...new Set(dbWhispers.map((s) => s.profileId))];
 
 	// Auteurs
 	const dbAuthors = await db
@@ -349,8 +349,8 @@ export async function retrieveSeveralCleanStatuses(
 	// Images
 	const imageIds = [
 		...new Set(
-			dbStatuses
-				.map((status) => status.image)
+			dbWhispers
+				.map((whisper) => whisper.image)
 				.filter((id): id is string => id !== null),
 		),
 	];
@@ -365,8 +365,8 @@ export async function retrieveSeveralCleanStatuses(
 
 	const images = new Map(dbImages.map((image) => [image.id, image]));
 
-	return dbStatuses.map((status) => {
-		const author = authors[status.profileId];
+	return dbWhispers.map((whisper) => {
+		const author = authors[whisper.profileId];
 
 		if (!author) {
 			throw new Error("Author not found");
@@ -378,36 +378,36 @@ export async function retrieveSeveralCleanStatuses(
 		const access = canAccessEntity(
 			privacy,
 			relationship,
-			status.visibility,
+			whisper.visibility,
 		);
 
 		const shouldTruncate = !access;
 
-		const image = status.image ? (images.get(status.image) ?? null) : null;
+		const image = whisper.image ? (images.get(whisper.image) ?? null) : null;
 
 		return {
-			id: status.id,
+			id: whisper.id,
 			profile: author,
-			content: shouldTruncate ? "" : status.content,
+			content: shouldTruncate ? "" : whisper.content,
 			image: image
 				? convertAttachment(image, {
 						truncate: shouldTruncate,
 					})
 				: null,
-			color: status.color,
-			textColor: status.textColor,
-			visibility: status.visibility,
-			createdAt: status.createdAt,
+			color: whisper.color,
+			textColor: whisper.textColor,
+			visibility: whisper.visibility,
+			createdAt: whisper.createdAt,
 		};
 	});
 }
 
-export function convertStatusReaction(
-	reaction: DbStatusReaction,
-): StatusReaction {
+export function convertWhisperReaction(
+	reaction: DbWhisperReaction,
+): WhisperReaction {
 	return {
 		id: reaction.id,
-		statusId: reaction.statusId,
+		whisperId: reaction.whisperId,
 		profileId: reaction.profileId,
 		reaction: reaction.reaction,
 		createdAt: reaction.createdAt,

@@ -10,7 +10,7 @@ import {
 import { accounts } from "./accounts";
 
 import { profiles } from "./profiles";
-import { posts, statuses } from "./interactions";
+import { posts, whispers } from "./interactions";
 
 export const reportStatusEnum = pgEnum("report_status", [
 	"pending",
@@ -60,16 +60,16 @@ export const post_reports = pgTable("post_reports", {
 
 export type PostReport = typeof post_reports.$inferSelect;
 
-export const status_reports = pgTable("status_reports", {
+export const whisper_reports = pgTable("whisper_reports", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	reporterId: uuid("reporter_id")
 		.notNull()
 		.references(() => accounts.id, { onDelete: "restrict" }),
 
-	reportedStatusId: uuid("reported_status_id")
+	reportedWhisperId: uuid("reported_whisper_id")
 		.notNull()
-		.references(() => statuses.id, { onDelete: "restrict" }),
+		.references(() => whispers.id, { onDelete: "restrict" }),
 
 	reason: text("reason").notNull(),
 	details: text("details"),
@@ -78,4 +78,4 @@ export const status_reports = pgTable("status_reports", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export type StatusReport = typeof status_reports.$inferSelect;
+export type WhisperReport = typeof whisper_reports.$inferSelect;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Navbar from "~/components/layout/Navbar.vue";
-import StatusBox from "~/components/interactions/Status.vue";
+import WhisperBox from "~/components/interactions/Whisper.vue";
 import ProfileBox from "~/components/profile/ProfileBox.vue";
 import PostBox from "~/components/interactions/Post.vue";
 
@@ -13,9 +13,9 @@ import {
 	NoSymbolIcon,
 } from "@heroicons/vue/24/solid";
 
-import type { Status } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
 
-const { statuses, suggestions, hits, following, users, refresh } = useFeed();
+const { whispers, suggestions, hits, following, users, refresh } = useFeed();
 const { blockUser } = useRelations();
 
 await refresh();
@@ -49,7 +49,7 @@ useHead({
 });
 
 const tab = ref<"suggest" | "following" | "hits">("suggest");
-const focusedStatus = ref<Status | null>(null);
+const focusedWhisper = ref<Whisper | null>(null);
 </script>
 <template>
 	<div class="md:flex">
@@ -70,13 +70,13 @@ const focusedStatus = ref<Status | null>(null);
 						<PlusCircleIcon class="w-8 h-8" />
 					</div>
 
-					<StatusBox
-						v-for="status in statuses"
-						:key="'status-' + status.id"
-						:data="status"
+					<WhisperBox
+						v-for="whisper in whispers"
+						:key="'whisper-' + whisper.id"
+						:data="whisper"
 						minified
 						class="h-full"
-						@click="focusedStatus = status"
+						@click="focusedWhisper = whisper"
 					/>
 				</div>
 				<TabBar
@@ -128,21 +128,21 @@ const focusedStatus = ref<Status | null>(null);
 		</aside>
 	</div>
 
-	<!-- Focused Status -->
+	<!-- Focused Whisper -->
 	<Menu
-		@close="focusedStatus = null"
-		v-if="focusedStatus"
+		@close="focusedWhisper = null"
+		v-if="focusedWhisper"
 		:title="
-			'Statut de ' +
-			(focusedStatus.profile.displayName ||
-				'@' + focusedStatus.profile.name ||
+			'Pensée de ' +
+			(focusedWhisper.profile.displayName ||
+				'@' + focusedWhisper.profile.name ||
 				'@ghost')
 		"
 		:actions="[
 			{
 				label: 'Voir le profil',
 				icon: UserIcon,
-				handler: '/@' + focusedStatus.profile.name,
+				handler: '/@' + focusedWhisper.profile.name,
 			},
 			{
 				label: 'Envoyer un message',
@@ -152,17 +152,17 @@ const focusedStatus = ref<Status | null>(null);
 			{
 				label:
 					'Bloquer ' +
-					(focusedStatus.profile.displayName ||
-						focusedStatus.profile.name),
+					(focusedWhisper.profile.displayName ||
+						focusedWhisper.profile.name),
 				icon: NoSymbolIcon,
 				danger: true,
-				handler: () => { blockUser(focusedStatus!.profile.id, refresh); focusedStatus = null; },
+				handler: () => { blockUser(focusedWhisper!.profile.id, refresh); focusedWhisper = null; },
 			},
 		]"
 	>
-		<StatusBox
-			:key="'status-' + focusedStatus.id + '-focus'"
-			:data="focusedStatus"
+		<WhisperBox
+			:key="'whisper-' + focusedWhisper.id + '-focus'"
+			:data="focusedWhisper"
 		/>
 	</Menu>
 </template>

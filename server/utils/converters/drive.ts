@@ -15,7 +15,7 @@ export function convertAttachment(
 		id: attachment.id,
 		authorId: attachment.authorId,
 		postId: attachment.postId ?? null,
-		statusId: attachment.statusId ?? null,
+		whisperId: attachment.whisperId ?? null,
 		link: shouldTruncate ? "" : attachment.link,
 		visibility: attachment.visibility,
 		createdAt: attachment.createdAt,

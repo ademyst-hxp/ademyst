@@ -9,7 +9,7 @@ export type Attachment = {
 	id: string;
 	authorId: string;
 	postId: string | null;
-	statusId: string | null;
+	whisperId: string | null;
 	link: string;
 	visibility: AttachmentVisibility;
 	createdAt: Date;

@@ -1,5 +1,5 @@
 import type { Account } from "./accounts";
-import type { Post, Status } from "./interactions";
+import type { Post, Whisper } from "./interactions";
 import type { Profile } from "./profiles";
 
 export type ReportStatus = "pending" | "reviewed" | "rejected";
@@ -24,10 +24,10 @@ export type PostReport = {
 	createdAt: Date;
 };
 
-export type StatusReport = {
+export type WhisperReport = {
 	id: string;
 	reporter: Account;
-	reportedStatus: Status;
+	reportedWhisper: Whisper;
 	reason: string;
 	details: string | null;
 	status: ReportStatus;

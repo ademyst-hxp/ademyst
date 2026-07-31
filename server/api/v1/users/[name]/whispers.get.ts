@@ -3,14 +3,14 @@ import { desc } from "drizzle-orm/sql/expressions/select";
 
 import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
-import { statuses } from "~~/server/db/schema/interactions";
+import { whispers } from "~~/server/db/schema/interactions";
 
 import {
 	getRelationshipStatus,
 } from "~~/server/utils/helpers/privacy";
 
 import { getIdentity } from "#server/utils/auth";
-import { retrieveCleanStatus } from "~~/server/utils/converters/interactions";
+import { retrieveCleanWhisper } from "~~/server/utils/converters/interactions";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -64,28 +64,28 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const dbStatuses = await db
+	const dbWhispers = await db
 		.select()
-		.from(statuses)
-		.where(eq(statuses.profileId, profile.id))
-		.orderBy(desc(statuses.createdAt))
+		.from(whispers)
+		.where(eq(whispers.profileId, profile.id))
+		.orderBy(desc(whispers.createdAt))
 		.limit(limit)
 		.offset(offset);
 
-	const _statuses = await Promise.all(
-		dbStatuses.map(async (status) =>
-			retrieveCleanStatus(
+	const _whispers = await Promise.all(
+		dbWhispers.map(async (whisper) =>
+			retrieveCleanWhisper(
 				event,
 				identity,
-				status,
+				whisper,
 			),
 		),
 	);
 
 	return {
 		status: "ok",
-		statuses: _statuses,
+		whispers: _whispers,
 		next: offset + limit,
-		hasNext: dbStatuses.length === limit,
+		hasNext: dbWhispers.length === limit,
 	};
 });

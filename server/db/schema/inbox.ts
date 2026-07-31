@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
-import { posts, statuses } from "./interactions";
+import { posts, whispers } from "./interactions";
 
 export const notification_type = pgEnum("notification_type", [
 	"follow",
@@ -21,9 +21,9 @@ export const notification_type = pgEnum("notification_type", [
 	"mention",
 	"reply",
 	"reaction",
-	"status_update",
-	"status_mention",
-	"status_reaction",
+	"whisper_update",
+	"whisper_mention",
+	"whisper_reaction",
 ]);
 
 export const notifications = pgTable("notifications", {
@@ -44,7 +44,7 @@ export const notifications = pgTable("notifications", {
 		onDelete: "cascade",
 	}),
 
-	statusId: uuid("status_id").references(() => statuses.id, {
+	whisperId: uuid("whisper_id").references(() => whispers.id, {
 		onDelete: "cascade",
 	}),
 

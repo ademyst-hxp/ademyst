@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
-import { posts, statuses } from "./interactions";
+import { posts, whispers } from "./interactions";
 
 export const attachmentVisibilityEnum = pgEnum("attachment_visibility", [
 	"outside",
@@ -32,7 +32,7 @@ export const attachments = pgTable("attachments", {
 		onDelete: "cascade",
 	}),
 
-	statusId: uuid("status_id").references(() => statuses.id, {
+	whisperId: uuid("whisper_id").references(() => whispers.id, {
 		onDelete: "cascade",
 	}),
 

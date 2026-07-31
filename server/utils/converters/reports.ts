@@ -6,17 +6,17 @@ import { eq, or, and, inArray } from "drizzle-orm";
 import type {
 	ProfileReport as DbProfileReport,
 	PostReport as DbPostReport,
-	StatusReport as DbStatusReport,
+	WhisperReport as DbWhisperReport,
 } from "~~/server/db/schema/reports";
 
 import { profiles } from "~~/server/db/schema/profiles";
 import { accounts } from "~~/server/db/schema/accounts";
-import { posts, statuses } from "~~/server/db/schema/interactions";
+import { posts, whispers } from "~~/server/db/schema/interactions";
 
 import type {
 	ProfileReport,
 	PostReport,
-	StatusReport,
+	WhisperReport,
 } from "~~/shared/models/reports";
 
 import {
@@ -26,8 +26,8 @@ import {
 import {
 	retrieveCleanPost,
 	retrieveSeveralCleanPosts,
-	retrieveCleanStatus,
-	retrieveSeveralCleanStatuses,
+	retrieveCleanWhisper,
+	retrieveSeveralCleanWhispers,
 } from "~~/server/utils/converters/interactions";
 
 import { convertAccount } from "~~/server/utils/converters/accounts";
@@ -406,11 +406,11 @@ export async function retrieveSeveralCleanPostReports(
 
 // ============================================================
 
-export async function retrieveCleanStatusReport(
+export async function retrieveCleanWhisperReport(
 	event: H3Event,
 	identity: Identity | null | undefined,
-	report: DbStatusReport,
-): Promise<StatusReport> {
+	report: DbWhisperReport,
+): Promise<WhisperReport> {
 	const db = useDb(event);
 
 	if (!identity) {
@@ -440,16 +440,16 @@ export async function retrieveCleanStatusReport(
 		});
 	}
 
-	const [reportedStatus] = await db
+	const [reportedWhisper] = await db
 		.select()
-		.from(statuses)
-		.where(eq(statuses.id, report.reportedStatusId))
+		.from(whispers)
+		.where(eq(whispers.id, report.reportedWhisperId))
 		.limit(1);
 
-	if (!reportedStatus) {
+	if (!reportedWhisper) {
 		throw createError({
 			statusCode: 404,
-			statusMessage: "Reported status not found",
+			statusMessage: "Reported whisper not found",
 		});
 	}
 
@@ -469,10 +469,10 @@ export async function retrieveCleanStatusReport(
 	return {
 		id: report.id,
 		reporter: convertAccount(reporter),
-		reportedStatus: await retrieveCleanStatus(
+		reportedWhisper: await retrieveCleanWhisper(
 			event,
 			identity,
-			reportedStatus,
+			reportedWhisper,
 		),
 		reason: report.reason,
 		details: report.details ?? null,
@@ -481,11 +481,11 @@ export async function retrieveCleanStatusReport(
 	};
 }
 
-export async function retrieveSeveralCleanStatusReports(
+export async function retrieveSeveralCleanWhisperReports(
 	event: H3Event,
 	identity: Identity | null | undefined,
-	_reports: DbStatusReport[],
-): Promise<StatusReport[]> {
+	_reports: DbWhisperReport[],
+): Promise<WhisperReport[]> {
 	const db = useDb(event);
 
 	if (!identity) {
@@ -515,20 +515,20 @@ export async function retrieveSeveralCleanStatusReports(
 		});
 	}
 
-	const reportedStatuses = await db
+	const reportedWhispers = await db
 		.select()
-		.from(statuses)
+		.from(whispers)
 		.where(
 			inArray(
-				statuses.id,
-				_reports.map((r) => r.reportedStatusId),
+				whispers.id,
+				_reports.map((r) => r.reportedWhisperId),
 			),
 		);
 
-	if (!reportedStatuses) {
+	if (!reportedWhispers) {
 		throw createError({
 			statusCode: 404,
-			statusMessage: "Reported status not found",
+			statusMessage: "Reported whisper not found",
 		});
 	}
 
@@ -552,21 +552,21 @@ export async function retrieveSeveralCleanStatusReports(
 	const cleanReporters = reporters.map((reporter) =>
 		convertAccount(reporter),
 	);
-	const cleanStatuses = await retrieveSeveralCleanStatuses(
+	const cleanWhispers = await retrieveSeveralCleanWhispers(
 		event,
 		identity,
-		reportedStatuses,
+		reportedWhispers,
 	);
 
-	const statusReports: StatusReport[] = _reports.map((report) => {
-		const reportedStatus = cleanStatuses.find(
-			(s) => s.id === report.reportedStatusId,
+	const whisperReports: WhisperReport[] = _reports.map((report) => {
+		const reportedWhisper = cleanWhispers.find(
+			(s) => s.id === report.reportedWhisperId,
 		);
 
-		if (!reportedStatus) {
+		if (!reportedWhisper) {
 			throw createError({
 				statusCode: 404,
-				statusMessage: "Reported status not found",
+				statusMessage: "Reported whisper not found",
 			});
 		}
 
@@ -582,7 +582,7 @@ export async function retrieveSeveralCleanStatusReports(
 		return {
 			id: report.id,
 			reporter,
-			reportedStatus,
+			reportedWhisper,
 			reason: report.reason,
 			details: report.details ?? null,
 			status: report.status,
@@ -590,5 +590,5 @@ export async function retrieveSeveralCleanStatusReports(
 		};
 	});
 
-	return Promise.all(statusReports);
+	return Promise.all(whisperReports);
 }

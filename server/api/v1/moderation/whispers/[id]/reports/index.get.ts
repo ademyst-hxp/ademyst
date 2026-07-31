@@ -2,7 +2,7 @@ import { H3Event } from "h3";
 
 import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
-import { status_reports } from "~~/server/db/schema/reports";
+import { whisper_reports } from "~~/server/db/schema/reports";
 
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
@@ -13,21 +13,21 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const identity = await requireAuth(event);
 
-	const statusId = normalizeId(event.context.params?.id);
+	const whisperId = normalizeId(event.context.params?.id);
 
-	if (!statusId) {
+	if (!whisperId) {
 		throw createError({
 			statusCode: 400,
-			statusMessage: "Invalid status id",
+			statusMessage: "Invalid whisper id",
 		});
 	}
 
 	const dbReports = await db
 		.select()
-		.from(status_reports)
-		.where(eq(status_reports.reportedStatusId, statusId))
+		.from(whisper_reports)
+		.where(eq(whisper_reports.reportedWhisperId, whisperId))
 
-	const reports = await retrieveSeveralCleanStatusReports(event, identity, dbReports);
+	const reports = await retrieveSeveralCleanWhisperReports(event, identity, dbReports);
 
 	return {
 		status: "ok",

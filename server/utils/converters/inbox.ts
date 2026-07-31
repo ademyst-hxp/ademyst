@@ -4,21 +4,21 @@ import type {
 } from "~~/server/db/schema/inbox";
 import type { Notification, Alert } from "~~/shared/models/inbox";
 import type { Profile } from "~~/shared/models/profiles";
-import type { Post, Status } from "~~/shared/models/interactions";
+import type { Post, Whisper } from "~~/shared/models/interactions";
 
 export function convertNotification(
 	notification: DbNotification,
 	options: {
 		issuer?: Profile | null;
 		post?: Post | null;
-		status?: Status | null;
+		whisper?: Whisper | null;
 	} = {},
 ): Notification {
 	return {
 		id: notification.id,
 		issuer: options.issuer ?? null,
 		post: options.post ?? null,
-		status: options.status ?? null,
+		whisper: options.whisper ?? null,
 		type: notification.type,
 		read: String(notification.read) === "true",
 		createdAt: notification.createdAt,
