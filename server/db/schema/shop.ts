@@ -27,7 +27,7 @@ export const badges = pgTable("badges", {
 	color: varchar("color", { length: 7 }).notNull(), // Hex color code
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Badge = typeof badges.$inferSelect;
 
@@ -40,6 +40,6 @@ export const levels = pgTable("levels", {
 	color: varchar("color", { length: 7 }).notNull(), // Hex color code
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Level = typeof levels.$inferSelect;

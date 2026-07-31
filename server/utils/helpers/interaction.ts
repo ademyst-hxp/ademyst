@@ -4,7 +4,7 @@ import { useDb } from "#server/db";
 import type { H3Event } from "h3";
 
 import { Post, postReactions } from "~~/server/db/schema/interactions";
-import { post_reports } from "~~/server/db/schema/reports";
+import { postReports } from "~~/server/db/schema/reports";
 
 import { Identity } from "../auth";
 
@@ -48,11 +48,11 @@ export const getInteractionStatus = async (
 
 	const [report] = await db
 		.select()
-		.from(post_reports)
+		.from(postReports)
 		.where(
 			and(
-				eq(post_reports.reportedPostId, post.id),
-				eq(post_reports.reporterId, identity.accountId),
+				eq(postReports.reportedPostId, post.id),
+				eq(postReports.reporterId, identity.accountId),
 			),
 		)
 		.limit(1);
@@ -100,11 +100,11 @@ export const getSeveralInteractionStatus = async (
 
 	const reports = await db
 		.select()
-		.from(post_reports)
+		.from(postReports)
 		.where(
 			and(
-				inArray(post_reports.reportedPostId, _posts.map((p) => p.id)),
-				eq(post_reports.reporterId, identity.accountId),
+				inArray(postReports.reportedPostId, _posts.map((p) => p.id)),
+				eq(postReports.reporterId, identity.accountId),
 			),
 		)
 		.limit(1);

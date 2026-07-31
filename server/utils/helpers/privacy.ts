@@ -5,7 +5,7 @@ import type { H3Event } from "h3";
 
 import { blocks, follows, friendships } from "#server/db/schema/relations";
 import { Profile, profiles } from "#server/db/schema/profiles";
-import { privacy_settings, PrivacySettings } from "#server/db/schema/settings";
+import { privacySettings, PrivacySettings } from "#server/db/schema/settings";
 
 import { Identity } from "../auth";
 
@@ -179,8 +179,8 @@ export const getPrivacySettings = async (
 
 	const [privacy] = await db
 		.select()
-		.from(privacy_settings)
-		.where(eq(privacy_settings.accountId, profile.accountId))
+		.from(privacySettings)
+		.where(eq(privacySettings.accountId, profile.accountId))
 		.limit(1);
 
 	return privacy ?? null;
@@ -471,10 +471,10 @@ export const getSeveralPrivacySettings = async (
 
 	const privacy = await db
 		.select()
-		.from(privacy_settings)
+		.from(privacySettings)
 		.where(
 			inArray(
-				privacy_settings.accountId,
+				privacySettings.accountId,
 				_profiles.map((p) => p.accountId),
 			),
 		)

@@ -1,7 +1,7 @@
 import { createError, readBody } from "h3";
 
 import { useDb } from "#server/db";
-import { post_reports } from "#server/db/schema/reports";
+import { postReports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import {
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	await db.insert(post_reports).values({
+	await db.insert(postReports).values({
 		reporterId: identity.profileId,
 		reportedPostId: postId,
 		reason,

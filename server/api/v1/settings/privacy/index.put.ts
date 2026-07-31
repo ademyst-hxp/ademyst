@@ -1,4 +1,4 @@
-import { privacy_settings } from "#server/db/schema/settings";
+import { privacySettings } from "#server/db/schema/settings";
 import type { PrivacySettings, Visibility } from "#shared/models/settings";
 
 import { useDb } from "#server/db";
@@ -47,14 +47,14 @@ export default defineEventHandler(async (event) => {
 
 	let [settings] = await db
 		.select()
-		.from(privacy_settings)
-		.where(eq(privacy_settings.accountId, identity.accountId))
+		.from(privacySettings)
+		.where(eq(privacySettings.accountId, identity.accountId))
 		.limit(1);
 
 	if (!settings) {
 		const defaultSettings = generateDefaultPrivacySettings();
 
-		[settings] = await db.insert(privacy_settings).values({
+		[settings] = await db.insert(privacySettings).values({
 			...defaultSettings,
 			accountId: identity.accountId,
 		}).returning();
@@ -64,12 +64,12 @@ export default defineEventHandler(async (event) => {
 
 	const normalizedSettings = normalizePrivacySettings(body, settings!);
 
-	[settings] = await db.update(privacy_settings)
+	[settings] = await db.update(privacySettings)
 		.set({
 			...normalizedSettings,
 			updatedAt: new Date(),
 		})
-		.where(eq(privacy_settings.accountId, identity.accountId))
+		.where(eq(privacySettings.accountId, identity.accountId))
 		.returning();
 
 	return {

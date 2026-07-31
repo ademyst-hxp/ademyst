@@ -1,4 +1,4 @@
-import { appearance_settings } from "#server/db/schema/settings";
+import { appearanceSettings } from "#server/db/schema/settings";
 import type { AppearanceSettings } from "#shared/models/settings";
 
 import { useDb } from "#server/db";
@@ -24,14 +24,14 @@ export default defineEventHandler(async (event) => {
 
 	const [settings] = await db
 		.select()
-		.from(appearance_settings)
-		.where(eq(appearance_settings.accountId, identity.accountId))
+		.from(appearanceSettings)
+		.where(eq(appearanceSettings.accountId, identity.accountId))
 		.limit(1);
 
 	if (!settings) {
 		const defaultSettings = generateDefaultAppearanceSettings();
 
-		await db.insert(appearance_settings).values({
+		await db.insert(appearanceSettings).values({
 			...defaultSettings,
 			accountId: identity.accountId,
 		});

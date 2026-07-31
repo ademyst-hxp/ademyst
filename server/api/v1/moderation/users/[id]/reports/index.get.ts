@@ -2,7 +2,7 @@ import { H3Event } from "h3";
 
 import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
-import { profile_reports } from "~~/server/db/schema/reports";
+import { profileReports } from "~~/server/db/schema/reports";
 
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
@@ -25,8 +25,8 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const dbReports = await db
 		.select()
-		.from(profile_reports)
-		.where(eq(profile_reports.reportedProfileId, profileId))
+		.from(profileReports)
+		.where(eq(profileReports.reportedProfileId, profileId))
 
 	const reports = await retrieveSeveralCleanProfileReports(event, identity, dbReports);
 

@@ -52,7 +52,7 @@ export const notifications = pgTable("notifications", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Notification = typeof notifications.$inferSelect;
 
@@ -84,6 +84,6 @@ export const alerts = pgTable(
 			foreignColumns: [profiles.id],
 		}).onDelete("cascade"),
 	],
-);
+).enableRLS();
 
 export type Alert = typeof alerts.$inferSelect;

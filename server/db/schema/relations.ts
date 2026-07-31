@@ -14,7 +14,7 @@ export const follows = pgTable("follows", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Follow = typeof follows.$inferSelect;
 
@@ -30,11 +30,11 @@ export const friendships = pgTable("friendships", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Friendship = typeof friendships.$inferSelect;
 
-export const content_subscriptions = pgTable("content_subscriptions", {
+export const contentSubscriptions = pgTable("content_subscriptions", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	subscriberId: varchar("subscriber_id", { length: 10 })
@@ -46,9 +46,9 @@ export const content_subscriptions = pgTable("content_subscriptions", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type ContentSubscription = typeof content_subscriptions.$inferSelect;
+export type ContentSubscription = typeof contentSubscriptions.$inferSelect;
 
 export const requests = pgTable("requests", {
 	id: uuid("id").defaultRandom().primaryKey(),
@@ -62,7 +62,7 @@ export const requests = pgTable("requests", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Request = typeof requests.$inferSelect;
 
@@ -78,6 +78,6 @@ export const blocks = pgTable("blocks", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Block = typeof blocks.$inferSelect;

@@ -1,7 +1,7 @@
 import { createError, readBody } from "h3";
 
 import { useDb } from "#server/db";
-import { whisper_reports } from "#server/db/schema/reports";
+import { whisperReports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import {
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	await db.insert(whisper_reports).values({
+	await db.insert(whisperReports).values({
 		reporterId: identity.profileId,
 		reportedWhisperId: whisperId,
 		reason,

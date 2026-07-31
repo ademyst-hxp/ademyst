@@ -20,7 +20,7 @@ export const reportStatusEnum = pgEnum("report_status", [
 
 export type ReportStatus = (typeof reportStatusEnum.enumValues)[number];
 
-export const profile_reports = pgTable("profile_reports", {
+export const profileReports = pgTable("profile_reports", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	reporterId: uuid("reporter_id")
@@ -36,11 +36,11 @@ export const profile_reports = pgTable("profile_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type ProfileReport = typeof profile_reports.$inferSelect;
+export type ProfileReport = typeof profileReports.$inferSelect;
 
-export const post_reports = pgTable("post_reports", {
+export const postReports = pgTable("post_reports", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	reporterId: uuid("reporter_id")
@@ -56,11 +56,11 @@ export const post_reports = pgTable("post_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type PostReport = typeof post_reports.$inferSelect;
+export type PostReport = typeof postReports.$inferSelect;
 
-export const whisper_reports = pgTable("whisper_reports", {
+export const whisperReports = pgTable("whisper_reports", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	reporterId: uuid("reporter_id")
@@ -76,6 +76,6 @@ export const whisper_reports = pgTable("whisper_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type WhisperReport = typeof whisper_reports.$inferSelect;
+export type WhisperReport = typeof whisperReports.$inferSelect;

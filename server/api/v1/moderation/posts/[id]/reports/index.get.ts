@@ -2,7 +2,7 @@ import { H3Event } from "h3";
 
 import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
-import { post_reports } from "~~/server/db/schema/reports";
+import { postReports } from "~~/server/db/schema/reports";
 
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
@@ -24,8 +24,8 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const dbReports = await db
 		.select()
-		.from(post_reports)
-		.where(eq(post_reports.reportedPostId, postId))
+		.from(postReports)
+		.where(eq(postReports.reportedPostId, postId))
 
 	const reports = await retrieveSeveralCleanPostReports(event, identity, dbReports);
 

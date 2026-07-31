@@ -4,7 +4,7 @@ import { setCookie } from "h3";
 import { useDb } from "#server/db";
 import { accounts, sessions } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
-import { appearance_settings, privacy_settings } from "#server/db/schema/settings";
+import { appearanceSettings, privacySettings } from "#server/db/schema/settings";
 
 import { generateHexId } from "#server/utils/ids";
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
@@ -104,11 +104,11 @@ export default defineEventHandler(async (event) => {
 			.values({ email, passwordHash })
 			.returning({ id: accounts.id, email: accounts.email });
 
-		await tx.insert(appearance_settings).values({
+		await tx.insert(appearanceSettings).values({
 			accountId: account!.id,
 		});
 
-		await tx.insert(privacy_settings).values({
+		await tx.insert(privacySettings).values({
 			accountId: account!.id,
 		});
 

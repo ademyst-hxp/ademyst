@@ -2,7 +2,7 @@ import { H3Event } from "h3";
 
 import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
-import { whisper_reports } from "~~/server/db/schema/reports";
+import { whisperReports } from "~~/server/db/schema/reports";
 
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
@@ -24,8 +24,8 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const dbReports = await db
 		.select()
-		.from(whisper_reports)
-		.where(eq(whisper_reports.reportedWhisperId, whisperId))
+		.from(whisperReports)
+		.where(eq(whisperReports.reportedWhisperId, whisperId))
 
 	const reports = await retrieveSeveralCleanWhisperReports(event, identity, dbReports);
 

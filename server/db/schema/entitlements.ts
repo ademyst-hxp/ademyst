@@ -10,7 +10,7 @@ import {
 import { profiles } from "./profiles";
 import { badges, levels } from "./shop";
 
-export const badges_entitlements = pgTable("badges_entitlements", {
+export const badgesEntitlements = pgTable("badges_entitlements", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	profileId: varchar("profile_id", { length: 10 })
@@ -27,11 +27,11 @@ export const badges_entitlements = pgTable("badges_entitlements", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
-});
+}).enableRLS();
 
-export type BadgeEntitlement = typeof badges_entitlements.$inferSelect;
+export type BadgeEntitlement = typeof badgesEntitlements.$inferSelect;
 
-export const levels_entitlements = pgTable("levels_entitlements", {
+export const levelsEntitlements = pgTable("levels_entitlements", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	profileId: varchar("profile_id", { length: 10 })
@@ -48,6 +48,6 @@ export const levels_entitlements = pgTable("levels_entitlements", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
-});
+}).enableRLS();
 
-export type LevelEntitlement = typeof levels_entitlements.$inferSelect;
+export type LevelEntitlement = typeof levelsEntitlements.$inferSelect;

@@ -46,7 +46,7 @@ export const posts = pgTable(
 
 		check("posts_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
 	],
-);
+).enableRLS();
 
 export type Post = typeof posts.$inferSelect;
 
@@ -66,7 +66,7 @@ export const postReactions = pgTable("post_reactions", {
 	reaction: postsReactionsEnum("reaction").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type PostReaction = typeof postReactions.$inferSelect;
 
@@ -90,7 +90,7 @@ export const postsFlags = pgTable("post_flags", {
 	flag: postsFlagEnum("flag").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type PostFlag = typeof postsFlags.$inferSelect;
 
@@ -114,17 +114,14 @@ export const whispers = pgTable("whispers", {
 	content: text("content").notNull(),
 	image: text("image"), // URL to the image
 	color: varchar("color", { length: 7 }), // Hex code for the whisper color
-
-	textColor: varchar("text_color", { length: 7 })
-		.notNull()
-		.default("#ffffff"), // Hex code for the text color
+	textColor: varchar("text_color", { length: 7 }), // Hex code for the text color
 
 	visibility: whisperVisibilityEnum("visibility")
 		.notNull()
 		.default("everyone"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Whisper = typeof whispers.$inferSelect;
 
@@ -142,6 +139,6 @@ export const whisperReactions = pgTable("whisper_reactions", {
 	reaction: text("reaction").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type WhisperReaction = typeof whisperReactions.$inferSelect;

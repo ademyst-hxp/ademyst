@@ -24,7 +24,7 @@ export const ui_density_enum = pgEnum("ui_density", ["compact", "comfortable", "
 
 export type UiDensity = typeof ui_density_enum.enumValues[number];
 
-export const appearance_settings = pgTable("appearance_settings", {
+export const appearanceSettings = pgTable("appearance_settings", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	accountId: uuid("account_id")
@@ -39,11 +39,11 @@ export const appearance_settings = pgTable("appearance_settings", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type AppearanceSettings = typeof appearance_settings.$inferSelect;
+export type AppearanceSettings = typeof appearanceSettings.$inferSelect;
 
-export const privacy_settings = pgTable("privacy_settings", {
+export const privacySettings = pgTable("privacy_settings", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	accountId: uuid("account_id")
@@ -60,6 +60,6 @@ export const privacy_settings = pgTable("privacy_settings", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
-export type PrivacySettings = typeof privacy_settings.$inferSelect;
+export type PrivacySettings = typeof privacySettings.$inferSelect;

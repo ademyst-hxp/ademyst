@@ -45,7 +45,7 @@ export const profiles = pgTable(
 	(table) => [
 		check("profiles_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
 	],
-);
+).enableRLS();
 
 export type Profile = typeof profiles.$inferSelect;
 
@@ -61,6 +61,6 @@ export const profileLinks = pgTable("profile_links", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type ProfileLink = typeof profileLinks.$inferSelect;

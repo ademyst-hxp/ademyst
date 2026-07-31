@@ -21,7 +21,7 @@ export const accounts = pgTable("accounts", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	confirmedAt: timestamp("confirmed_at"),
-});
+}).enableRLS();
 
 export type Account = typeof accounts.$inferSelect;
 
@@ -39,7 +39,7 @@ export const sessions = pgTable("sessions", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Session = typeof sessions.$inferSelect;
 
@@ -59,7 +59,7 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	usedAt: timestamp("used_at"),
 	revoked: boolean("revoked").default(false).notNull(),
-});
+}).enableRLS();
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 
@@ -82,7 +82,7 @@ export const emailConfirmationTokens = pgTable("email_confirmation_tokens", {
 
 	usedAt: timestamp("used_at"),
 	revoked: boolean("revoked").default(false).notNull(),
-});
+}).enableRLS();
 
 export type EmailConfirmationToken =
 	typeof emailConfirmationTokens.$inferSelect;
@@ -103,7 +103,7 @@ export const accountDeletionTokens = pgTable("account_deletion_tokens", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	usedAt: timestamp("used_at"),
 	revoked: boolean("revoked").default(false).notNull(),
-});
+}).enableRLS();
 
 export type AccountDeletionToken = typeof accountDeletionTokens.$inferSelect;
 
@@ -132,6 +132,6 @@ export const accountModificationHistory = pgTable(
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},
-);
+).enableRLS();
 
 export type AccountModificationHistory = typeof accountModificationHistory.$inferSelect

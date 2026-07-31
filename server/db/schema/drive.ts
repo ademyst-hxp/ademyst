@@ -43,6 +43,6 @@ export const attachments = pgTable("attachments", {
 		.default("everyone"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}).enableRLS();
 
 export type Attachment = typeof attachments.$inferSelect;

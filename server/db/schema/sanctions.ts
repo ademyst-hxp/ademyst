@@ -1,7 +1,7 @@
 import { pgTable, uuid, timestamp, text, pgEnum } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
-import { profile_reports, post_reports, whisper_reports } from "./reports";
+import { profileReports, postReports, whisperReports } from "./reports";
 
 export const sanctionTypeEnum = pgEnum("sanction_type", [
 	"ban", // niveau 0
@@ -29,19 +29,19 @@ export const sanctions = pgTable("sanctions", {
 	details: text("details"),
 
 	profileReportId: uuid("profile_report_id").references(
-		() => profile_reports.id,
+		() => profileReports.id,
 		{ onDelete: "set null" },
 	),
-	postReportId: uuid("post_report_id").references(() => post_reports.id, {
+	postReportId: uuid("post_report_id").references(() => postReports.id, {
 		onDelete: "set null",
 	}),
 	whisperReportId: uuid("whisper_report_id").references(
-		() => whisper_reports.id,
+		() => whisperReports.id,
 		{ onDelete: "set null" },
 	),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
-});
+}).enableRLS();
 
 export type Sanction = typeof sanctions.$inferSelect;
