@@ -66,7 +66,7 @@ export type Whisper = {
 	content: string;
 	image: Attachment | null;
 	color: string | null;
-	textColor: string;
+	textColor: string | null;
 	visibility: WhisperVisibility;
 	createdAt: Date;
 };
