@@ -2,7 +2,11 @@ import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { useDb } from "#server/db";
-import { accountDeletionTokens, accounts } from "#server/db/schema/accounts";
+import {
+	accountDeletionTokens,
+	accountModificationHistory,
+	accounts,
+} from "#server/db/schema/accounts";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -55,6 +59,23 @@ export default defineEventHandler(async (event) => {
 			.where(eq(accountDeletionTokens.id, tokenRow.id));
 
 		await tx.delete(accounts).where(eq(accounts.id, tokenRow.accountId));
+
+		try {
+			const ipAddress = getRequestIP(event) ?? null;
+			const userAgent = getHeader(event, "user-agent") ?? null;
+
+			const safeUserAgent = userAgent ?? "unknown";
+			const safeIp = ipAddress ?? "unknown";
+
+			await tx.insert(accountModificationHistory).values({
+				accountId: tokenRow.accountId,
+				action: "account_deletion",
+				ipAddress: safeIp,
+				userAgent: safeUserAgent,
+			});
+		} catch {
+			// Account deletion already succeeded; notification failures should not fail the request.
+		}
 	});
 
 	return { ok: true };

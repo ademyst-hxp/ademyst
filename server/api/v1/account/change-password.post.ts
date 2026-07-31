@@ -3,7 +3,8 @@ import { randomBytes } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { useDb } from "#server/db";
-import { accounts, passwordResetTokens } from "#server/db/schema/accounts";
+import { accounts, passwordResetTokens, accountModificationHistory } from "#server/db/schema/accounts";
+
 import { hashPassword } from "#server/utils/password";
 
 const TOKEN_BYTES = 32;
@@ -132,6 +133,13 @@ export default defineEventHandler(async (event) => {
 			safeUserAgent,
 			safeIp,
 		);
+
+		await db.insert(accountModificationHistory).values({
+			accountId: account.id,
+			action: "password_change",
+			ipAddress: safeIp,
+			userAgent: safeUserAgent,
+		});
 	} catch {
 		// Password change already succeeded; notification failures should not fail the request.
 	}

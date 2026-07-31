@@ -116,7 +116,7 @@ export const accountActionEnum = pgEnum("account_action", [
 
 export type AccountAction = (typeof accountActionEnum.enumValues)[number];
 
-export const account_modification_history = pgTable(
+export const accountModificationHistory = pgTable(
 	"account_modification_history",
 	{
 		id: uuid("id").defaultRandom().primaryKey(),
@@ -134,4 +134,4 @@ export const account_modification_history = pgTable(
 	},
 );
 
-export type AccountModificationHistory = typeof account_modification_history.$inferSelect
+export type AccountModificationHistory = typeof accountModificationHistory.$inferSelect

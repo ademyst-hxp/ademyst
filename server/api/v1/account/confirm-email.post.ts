@@ -2,7 +2,11 @@ import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { useDb } from "#server/db";
-import { accounts, emailConfirmationTokens } from "#server/db/schema/accounts";
+import {
+	accountModificationHistory,
+	accounts,
+	emailConfirmationTokens,
+} from "#server/db/schema/accounts";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -76,6 +80,23 @@ export default defineEventHandler(async (event) => {
 			.update(emailConfirmationTokens)
 			.set({ usedAt: new Date(), revoked: true })
 			.where(eq(emailConfirmationTokens.id, tokenRow.id));
+
+		try {
+			const ipAddress = getRequestIP(event) ?? null;
+			const userAgent = getHeader(event, "user-agent") ?? null;
+
+			const safeUserAgent = userAgent ?? "unknown";
+			const safeIp = ipAddress ?? "unknown";
+
+			await tx.insert(accountModificationHistory).values({
+				accountId: tokenRow.accountId,
+				action: "email_confirmation",
+				ipAddress: safeIp,
+				userAgent: safeUserAgent,
+			});
+		} catch {
+			// Email confirmation already succeeded; notification failures should not fail the request.
+		}
 
 		return tokenRow.email;
 	});
