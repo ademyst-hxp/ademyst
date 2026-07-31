@@ -342,7 +342,6 @@ watch(
 					color: revertColors ? '#ffffff' : undefined,
 				}"
 				@click="() => revertColors = !revertColors"
-				"
 			>
 				<ArrowPathIcon class="w-full h-full" />
 			</div>

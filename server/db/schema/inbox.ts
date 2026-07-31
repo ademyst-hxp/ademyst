@@ -75,6 +75,9 @@ export const alerts = pgTable(
 			.references(() => profiles.id, { onDelete: "cascade" }),
 
 		type: alert_type("type").notNull(),
+		reason: text("reason").notNull(),
+		details: text("details").notNull(),
+
 		read: boolean("read").notNull().default(false),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 	},

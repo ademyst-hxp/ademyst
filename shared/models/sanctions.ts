@@ -1,6 +1,7 @@
 import type { Account } from "./accounts";
+import type { ProfileReport, PostReport, WhisperReport } from "./reports";
 
-export type SanctionType = "ban" | "mute" | "shadow_ban";
+export type SanctionType = "ban" | "mute" | "shadow_ban" | "warning";
 
 export type Sanction = {
 	id: string;
@@ -11,4 +12,7 @@ export type Sanction = {
 	details: string | null;
 	createdAt: Date;
 	expiresAt: Date | null;
+	profileReport: ProfileReport | null;
+	postReport: PostReport | null;
+	whisperReport: WhisperReport | null;
 };
