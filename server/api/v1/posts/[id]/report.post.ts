@@ -7,7 +7,7 @@ import { normalizeId } from "#server/utils/normalizers/ids";
 import {
 	normalizeOptionalText,
 	normalizeRequiredText,
-} from "#server/utils/normalizers/posts";
+} from "~~/server/utils/normalizers/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
