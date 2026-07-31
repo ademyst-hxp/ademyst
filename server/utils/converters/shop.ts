@@ -9,6 +9,7 @@ export function convertBadge(badge: DbBadge): Badge {
 		id: badge.id,
 		name: badge.name,
 		description: badge.description ?? null,
+		category: badge.category,
 		rarity: badge.rarity,
 		color: badge.color,
 		createdAt: badge.createdAt,
