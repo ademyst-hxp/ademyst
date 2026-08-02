@@ -13,7 +13,7 @@ const root = computed<{
 
 	switch (props.scale) {
 		case "sm":
-			rootClass += " rounded-3xl gap-1 p-4 sm:p-6 sm:gap-2";
+			rootClass += " rounded-3xl gap-1 p-4 sm:p-6 sm:gap-1";
 			break;
 		case "md":
 		default:

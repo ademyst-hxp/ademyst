@@ -7,6 +7,9 @@
 	--color-secondary: var(--clr-secondary);
 	--color-tertiary: var(--clr-tertiary);
 
+	--color-whispers: var(--clr-whispers);
+	--color-whispers-text: var(--clr-whispers-text);
+
 	--color-danger: var(--clr-danger);
 	--color-danger-shaded: var(--clr-danger-shaded);
 

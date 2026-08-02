@@ -5,6 +5,9 @@
 	--clr-secondary: #793cce; /* Dimmed Revolred */
 	--clr-tertiary: #ffffff; /* White */
 
+	--clr-whispers: #C19342; /* Gold */
+	--clr-whispers-text: #0a1921; /* Marine Blue */
+
 	/* INFO PALETTE */
 	--clr-danger: #ff0044;
 	--clr-danger-shaded: #ffb3c7;

@@ -22,6 +22,10 @@ import {
 	EyeSlashIcon,
 } from "@heroicons/vue/24/outline";
 
+import WhisperIcon from "~/assets/whispers.svg";
+import WhisperGoldIcon from "~/assets/whispers-gold.svg";
+import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
+
 import type { Whisper } from "~~/shared/models/interactions";
 import Popup from "~/components/base/Popup.vue";
 
@@ -168,7 +172,9 @@ watch(
 			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
 		>
 			<header class="flex flex-col gap-4">
-				<h2 class="text-2xl font-bold px-8">Pensées récentes</h2>
+				<h2 class="px-8">
+					<WhisperGoldIcon class="text-whispers-text w-auto h-6" />
+				</h2>
 				<div
 					class="flex justify-start items-stretch gap-2 rounded-3xl overflow-x-auto scrollbar-none w-full h-24 sm:gap-4"
 				>
@@ -333,31 +339,31 @@ watch(
 				</div>
 			</template>
 		</WhisperBox>
-		<div class="flex items-center gap-2 w-full max-w-lg px-8 py-1 overflow-x-auto scrollbar-none">
+		<div
+			class="flex items-center gap-2 w-full max-w-lg px-8 py-1 overflow-x-auto scrollbar-none"
+		>
 			<div
 				key="whisper-color-default"
+				class="shrink-0 flex items-center justify-center bg-whispers-text text-whispers h-10 p-2.5 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
+				@click="
+					() => {
+						newWhisper.color = null;
+						newWhisper.textColor = null;
+					}
+				"
+			>
+				<WhisperFeatherIcon class="w-full h-full" />
+			</div>
+			<div
+				key="whisper-color-revert"
 				class="shrink-0 flex items-center justify-center bg-surface text-surface-text h-10 p-2.5 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
 				:style="{
 					backgroundColor: revertColors ? '#102030' : undefined,
 					color: revertColors ? '#ffffff' : undefined,
 				}"
-				@click="() => revertColors = !revertColors"
+				@click="() => (revertColors = !revertColors)"
 			>
 				<ArrowPathIcon class="w-full h-full" />
-			</div>
-			<div
-				key="whisper-color-default"
-				class="shrink-0 flex items-center justify-center bg-surface text-surface-text h-10 p-2 aspect-square rounded-xl cursor-pointer transition-all duration-150 hover:scale-105"
-				:style="{
-					backgroundColor: revertColors ? '#102030' : undefined,
-					color: revertColors ? '#ffffff' : undefined,
-				}"
-				@click="
-					newWhisper.color = revertColors ? '#102030' : null;
-					newWhisper.textColor = revertColors ? '#ffffff' : null;
-				"
-			>
-				<ChatBubbleBottomCenterTextIcon class="w-full h-full" />
 			</div>
 			<div
 				v-for="color in whisperColors"
