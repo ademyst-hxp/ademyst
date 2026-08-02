@@ -157,10 +157,7 @@ const submitNewSanction = async () => {
 		);
 	} catch (error) {
 		console.error(error);
-		throw createError({
-			statusCode: 500,
-			statusMessage: "Failed to create new sanction",
-		});
+		throw error;
 	}
 };
 </script>
@@ -374,7 +371,10 @@ const submitNewSanction = async () => {
 					<h2 class="text-2xl font-bold">Nouvelle sanction</h2>
 				</div>
 				<Box>
-					<form class="flex flex-col gap-4">
+					<form
+						class="flex flex-col gap-4"
+						@submit.prevent="() => {}"
+					>
 						<div class="flex flex-col gap-1">
 							<label for="type" class="font-semibold"
 								>Type de sanction</label

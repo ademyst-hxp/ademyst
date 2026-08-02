@@ -36,10 +36,6 @@ export default defineEventHandler(async (event) => {
 			report_id?: string;
 		};
 
-	const identity = await requireAuth(event, {
-		min_level: ["mute", "warning"].includes(type) ? 6 : 7,
-	});
-
 	const validTypes: SanctionType[] = ["ban", "mute", "shadow_ban", "warning"];
 
 	if (!type || !validTypes.includes(type)) {
@@ -138,6 +134,13 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "User not found",
 		});
 	}
+
+	const identity = await requireAuth(event, {
+		min_level: Math.max(
+			["mute", "warning"].includes(type) ? 6 : 7,
+			(target.level ?? 0) + 1, // Ensure that the moderator's level is higher than the target's level
+		),
+	});
 
 	const [sanction] = await db
 		.insert(sanctions)
