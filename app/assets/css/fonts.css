@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Sansita+Swashed:wght@300..900&display=swap");
+
 @font-face {
 	font-family: "SN Pro";
 	src: url("/fonts/SNPro-VariableFont_wght.ttf") format("truetype");
@@ -18,4 +21,6 @@
 
 :root {
 	--font-sans: "SN Pro", Verdana, sans-serif;
+	--font-serif: "Tiro Bangla", "Times New Roman", serif;
+	--font-whispers: "Sansita Swashed", "Times New Roman", serif;
 }
