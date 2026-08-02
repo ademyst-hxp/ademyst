@@ -80,12 +80,12 @@ useHead(() => {
 		(profile.value?.name ? `@${profile.value.name}` : "Profil");
 
 	return {
-		title: `${profileName} | Beam: Revolved`,
+		title: `${profileName} | Ademyst`,
 		meta: [
 			{
 				name: "description",
 				content:
-					profile.value?.bio ?? `${profileName} sur Beam: Revolved.`,
+					profile.value?.bio ?? `${profileName} sur Ademyst.`,
 			},
 		],
 	};

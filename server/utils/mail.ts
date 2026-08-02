@@ -10,12 +10,12 @@ export async function sendResetPasswordEmail(
 	ipAddress: string,
 ) {
 	await resend.emails.send({
-		from: "Beam <no-reply@beam.ejnalo.me>",
+		from: "Ademyst <no-reply@beam.ejnalo.me>",
 		to: email,
-		subject: "Beam - Réinitialisation de votre mot de passe",
+		subject: "Ademyst - Réinitialisation de votre mot de passe",
 
 		html: `
-			<p>Vous avez demandé une réinitialisation de votre mot de passe pour votre compte Beam.</p>
+			<p>Vous avez demandé une réinitialisation de votre mot de passe pour votre compte Ademyst.</p>
 			<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
 			<p>Cette demande a été faite le ${date.toLocaleString()} depuis ${userAgent} (${ipAddress}).</p>
 
@@ -34,9 +34,9 @@ export async function sendPasswordChangedEmail(
 	ipAddress: string,
 ) {
 	await resend.emails.send({
-		from: "Beam <no-reply@beam.ejnalo.me>",
+		from: "Ademyst <no-reply@beam.ejnalo.me>",
 		to: email,
-		subject: "Beam - Modification de votre mot de passe",
+		subject: "Ademyst - Modification de votre mot de passe",
 
 		html: `
 			<p>Votre mot de passe a été modifié avec succès.</p>
@@ -59,12 +59,12 @@ export async function sendEmailConfirmation(
 	ipAddress: string,
 ) {
 	await resend.emails.send({
-		from: "Beam <no-reply@beam.ejnalo.me>",
+		from: "Ademyst <no-reply@beam.ejnalo.me>",
 		to: email,
-		subject: "Beam - Confirmation de votre adresse e-mail",
+		subject: "Ademyst - Confirmation de votre adresse e-mail",
 
 		html: `
-			<p>Vous avez demandé la confirmation de votre adresse e-mail pour votre compte Beam.</p>
+			<p>Vous avez demandé la confirmation de votre adresse e-mail pour votre compte Ademyst.</p>
 			<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
 			<p>Cette demande a été faite le ${date.toLocaleString()} depuis ${userAgent} (${ipAddress}).</p>
 
@@ -83,12 +83,12 @@ export async function sendEmailModified(
 	ipAddress: string,
 ) {
 	await resend.emails.send({
-		from: "Beam <no-reply@beam.ejnalo.me>",
+		from: "Ademyst <no-reply@beam.ejnalo.me>",
 		to: email,
-		subject: "Beam - Modification de votre adresse e-mail",
+		subject: "Ademyst - Modification de votre adresse e-mail",
 
 		html: `
-			<p>Vous avez demandé la modification de votre adresse e-mail pour votre compte Beam.</p>
+			<p>Vous avez demandé la modification de votre adresse e-mail pour votre compte Ademyst.</p>
 			<p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.</p>
 			<p>Cette demande a été faite le ${date.toLocaleString()} depuis ${userAgent} (${ipAddress}).</p>
 

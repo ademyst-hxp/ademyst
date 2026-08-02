@@ -11,17 +11,17 @@ if (session.value) {
 }
 
 useHead({
-	title: "Beam: Revolved",
+	title: "Ademyst: Démarrez votre aventure",
 	meta: [
 		{
 			name: "description",
 			content:
-				"Démarrez votre aventure avec Revolved, la nouvelle version de Beam, offrant une expérience utilisateur inégalée.",
+				"Démarrez votre aventure avec Ademyst, la nouvelle version de Beam, offrant une expérience utilisateur inégalée.",
 		},
 		{
 			name: "keywords",
 			content:
-				"Beam, Revolved, nouvelle version, expérience utilisateur, démarrage, aventure",
+				"Beam, Ademyst, nouvelle version, expérience utilisateur, démarrage, aventure",
 		},
 		{
 			name: "author",
@@ -36,9 +36,9 @@ useHead({
 </script>
 <template>
 	<header class="flex flex-col justify-center gap-8 h-screen md:items-center max-md:p-8">
-		<h1 class="text-5xl font-bold">Revolved</h1>
+		<h1 class="text-5xl font-bold">Ademyst</h1>
 		<p class="text-xl sm:text-center sm:max-w-xl">
-			Découvrez Revolved, la toute nouvelle version de Beam, conçue pour
+			Découvrez Ademyst, la toute nouvelle version de Beam, conçue pour
 			offrir une expérience inégalée.
 		</p>
 		<nav>

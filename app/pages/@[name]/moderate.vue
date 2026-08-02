@@ -102,7 +102,7 @@ const levelLabel = computed(() => {
 		case 8:
 			return "Haut Gradé";
 		case 9:
-			return "Équipe Beam";
+			return "Équipe Ademyst";
 		default:
 			return "Inconnu";
 	}

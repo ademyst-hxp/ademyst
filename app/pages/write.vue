@@ -26,23 +26,23 @@ if (!session.value) {
 }
 
 definePageMeta({
-	title: "Écrire un post | Beam",
+	title: "Écrire un post | Ademyst",
 	description:
-		"Exprimez-vous et partagez vos idées avec la communauté Beam en écrivant un post.",
+		"Exprimez-vous et partagez vos idées avec la communauté Ademyst en écrivant un post.",
 	middleware: ["auth"],
 });
 
 useHead({
-	title: "Écrire un post | Beam",
+	title: "Écrire un post | Ademyst",
 	meta: [
 		{
 			name: "description",
 			content:
-				"Exprimez-vous et partagez vos idées avec la communauté Beam en écrivant un post.",
+				"Exprimez-vous et partagez vos idées avec la communauté Ademyst en écrivant un post.",
 		},
 		{
 			name: "keywords",
-			content: "Beam, Revolved, Discover",
+			content: "Beam, Ademyst, Discover",
 		},
 		{
 			name: "author",

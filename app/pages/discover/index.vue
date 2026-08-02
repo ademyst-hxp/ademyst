@@ -39,21 +39,21 @@ await refresh();
 await refreshSession();
 
 definePageMeta({
-	title: "Beam: Discover",
-	description: "Découvrez des publications avec Beam Discover !",
+	title: "Ademyst: Discover",
+	description: "Découvrez des publications avec Ademyst Discover !",
 	middleware: ["auth"],
 });
 
 useHead({
-	title: "Beam: Discover",
+	title: "Ademyst: Discover",
 	meta: [
 		{
 			name: "description",
-			content: "Découvrez des publications avec Beam Discover !",
+			content: "Découvrez des publications avec Ademyst Discover !",
 		},
 		{
 			name: "keywords",
-			content: "Beam, Revolved, Discover",
+			content: "Beam, Ademyst, Discover",
 		},
 		{
 			name: "author",
