@@ -37,12 +37,11 @@ const textClass = computed(() =>
 	props.data.textColor ? "text-inherit" : "text-white font-serif",
 );
 </script>
-
 <template>
 	<Box
 		:key="`whisper-${data.id}`"
 		:customColor="data.color || undefined"
-		class="shrink-0 bg-whispers-text text-whispers justify-center"
+		class="shrink-0 bg-whispers-text text-whispers border-2 border-whispers justify-center"
 		:class="
 			minified
 				? 'w-48 cursor-pointer transition-all duration-150 hover:scale-97'
@@ -67,7 +66,10 @@ const textClass = computed(() =>
 		>
 			<Avatar v-if="minified" size="sm" class="shrink-0 mt-1.5" />
 
-			<div class="grow flex flex-col -space-y-1" :class="minified ? '' : 'items-center'">
+			<div
+				class="grow flex flex-col -space-y-1"
+				:class="minified ? '' : 'items-center'"
+			>
 				<h3 v-if="minified" class="opacity-75">
 					{{ author }}
 				</h3>

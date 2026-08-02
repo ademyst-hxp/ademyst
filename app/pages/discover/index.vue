@@ -171,7 +171,7 @@ watch(
 		<section
 			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
 		>
-			<header class="flex flex-col gap-4">
+			<header class="flex flex-col gap-2">
 				<h2 class="px-8">
 					<WhisperGoldIcon class="text-whispers-text w-auto h-6" />
 				</h2>
