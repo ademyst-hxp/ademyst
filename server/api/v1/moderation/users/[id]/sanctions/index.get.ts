@@ -45,10 +45,10 @@ export default defineEventHandler(async (event) => {
 		.orderBy(desc(sanctions.createdAt));
 
 	if (!_sanctions.length) {
-		throw createError({
-			statusCode: 500,
-			statusMessage: "Failed to retrieve sanctions",
-		});
+		return {
+			status: "ok",
+			data: [],
+		};
 	}
 
 	return {

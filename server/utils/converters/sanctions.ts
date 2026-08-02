@@ -131,7 +131,7 @@ export async function retrieveSeveralCleanSanctions(
 		.where(
 			inArray(
 				profileReports.id,
-				_sanctions.map((s) => s.profileReportId || ""),
+				_sanctions.filter((s) => s.profileReportId).map((s) => s.profileReportId!),
 			),
 		);
 
@@ -141,7 +141,7 @@ export async function retrieveSeveralCleanSanctions(
 		.where(
 			inArray(
 				postReports.id,
-				_sanctions.map((s) => s.postReportId || ""),
+				_sanctions.filter((s) => s.postReportId).map((s) => s.postReportId!),
 			),
 		);
 
@@ -151,7 +151,7 @@ export async function retrieveSeveralCleanSanctions(
 		.where(
 			inArray(
 				whisperReports.id,
-				_sanctions.map((s) => s.whisperReportId || ""),
+				_sanctions.filter((s) => s.whisperReportId).map((s) => s.whisperReportId!),
 			),
 		);
 
