@@ -5,7 +5,7 @@ const props = withDefaults(
 	defineProps<{
 		label?: string;
 		icon?: Component;
-		modelValue?: string | number | boolean;
+		modelValue?: string | number | boolean | Date | null;
 		type?: string;
 		size?: "small" | "medium" | "large";
 		placeholder?: string;
@@ -146,6 +146,38 @@ function onEnter(event: KeyboardEvent) {
 			<div class="bg-primary shrink-0 rounded-full p-3"></div>
 		</div>
 		<span class="font-semibold text-muted">{{ label }}</span>
+	</div>
+	<div v-else-if="type == 'textarea'" class="flex flex-col gap-1 text-sm">
+		<span v-if="label" class="text-sm text-muted px-4">
+			{{ label }} <span v-if="required" class="text-danger">*</span>
+		</span>
+		<div class="flex items-center gap-1 text-base" :class="rootClass">
+			<textarea
+				class="grow outline-none h-full resize-none"
+				:value="modelValue as string"
+				:placeholder="placeholder"
+				:disabled="disabled"
+				@input="onInput"
+				@focus="onFocus"
+				@blur="onBlur"
+				@keydown.enter="onEnter"
+			/>
+		</div>
+		<div
+			v-if="missing"
+			class="flex flex-col gap-1 text-sm text-danger px-4"
+		>
+			Ce champ est obligatoire.
+		</div>
+		<div
+			v-if="$slots.error && !valid"
+			class="flex flex-col gap-1 text-sm text-danger px-4"
+		>
+			<slot name="error">Entrée invalide.</slot>
+		</div>
+		<div v-if="$slots.indications" class="flex flex-col gap-1 text-sm px-4">
+			<slot name="indications" />
+		</div>
 	</div>
 	<div v-else class="flex flex-col gap-1 text-sm">
 		<span v-if="label" class="text-sm text-muted px-4">
