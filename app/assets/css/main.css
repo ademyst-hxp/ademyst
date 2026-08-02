@@ -4,6 +4,8 @@
 
 @theme {
 	--color-primary: var(--clr-primary);
+	--color-primary-dark: var(--clr-primary-dark);
+
 	--color-secondary: var(--clr-secondary);
 	--color-tertiary: var(--clr-tertiary);
 

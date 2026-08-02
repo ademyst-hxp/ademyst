@@ -2,6 +2,8 @@
 .scheme-light {
 	/* PALETTE */
 	--clr-primary: #ff7050; /* Revolred */
+	--clr-primary-dark: #cc5a40; /* Dark Revolred */
+
 	--clr-secondary: #793cce; /* Dimmed Revolred */
 	--clr-tertiary: #ffffff; /* White */
 
@@ -22,8 +24,8 @@
 	--clr-success-darkened: #1eb961;
 
 	--clr-accent: #ff7050;
-	--clr-accent-shaded: #ff9966;
-	--clr-accent-darkened: #ff603c;
+	--clr-accent-shaded: #FF7E61;
+	--clr-accent-darkened: #F26A4C;
 
 	/* PAGE */
 	--clr-background-1: #0053ec;
