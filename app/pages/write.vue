@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import Navbar from "~/components/layout/Navbar.vue";
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
 
@@ -12,14 +11,19 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import type { Post } from "~~/shared/models/interactions";
-import Box from "~/components/base/Box.vue";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
 await refresh();
 
+const error = ref<string | null>(null);
+
 const route = useRoute();
-const { parent: parentPostId, quote: quotedPostId } = route.query as { parent?: string; quote?: string };
+const { parent: parentPostId, edit: editPostId } = route.query as {
+	parent?: string;
+	quote?: string;
+	edit?: string;
+};
 
 if (!session.value) {
 	navigateTo("/auth/login");
@@ -79,6 +83,29 @@ const preparingPost = ref<Post>({
 	},
 });
 
+if (editPostId) {
+	// Fetch the post to edit
+	$api(`/posts/${editPostId}`)
+		.then((response: any) => {
+			if (!response.data) {
+				error.value = "Publication introuvable.";
+				return;
+			}
+
+			if (response.data.profile?.id !== session.value?.profile?.id) {
+				navigateTo("/discover");
+				return;
+			}
+
+			preparingPost.value = response.data;
+		})
+		.catch((e: any) => {
+			error.value =
+				e.message ||
+				"Erreur lors de la récupération de la publication.";
+		});
+}
+
 const isVisibilityMenuOpen = ref(false);
 
 const visibilityLabels: Record<string, string> = {
@@ -101,10 +128,39 @@ const handlePublish = async () => {
 	if (!isGood.value) return;
 
 	try {
-		await $api("/posts/new", { method: "POST", body: preparingPost.value });
+		if (editPostId) {
+			// Update the existing post
+			try {
+				await $api(`/posts/${editPostId}`, {
+					method: "PUT",
+					body: preparingPost.value,
+				});
+			} catch (e: any) {
+				error.value =
+					e.message ||
+					"Erreur lors de la mise à jour de la publication.";
+			}
+		} else {
+			// Create a new post
+			try {
+				await $api("/posts/new", {
+					method: "POST",
+					body: preparingPost.value,
+				});
+			} catch (e: any) {
+				error.value =
+					e.message ||
+					"Erreur lors de la création de la publication.";
+			}
+			await $api("/posts/new", {
+				method: "POST",
+				body: preparingPost.value,
+			});
+		}
+
 		await navigateTo("/discover");
-	} catch (error) {
-		console.error("Erreur lors de la publication du post:", error);
+	} catch (e: any) {
+		error.value = e.message || "Erreur lors de la publication du post.";
 	}
 };
 </script>
@@ -149,8 +205,7 @@ const handlePublish = async () => {
 		</section>
 		<aside
 			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		>
-		</aside>
+		></aside>
 	</div>
 	<Menu
 		v-if="isVisibilityMenuOpen"
