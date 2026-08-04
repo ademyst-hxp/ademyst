@@ -48,20 +48,36 @@ const actions = computed(() => {
 			description: "Cette action est irréversible.",
 			icon: TrashIcon,
 			danger: true,
-			handler: () => {},
+			handler: () => {
+				isDeleteMenuOpen.value = true;
+			},
 		});
 
 		actions.push({
 			label: "Modifier la publication",
 			icon: PencilIcon,
-			handler: () => {},
+			handler: () => {
+				navigateTo("/write?edit=" + props.data.id);
+			},
 		});
 	} else {
 		actions.push({
 			label: "Signaler la publication",
 			icon: FlagIcon,
 			danger: true,
-			handler: () => {},
+			handler: () => {
+				navigateTo("/post/" + props.data.id + "/report");
+			},
+		});
+	}
+
+	if (session.value?.profile?.level ?? 0 > 6) {
+		actions.push({
+			label: "Modérer la publication",
+			icon: PaperAirplaneIcon,
+			handler: () => {
+				navigateTo("/post/" + props.data.id + "/moderate");
+			},
 		});
 	}
 
@@ -69,6 +85,7 @@ const actions = computed(() => {
 });
 
 const isMenuOpen = ref(false);
+const isDeleteMenuOpen = ref(false);
 
 const rendered = computed(() => {
 	return $md.render(props.data.content);
@@ -142,5 +159,32 @@ const rendered = computed(() => {
 			</div>
 		</div>
 	</Box>
+
 	<Menu v-if="isMenuOpen" @close="isMenuOpen = false" :actions="actions" />
+	<Dialog
+		description="Cette action est irréversible."
+		v-if="isDeleteMenuOpen"
+		@close="isDeleteMenuOpen = false"
+		:actions="[
+			{
+				label: 'Confirmer',
+				variant: 'danger',
+				handler: async () => {
+					try {
+						await $api('/posts/' + data.id, { method: 'DELETE' });
+						navigateTo('/discover');
+					} catch (e: any) {
+						console.error(
+							'Erreur lors de la suppression du post:',
+							e,
+						);
+					}
+				},
+			},
+			{
+				label: 'Annuler',
+				handler: async () => {},
+			},
+		]"
+	/>
 </template>
