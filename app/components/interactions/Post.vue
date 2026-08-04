@@ -17,6 +17,7 @@ import {
 	ChatBubbleOvalLeftEllipsisIcon,
 	PaperAirplaneIcon,
 	ClipboardDocumentIcon,
+	ScaleIcon,
 	BookmarkIcon,
 } from "@heroicons/vue/24/outline";
 import PostCard from "../cards/PostCard.vue";
@@ -41,6 +42,14 @@ const { likePost, unlikePost } = usePostInteractions();
 const copyToClipboard = async () => {
 	try {
 		await navigator.clipboard.writeText(props.data.content);
+	} catch (err) {
+		console.error("Failed to copy text: ", err);
+	}
+};
+
+const copyLinkToClipboard = async () => {
+	try {
+		await navigator.clipboard.writeText(`${window.location.origin}/posts/${props.data.id}`);
 	} catch (err) {
 		console.error("Failed to copy text: ", err);
 	}
@@ -90,10 +99,16 @@ const actions = computed(() => {
 		handler: copyToClipboard,
 	});
 
+	actions.push({
+		label: "Copier le lien",
+		icon: PaperAirplaneIcon,
+		handler: copyLinkToClipboard,
+	});
+
 	if (session.value?.profile?.level ?? 0 > 6) {
 		actions.push({
 			label: "Modérer la publication",
-			icon: PaperAirplaneIcon,
+			icon: ScaleIcon,
 			handler: () => {
 				navigateTo("/post/" + props.data.id + "/moderate");
 			},
@@ -186,8 +201,8 @@ const rendered = computed(() => {
 				<span class="text-lg">{{ post.stats.answers || 0 }}</span>
 			</div>
 			<div class="grow" />
-			<div class="flex items-center gap-1" @click="copyToClipboard">
-				<ClipboardDocumentIcon class="h-6 w-6 cursor-pointer" />
+			<div class="flex items-center gap-1" @click="copyLinkToClipboard">
+				<PaperAirplaneIcon class="h-6 w-6 cursor-pointer" />
 			</div>
 			<!--div class="flex items-center gap-1">
 				<BookmarkIcon class="h-6 w-6 cursor-pointer" />
