@@ -180,6 +180,7 @@ const rendered = computed(() => {
 							() => {
 								post.interaction.liked =
 									!post.interaction.liked;
+								post.stats.reactions.like += +!!post.interaction.liked;
 							},
 						);
 					}
