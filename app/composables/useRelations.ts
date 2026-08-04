@@ -1,8 +1,8 @@
 export const useRelations = () => {
 	const { $api } = useNuxtApp();
 
-	const error = useState<string | null>("sessionError", () => null);
-	const loading = useState<boolean>("sessionLoading", () => false);
+	const error = useState<string | null>("relationsError", () => null);
+	const loading = useState<boolean>("relationsLoading", () => false);
 
 	const followUser = async (
 		username: string,
