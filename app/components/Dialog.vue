@@ -27,10 +27,10 @@ const router = useRouter();
 	<Popup>
 		<slot />
 		<Box class="items-center w-full max-h-full sm:w-lg">
-			<h2 class="text-xl font-semibold text-surface-text mb-4 sm:text-3xl">
+			<h2 class="text-xl font-semibold text-surface-text sm:text-3xl">
 				{{ title || "Choisir" }}
 			</h2>
-			<p v-if="description" class="text-surface-text mb-4 text-center w-full">
+			<p v-if="description" class="text-surface-text text-center w-full">
 				{{ description }}
 			</p>
 			<div
@@ -40,7 +40,7 @@ const router = useRouter();
 					v-for="action in actions"
 					:key="action.label"
 					:label="action.label"
-					:type="action.variant || 'link'"
+					:type="action.variant ?? 'link'"
 					:icon="action.icon"
 					:handler="() => {
 						if (typeof action.handler === 'function') {
