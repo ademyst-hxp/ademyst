@@ -1,3 +1,4 @@
+import { FetchError } from "ofetch";
 import type { StoredSession } from "~/composables/useAuthSession";
 
 export default defineNuxtPlugin(() => {
@@ -15,7 +16,7 @@ export default defineNuxtPlugin(() => {
 	const getAuthorizationToken = () =>
 		accessToken.value ?? getActiveSession()?.accessToken ?? null;
 
-	const api = $fetch.create({
+	const rawApi = $fetch.create({
 		baseURL: "/api/v1",
 		credentials: "include",
 
@@ -28,20 +29,18 @@ export default defineNuxtPlugin(() => {
 
 			options.headers.set("Authorization", `Bearer ${token}`);
 		},
+	});
 
-		async onResponseError({ response, request, options }) {
-			if (response.status !== 401) return;
+	// Dedupe concurrent refreshes: every 401 hitting at the same time shares one call.
+	let refreshPromise: Promise<boolean> | null = null;
 
-			if (String(request).includes("/auth/refresh")) {
-				accessToken.value = null;
-				return;
-			}
-
+	const refreshSession = () => {
+		refreshPromise ??= (async () => {
 			const currentSession = getActiveSession();
 
 			if (!currentSession?.refreshToken) {
 				accessToken.value = null;
-				return;
+				return false;
 			}
 
 			try {
@@ -57,7 +56,6 @@ export default defineNuxtPlugin(() => {
 				});
 
 				accessToken.value = refresh.accessToken;
-				currentSession.accessToken = refresh.accessToken;
 
 				sessions.value = sessions.value.map((entry) =>
 					entry.id === currentSession.id
@@ -69,23 +67,39 @@ export default defineNuxtPlugin(() => {
 						: entry,
 				);
 
-				const retryOptions = {
-					...options,
-					headers: new Headers(options.headers),
-				};
-
-				(retryOptions.headers as Headers).set(
-					"Authorization",
-					`Bearer ${refresh.accessToken}`,
-				);
-
-				return await $fetch(request as string, retryOptions as any);
+				return true;
 			} catch {
 				accessToken.value = null;
-				throw response;
+				return false;
 			}
-		},
-	});
+		})().finally(() => {
+			refreshPromise = null;
+		});
+
+		return refreshPromise;
+	};
+
+	// $fetch.create's onResponseError can't stop the original call from
+	// throwing (ofetch always re-throws after running it), so the retry has
+	// to happen by wrapping the call instead of hooking into the response.
+	const api = (async (request: unknown, options?: unknown) => {
+		try {
+			return await rawApi(request as string, options as never);
+		} catch (error) {
+			const is401 =
+				error instanceof FetchError && error.response?.status === 401;
+
+			if (!is401 || String(request).includes("/auth/refresh")) {
+				throw error;
+			}
+
+			const refreshed = await refreshSession();
+
+			if (!refreshed) throw error;
+
+			return await rawApi(request as string, options as never);
+		}
+	}) as typeof rawApi;
 
 	return {
 		provide: {
