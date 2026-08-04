@@ -25,7 +25,7 @@ const root = computed<{
 				rootClass,
 				rootStyle: {
 					backgroundColor: props.customColor,
-					borderColor: "#00000040",
+					borderColor: "#00000020",
 				},
 			}
 		: {
