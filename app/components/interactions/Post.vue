@@ -16,6 +16,7 @@ import {
 	HeartIcon,
 	ChatBubbleOvalLeftEllipsisIcon,
 	PaperAirplaneIcon,
+	ClipboardDocumentIcon,
 	BookmarkIcon,
 } from "@heroicons/vue/24/outline";
 import PostCard from "../cards/PostCard.vue";
@@ -32,6 +33,18 @@ const props = withDefaults(
 
 const { $md } = useNuxtApp();
 const { session } = useAuthSession();
+
+const post = ref<Post>(props.data);
+
+const { likePost, unlikePost } = usePostInteractions();
+
+const copyToClipboard = async () => {
+	try {
+		await navigator.clipboard.writeText(props.data.content);
+	} catch (err) {
+		console.error("Failed to copy text: ", err);
+	}
+};
 
 const actions = computed(() => {
 	const actions: {
@@ -71,6 +84,12 @@ const actions = computed(() => {
 		});
 	}
 
+	actions.push({
+		label: "Copier le contenu",
+		icon: ClipboardDocumentIcon,
+		handler: copyToClipboard,
+	});
+
 	if (session.value?.profile?.level ?? 0 > 6) {
 		actions.push({
 			label: "Modérer la publication",
@@ -92,30 +111,29 @@ const rendered = computed(() => {
 });
 </script>
 <template>
-	<Box :key="'post-' + data.id" class="shrink-0">
+	<Box :key="'post-' + post.id" class="shrink-0">
 		<div class="flex items-center">
-			<ProfileRow :data="data.profile" />
+			<ProfileRow :data="post.profile" />
 			<div class="grow" />
 			<EllipsisVerticalIcon
 				@click="isMenuOpen = !isMenuOpen"
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<PostCard :data="data" class="-mx-2" />
 		<textarea
 			v-if="editable"
-			v-model="data.content"
+			v-model="post.content"
 			class="bg-black/10 rounded-xl p-2 -mx-2"
 		></textarea>
 		<div
 			v-else
 			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
-			:class="data.parentId ? 'max-h-96' : 'max-h-144'"
+			:class="post.parentId ? 'max-h-96' : 'max-h-144'"
 			v-html="rendered || '<em>Vide.</em>'"
 		/>
-		<div class="flex flex-col gap-2" v-if="data.flags.length > 0">
+		<div class="flex flex-col gap-2" v-if="post.flags.length > 0">
 			<div
-				v-if="data.flags.some((flag: PostFlag) => flag.flag === 'AI')"
+				v-if="post.flags.some((flag: PostFlag) => flag.flag === 'AI')"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">
@@ -124,7 +142,7 @@ const rendered = computed(() => {
 				</p>
 			</div>
 			<div
-				v-if="data.flags.some((flag: PostFlag) => flag.flag === 'NFE')"
+				v-if="post.flags.some((flag: PostFlag) => flag.flag === 'NFE')"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">
@@ -138,25 +156,42 @@ const rendered = computed(() => {
 			class="flex items-center gap-4"
 			:class="editable ? 'opacity-50' : ''"
 		>
-			<div class="flex items-center gap-1">
-				<HeartIcon class="h-6 w-6 cursor-pointer" />
+			<div
+				class="flex items-center gap-1"
+				@click="
+					() => {
+						(post.interaction.liked ? unlikePost : likePost)(
+							post.id,
+							() => {
+								post.interaction.liked =
+									!post.interaction.liked;
+							},
+						);
+					}
+				"
+			>
+				<HeartSolidIcon
+					class="text-red-500 h-6 w-6 cursor-pointer"
+					v-if="post.interaction.liked"
+				/>
+				<HeartIcon class="h-6 w-6 cursor-pointer" v-else />
 				<span class="text-lg">{{
-					data.stats.reactions.like || 0
+					post.stats.reactions.like || 0
 				}}</span>
 			</div>
 			<div class="flex items-center gap-1">
 				<ChatBubbleOvalLeftEllipsisIcon
 					class="h-6 w-6 cursor-pointer"
 				/>
-				<span class="text-lg">{{ data.stats.answers || 0 }}</span>
+				<span class="text-lg">{{ post.stats.answers || 0 }}</span>
 			</div>
 			<div class="grow" />
-			<div class="flex items-center gap-1">
-				<PaperAirplaneIcon class="h-6 w-6 cursor-pointer" />
+			<div class="flex items-center gap-1" @click="copyToClipboard">
+				<ClipboardDocumentIcon class="h-6 w-6 cursor-pointer" />
 			</div>
-			<div class="flex items-center gap-1">
+			<!--div class="flex items-center gap-1">
 				<BookmarkIcon class="h-6 w-6 cursor-pointer" />
-			</div>
+			</div-->
 		</div>
 	</Box>
 
