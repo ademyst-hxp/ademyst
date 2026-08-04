@@ -168,7 +168,12 @@ const rendered = computed(() => {
 		@close="isDeleteMenuOpen = false"
 		:actions="[
 			{
+				label: 'Annuler',
+				handler: async () => {},
+			},
+			{
 				label: 'Confirmer',
+				icon: TrashIcon,
 				variant: 'danger',
 				handler: async () => {
 					try {
@@ -181,10 +186,6 @@ const rendered = computed(() => {
 						);
 					}
 				},
-			},
-			{
-				label: 'Annuler',
-				handler: async () => {},
 			},
 		]"
 	/>
