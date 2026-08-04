@@ -162,6 +162,7 @@ const rendered = computed(() => {
 
 	<Menu v-if="isMenuOpen" @close="isMenuOpen = false" :actions="actions" />
 	<Dialog
+		title="Supprimer la publication ?"
 		description="Cette action est irréversible."
 		v-if="isDeleteMenuOpen"
 		@close="isDeleteMenuOpen = false"
