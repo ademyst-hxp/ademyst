@@ -6,15 +6,24 @@ export const usePostInteractions = () => {
 
 	const likePost = async (
 		id: string,
+		prepare?: () => void | Promise<void>,
+		rollback?: () => void | Promise<void>,
 		callback?: () => void | Promise<void>,
 	) => {
 		loading.value = true;
 		error.value = null;
 
+		if (prepare) await prepare();
+
 		try {
-			await $api(`/posts/${id}/like`, {
-				method: "POST",
-			});
+			try {
+				await $api(`/posts/${id}/like`, {
+					method: "POST",
+				});
+			} catch (err) {
+				if (rollback) await rollback();
+				throw err;
+			}
 
 			if (callback) await callback();
 		} catch (err) {
@@ -26,15 +35,24 @@ export const usePostInteractions = () => {
 
 	const unlikePost = async (
 		id: string,
+		prepare?: () => void | Promise<void>,
+		rollback?: () => void | Promise<void>,
 		callback?: () => void | Promise<void>,
 	) => {
 		loading.value = true;
 		error.value = null;
 
 		try {
-			await $api(`/posts/${id}/unlike`, {
-				method: "POST",
-			});
+			if (prepare) await prepare();
+
+			try {
+				await $api(`/posts/${id}/unlike`, {
+					method: "POST",
+				});
+			} catch (err) {
+				if (rollback) await rollback();
+				throw err;
+			}
 
 			if (callback) await callback();
 		} catch (err) {

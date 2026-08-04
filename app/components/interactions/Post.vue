@@ -49,7 +49,9 @@ const copyToClipboard = async () => {
 
 const copyLinkToClipboard = async () => {
 	try {
-		await navigator.clipboard.writeText(`${window.location.origin}/posts/${props.data.id}`);
+		await navigator.clipboard.writeText(
+			`${window.location.origin}/posts/${props.data.id}`,
+		);
 	} catch (err) {
 		console.error("Failed to copy text: ", err);
 	}
@@ -180,7 +182,18 @@ const rendered = computed(() => {
 							() => {
 								post.interaction.liked =
 									!post.interaction.liked;
-								post.stats.reactions.like += +!!post.interaction.liked;
+								post.stats.reactions.like += post.interaction
+									.liked
+									? 1
+									: -1;
+							},
+							() => {
+								post.interaction.liked =
+									!post.interaction.liked;
+								post.stats.reactions.like += post.interaction
+									.liked
+									? 1
+									: -1;
 							},
 						);
 					}
