@@ -8,7 +8,14 @@ const props = defineProps<{
 	actions?: {
 		label: string;
 		icon?: Component;
-		variant?: string;
+		variant?:
+			| "primary"
+			| "secondary"
+			| "tertiary"
+			| "success"
+			| "warning"
+			| "danger"
+			| "link";
 		handler: string | (() => void | Promise<void>);
 	}[];
 }>();
@@ -33,23 +40,23 @@ const router = useRouter();
 			<p v-if="description" class="text-surface-text text-center w-full">
 				{{ description }}
 			</p>
-			<div
-				class="flex items-center gap-2 w-full"
-			>
+			<div class="flex items-center gap-2 w-full">
 				<Button
 					v-for="action in actions"
 					:key="action.label"
 					:label="action.label"
-					:type="action.variant ?? 'link'"
+					:variant="action.variant ?? 'link'"
 					:icon="action.icon"
-					:handler="() => {
-						if (typeof action.handler === 'function') {
-							action.handler();
-						} else {
-							router.push(action.handler);
+					:handler="
+						() => {
+							if (typeof action.handler === 'function') {
+								action.handler();
+							} else {
+								router.push(action.handler);
+							}
+							close();
 						}
-						close();
-					}"
+					"
 				/>
 			</div>
 		</Box>
