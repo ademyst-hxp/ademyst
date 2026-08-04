@@ -18,11 +18,15 @@ export const visibility = pgEnum("visibility", [
 	"me",
 ]);
 
-export type Visibility = typeof visibility.enumValues[number];
+export type Visibility = (typeof visibility.enumValues)[number];
 
-export const ui_density_enum = pgEnum("ui_density", ["compact", "comfortable", "auto"]);
+export const ui_density_enum = pgEnum("ui_density", [
+	"compact",
+	"comfortable",
+	"auto",
+]);
 
-export type UiDensity = typeof ui_density_enum.enumValues[number];
+export type UiDensity = (typeof ui_density_enum.enumValues)[number];
 
 export const appearanceSettings = pgTable("appearance_settings", {
 	id: uuid("id").defaultRandom().primaryKey(),
@@ -58,8 +62,40 @@ export const privacySettings = pgTable("privacy_settings", {
 		.notNull()
 		.default("friends"),
 
+	termsOfServiceConsent: boolean("terms_of_service_consent")
+		.notNull()
+		.default(false),
+
+	privacyPolicyConsent: boolean("privacy_policy_consent")
+		.notNull()
+		.default(false),
+
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }).enableRLS();
 
 export type PrivacySettings = typeof privacySettings.$inferSelect;
+
+export const notificationSettings = pgTable("notification_settings", {
+	id: uuid("id").defaultRandom().primaryKey(),
+
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+
+	securityAlertsEmail: boolean("security_alerts_email")
+		.notNull()
+		.default(true),
+	moderationAlertsEmail: boolean("moderation_alerts_email")
+		.notNull()
+		.default(true),
+	broadcastsEmail: boolean("broadcasts_email").notNull().default(true),
+	socialEmails: boolean("social_email").notNull().default(true),
+	interactionsEmails: boolean("interactions_email").notNull().default(true),
+	campaignEmails: boolean("campaign_email").notNull().default(true),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}).enableRLS();
+
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
