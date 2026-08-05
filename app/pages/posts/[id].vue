@@ -21,38 +21,37 @@ await refresh();
 const route = useRoute();
 const postId = route.params.id as string;
 
-const post = ref<Post | null>(null);
-const answers = ref<Post[]>([]);
-
-useAsyncData(
+const { data: post, pending: postPending } = await useAsyncData<Post | null>(
 	`post-${postId}`,
 	async () => {
 		try {
 			const response = await $api<{ status: string; data: Post }>(
 				`/posts/${postId}`,
 			);
-			post.value = response.data as Post;
+			return response.data;
 		} catch (e: any) {
 			error.value = e.message || "Erreur lors du chargement du post.";
+			return null;
 		}
 	},
-	{ immediate: true },
+	{ default: () => null },
 );
 
-useAsyncData(
+const { data: answers } = await useAsyncData<Post[]>(
 	`post-${postId}-answers`,
 	async () => {
 		try {
 			const response = await $api<{ status: string; data: Post[] }>(
 				`/posts/${postId}/answers`,
 			);
-			answers.value = response.data as Post[];
+			return response.data;
 		} catch (e: any) {
 			error.value =
 				e.message || "Erreur lors du chargement des réponses.";
+			return [];
 		}
 	},
-	{ immediate: true },
+	{ default: () => [] },
 );
 
 if (!session.value) {
@@ -156,7 +155,10 @@ const handlePublish = async () => {
 			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
 		>
 			<PostBox v-if="post" :data="post" />
-			<article v-else class="flex flex-col gap-2">
+			<article
+				v-else-if="!postPending"
+				class="flex flex-col gap-2"
+			>
 				<h1 class="text-2xl font-bold">Publication introuvable</h1>
 				<p>La publication que vous recherchez n'existe pas.</p>
 			</article>
