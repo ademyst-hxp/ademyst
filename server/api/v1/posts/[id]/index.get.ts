@@ -6,7 +6,6 @@ import { posts } from "~~/server/db/schema/interactions";
 import { retrieveCleanPost } from "#server/utils/converters/interactions";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
-import { getInteractionStatus } from "~~/server/utils/helpers/interaction";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -30,11 +29,10 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const post = retrieveCleanPost(event, identity, candidate);
+	const post = await retrieveCleanPost(event, identity, candidate);
 
 	return {
 		status: "ok",
 		data: post,
-		interaction: await getInteractionStatus(event, identity, candidate),
 	};
 });
