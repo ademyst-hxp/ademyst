@@ -31,7 +31,11 @@ const isSwitchAccountMenuOpen = ref(false);
 const path = computed(() => useRoute().path);
 </script>
 <template>
-	<nav v-if="isSm.value" id="navbar" class="_no_container fixed bottom-0 left-0 right-0 z-5000">
+	<nav
+		v-if="isSm.value"
+		id="navbar"
+		class="_no_container fixed bottom-0 left-0 right-0 z-5000"
+	>
 		<div
 			class="flex justify-between items-center bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border-t border-surface-border h-20 px-8"
 		>
@@ -68,7 +72,11 @@ const path = computed(() => useRoute().path);
 				:to="`/@${session?.profile.name}`"
 				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
 			>
-				<Avatar :color="path == `/@${session?.profile.name}` ? undefined : null" />
+				<Avatar
+					:color="
+						path == `/@${session?.profile.name}` ? undefined : null
+					"
+				/>
 			</RouterLink>
 		</div>
 	</nav>
@@ -76,10 +84,11 @@ const path = computed(() => useRoute().path);
 		<div
 			class="flex items-center gap-6 bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-3xl h-20 px-8"
 		>
-			<RouterLink to="/"
-				><Logo
-					class="w-auto h-4 transition-colors duration-200 hover:text-primary"
-			/></RouterLink>
+			<RouterLink to="/">
+				<Logo
+					class="w-auto h-6 transition-colors duration-200 hover:text-primary"
+				/>
+			</RouterLink>
 			<RouterLink
 				to="/discover"
 				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
