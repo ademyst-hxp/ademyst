@@ -16,12 +16,16 @@ const error = ref<string | null>(null);
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
-await refresh();
 
 const route = useRoute();
 const postId = route.params.id as string;
 
-const { data: post, pending: postPending } = await useAsyncData<Post | null>(
+// Fired concurrently rather than awaited one-by-one: each hits its own
+// SSR API route (own auth check, own DB round trip), so sequencing them
+// serialized three independent network round trips into one long chain.
+const refreshPromise = refresh();
+
+const postAsyncData = useAsyncData<Post | null>(
 	`post-${postId}`,
 	async () => {
 		try {
@@ -37,7 +41,7 @@ const { data: post, pending: postPending } = await useAsyncData<Post | null>(
 	{ default: () => null },
 );
 
-const { data: answers } = await useAsyncData<Post[]>(
+const answersAsyncData = useAsyncData<Post[]>(
 	`post-${postId}-answers`,
 	async () => {
 		try {
@@ -53,6 +57,11 @@ const { data: answers } = await useAsyncData<Post[]>(
 	},
 	{ default: () => [] },
 );
+
+await Promise.all([refreshPromise, postAsyncData, answersAsyncData]);
+
+const { data: post, pending: postPending } = postAsyncData;
+const { data: answers } = answersAsyncData;
 
 if (!session.value) {
 	navigateTo("/auth/login");

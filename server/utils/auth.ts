@@ -53,23 +53,20 @@ export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
 export const getUser = async (event: H3Event, identity: Identity): Promise<UserIdentity | null> => {
 	const db = useDb(event);
 
-	const [profile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity.profileId))
-		.limit(1);
+	const [[profile], [account]] = await Promise.all([
+		db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity.profileId))
+			.limit(1),
+		db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, identity.accountId))
+			.limit(1),
+	]);
 
-	if (!profile) {
-		return null;
-	}
-
-	const [account] = await db
-		.select()
-		.from(accounts)
-		.where(eq(accounts.id, identity.accountId))
-		.limit(1);
-
-	if (!account) {
+	if (!profile || !account) {
 		return null;
 	}
 
