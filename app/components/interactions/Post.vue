@@ -147,6 +147,7 @@ const rendered = computed(() => {
 			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
 			:class="post.parentId ? 'max-h-96' : 'max-h-144'"
 			v-html="rendered || '<em>Vide.</em>'"
+			@click.self="$router.push(`/posts/${post.id}`)"
 		/>
 		<div class="flex flex-col gap-2" v-if="post.flags.length > 0">
 			<div
@@ -208,7 +209,10 @@ const rendered = computed(() => {
 					post.stats.reactions.like || 0
 				}}</span>
 			</div>
-			<div class="flex items-center gap-1">
+			<div
+				class="flex items-center gap-1"
+				@click="$router.push(`/posts/${post.id}#compose`)"
+			>
 				<ChatBubbleOvalLeftEllipsisIcon
 					class="h-6 w-6 cursor-pointer"
 				/>
