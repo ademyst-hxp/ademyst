@@ -59,10 +59,6 @@ if (!session.value) {
 }
 
 definePageMeta({
-	title: `Publication de ${post.value?.profile?.displayName || "@" + post.value?.profile?.name || "@ghost"} | Ademyst`,
-	description:
-		post.value?.content.slice(0, 160) ||
-		`Découvrez la publication de ${post.value?.profile?.displayName || "@" + post.value?.profile?.name || "@ghost"} sur Ademyst.`,
 	middleware: ["auth"],
 });
 
