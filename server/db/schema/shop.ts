@@ -29,6 +29,7 @@ export const badges_families = pgTable("badges_families", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }).enableRLS();
 
+export type BadgeFamily = typeof badges_families.$inferSelect;
 
 export const badges = pgTable("badges", {
 	id: text("id").notNull().primaryKey(),

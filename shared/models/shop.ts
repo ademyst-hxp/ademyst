@@ -1,14 +1,22 @@
 export type ItemRarity = "common" | "rare" | "epic" | "collector" | "legendary" | "unclassified";
-export type BadgeCategory = "achievement" | "title" | "level";
+
+export type BadgeFamily = {
+	id: string;
+	name: string;
+	description: string | null;
+	createdAt: Date;
+	updatedAt: Date;
+};
 
 export type Badge = {
 	id: string;
 	name: string;
 	description: string | null;
-	category: BadgeCategory;
+	family: BadgeFamily | null;
 	rarity: ItemRarity;
 	color: string;
 	createdAt: Date;
+	updatedAt: Date;
 };
 
 export type Level = {
@@ -17,4 +25,5 @@ export type Level = {
 	description: string;
 	color: string;
 	createdAt: Date;
+	updatedAt: Date;
 };
