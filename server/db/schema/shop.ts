@@ -16,14 +16,19 @@ export const itemRarityEnum = pgEnum("item_rarity", [
 	"unclassified",
 ]);
 
-export const badgeCategoryEnum = pgEnum("badge_category", [
-	"achievement",
-	"title",
-	"level",
-]);
-
 export type ItemRarity = (typeof itemRarityEnum.enumValues)[number];
-export type BadgeCategory = (typeof badgeCategoryEnum.enumValues)[number];
+
+
+export const badges_families = pgTable("badges_families", {
+	id: text("id").notNull().primaryKey(),
+
+	name: text("name").notNull(),
+	description: text("description"),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}).enableRLS();
+
 
 export const badges = pgTable("badges", {
 	id: text("id").notNull().primaryKey(),
@@ -31,12 +36,13 @@ export const badges = pgTable("badges", {
 	name: text("name").notNull(),
 	description: text("description"),
 
-	category: badgeCategoryEnum("category").notNull(),
+	family: text("family").references(() => badges_families.id, { onDelete: "cascade" }),
 	rarity: itemRarityEnum("rarity").notNull(),
 
 	color: varchar("color", { length: 7 }).notNull(), // Hex color code
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }).enableRLS();
 
 export type Badge = typeof badges.$inferSelect;
@@ -50,6 +56,7 @@ export const levels = pgTable("levels", {
 	color: varchar("color", { length: 7 }).notNull(), // Hex color code
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }).enableRLS();
 
 export type Level = typeof levels.$inferSelect;
