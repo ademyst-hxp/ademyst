@@ -54,8 +54,6 @@ export const levels = pgTable("levels", {
 	name: text("name").notNull(),
 	description: text("description"),
 
-	color: varchar("color", { length: 7 }).notNull(), // Hex color code
-
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }).enableRLS();

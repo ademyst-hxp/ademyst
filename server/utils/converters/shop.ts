@@ -110,7 +110,6 @@ export async function retrieveCleanLevel(
 		id: level.id,
 		name: level.name,
 		description: level.description ?? "",
-		color: level.color,
 		createdAt: level.createdAt,
 		updatedAt: level.updatedAt,
 	};
@@ -124,7 +123,6 @@ export async function retrieveSeveralCleanLevels(
 		id: level.id,
 		name: level.name,
 		description: level.description ?? "",
-		color: level.color,
 		createdAt: level.createdAt,
 		updatedAt: level.updatedAt,
 	}));
