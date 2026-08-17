@@ -10,6 +10,8 @@ import { generateHexId } from "#server/utils/ids";
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
 import { hashPassword } from "#server/utils/password";
 
+import { giveSignupBadges } from "#server/jobs/signup";
+
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
 
@@ -165,6 +167,12 @@ export default defineEventHandler(async (event) => {
 		path: "/",
 		maxAge: 60 * 15,
 	});
+
+	try {
+		await giveSignupBadges(event, result.profile!.id);
+	} catch (error) {
+		console.error("Error occurred while giving signup badges:", error);
+	}
 
 	return {
 		account: result.account,
