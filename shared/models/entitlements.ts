@@ -5,7 +5,8 @@ export type BadgeEntitlement = {
 	badge: Badge;
 	name: string;
 	reason: string;
-	revoked: string;
+	revoked: boolean;
+	enabled: boolean;
 	createdAt: Date;
 	expiresAt: Date | null;
 };
@@ -15,7 +16,8 @@ export type LevelEntitlement = {
 	level: Level;
 	name: string;
 	reason: string;
-	revoked: string;
+	revoked: boolean;
+	enabled: boolean;
 	createdAt: Date;
 	expiresAt: Date | null;
 };

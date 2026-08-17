@@ -18,6 +18,7 @@ export function convertBadgeEntitlement(
 		name: entitlement.name,
 		reason: entitlement.reason,
 		revoked: entitlement.revoked,
+		enabled: entitlement.enabled,
 		createdAt: entitlement.createdAt,
 		expiresAt: entitlement.expiresAt ?? null,
 	};
@@ -33,6 +34,7 @@ export function convertLevelEntitlement(
 		name: entitlement.name,
 		reason: entitlement.reason,
 		revoked: entitlement.revoked,
+		enabled: entitlement.enabled,
 		createdAt: entitlement.createdAt,
 		expiresAt: entitlement.expiresAt ?? null,
 	};
