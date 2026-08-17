@@ -5,6 +5,7 @@ import {
 	uuid,
 	varchar,
 	integer,
+	boolean
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
