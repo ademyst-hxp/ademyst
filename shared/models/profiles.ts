@@ -1,3 +1,5 @@
+import type { Badge } from "./shop";
+
 export type Relationship = {
 	me: boolean; // A is B
 	following: boolean; // A following B
@@ -16,7 +18,8 @@ export type Profile = {
 	location: string | null;
 	corporation: string | null;
 	createdAt: Date;
-	badge: string | null;
+	badge: Badge | null;
+	badges: Badge[];
 	level: number | null;
 	links: ProfileLink[];
 	relationships: Relationship;

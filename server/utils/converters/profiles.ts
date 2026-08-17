@@ -1,14 +1,20 @@
-import type { Profile as PartialProfile } from "~~/server/db/schema/profiles";
-
-import { eq, count, inArray } from "drizzle-orm";
-
-import type { Profile } from "~~/shared/models/profiles";
+import { and, eq, count, inArray } from "drizzle-orm";
 
 import { useDb } from "#server/db";
 import type { H3Event } from "h3";
 
+import type { Profile as PartialProfile } from "~~/server/db/schema/profiles";
 import { profileLinks, profiles } from "#server/db/schema/profiles";
 import { follows } from "#server/db/schema/relations";
+import { badges } from "~~/server/db/schema/shop";
+import { badgesEntitlements } from "~~/server/db/schema/entitlements";
+
+import type { Profile } from "~~/shared/models/profiles";
+
+import {
+	retrieveCleanBadge,
+	retrieveSeveralCleanBadges,
+} from "~~/server/utils/converters/shop";
 
 import {
 	getSeveralRelationshipStatus,
@@ -25,7 +31,7 @@ export async function retrieveCleanProfile(
 
 	const relationships = await getRelationshipStatus(event, identity, profile);
 	const privacy = await getPrivacySettings(event, profile);
-	const access = await canAccess(privacy, relationships);
+	const access = canAccess(privacy, relationships);
 
 	const { blocked, friended, ...r } = relationships;
 
@@ -41,6 +47,7 @@ export async function retrieveCleanProfile(
 			corporation: null,
 			createdAt: profile.createdAt,
 			badge: null,
+			badges: [],
 			level: profile.level,
 			links: [],
 			relationships: r,
@@ -56,6 +63,21 @@ export async function retrieveCleanProfile(
 		.from(profileLinks)
 		.where(eq(profileLinks.profileId, profile.id));
 
+	const profileBadges = (
+		await db
+			.select()
+			.from(badgesEntitlements)
+			.where(
+				and(
+					eq(badgesEntitlements.profileId, profile.id),
+					eq(badgesEntitlements.enabled, true),
+				),
+			)
+			.innerJoin(badges, eq(badges.id, badgesEntitlements.badgeId))
+	)
+		.map((row) => row.badges)
+		.filter((badge): badge is NonNullable<typeof badge> => badge !== null);
+
 	const [followersCount] = await db
 		.select({ count: count() })
 		.from(follows)
@@ -65,6 +87,8 @@ export async function retrieveCleanProfile(
 		.select({ count: count() })
 		.from(follows)
 		.where(eq(follows.followerId, profile.id));
+
+	const badge = profileBadges.find((b) => b.family === "level") || null;
 
 	const stats = {
 		followers: followersCount?.count || 0,
@@ -81,7 +105,8 @@ export async function retrieveCleanProfile(
 		location: profile.location,
 		corporation: profile.corporation,
 		createdAt: profile.createdAt,
-		badge: profile.badge,
+		badge: (badge ? await retrieveCleanBadge(event, badge) : null) || null,
+		badges: await retrieveSeveralCleanBadges(event, profileBadges),
 		level: profile.level,
 		links: links.map((link) => ({
 			url: link.url,
@@ -134,6 +159,19 @@ export async function retrieveSeveralCleanProfiles(
 			),
 		);
 
+	const every_badges = (
+		await db
+			.select()
+			.from(badgesEntitlements)
+			.where(
+				inArray(
+					badgesEntitlements.profileId,
+					_profiles.map((p) => p.id),
+				),
+			)
+			.innerJoin(badges, eq(badges.id, badgesEntitlements.badgeId))
+	).filter((badge): badge is NonNullable<typeof badge> => badge !== null);
+
 	const followersCounts = await db
 		.select({ followingId: follows.followingId, count: count() })
 		.from(follows)
@@ -177,6 +215,7 @@ export async function retrieveSeveralCleanProfiles(
 				corporation: null,
 				createdAt: profile.createdAt,
 				badge: null,
+				badges: [],
 				level: profile.level,
 				links: [],
 				relationships: r,
@@ -187,6 +226,17 @@ export async function retrieveSeveralCleanProfiles(
 			});
 			continue;
 		}
+
+		const badge =
+			every_badges
+				.filter((b) => b.badges_entitlements?.profileId === profile.id)
+				.map((b) => b.badges)
+				.find((b) => b?.family === "level") || null;
+
+		const profileBadges = every_badges
+			.filter((b) => b.badges_entitlements?.profileId === profile.id)
+			.map((b) => b.badges)
+			.filter((b): b is NonNullable<typeof b> => b !== null);
 
 		const stats = {
 			followers:
@@ -207,7 +257,9 @@ export async function retrieveSeveralCleanProfiles(
 			location: profile.location,
 			corporation: profile.corporation,
 			createdAt: profile.createdAt,
-			badge: profile.badge,
+			badge:
+				(badge ? await retrieveCleanBadge(event, badge) : null) || null,
+			badges: await retrieveSeveralCleanBadges(event, profileBadges),
 			level: profile.level,
 			links: links.map((link) => ({
 				url: link.url,

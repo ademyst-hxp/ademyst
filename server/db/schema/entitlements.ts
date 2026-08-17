@@ -23,7 +23,8 @@ export const badgesEntitlements = pgTable("badges_entitlements", {
 
 	name: text("name").notNull(),
 	reason: text("reason").notNull(),
-	revoked: text("revoked").notNull().default("false"),
+	revoked: boolean("revoked").notNull().default(false),
+	enabled: boolean("enabled").notNull().default(true),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
@@ -44,7 +45,8 @@ export const levelsEntitlements = pgTable("levels_entitlements", {
 
 	name: text("name").notNull(),
 	reason: text("reason").notNull(),
-	revoked: text("revoked").notNull().default("false"),
+	revoked: boolean("revoked").notNull().default(false),
+	enabled: boolean("enabled").notNull().default(true),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
