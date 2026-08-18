@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -31,15 +31,15 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const storage = useStorage(event);
+	const drive = useDrive(event);
 
 	const avatarKey = `avatars/${profile.id}.webp`;
 
-	if (!(await storage.exists(avatarKey))) {
+	if (!(await drive.exists(avatarKey))) {
 		return sendRedirect(event, "/images/default_avatar.png", 302);
 	}
 
-	const url = await storage.signedUrl(avatarKey, {
+	const url = await drive.signedUrl(avatarKey, {
 		expiresIn: 60 * 60,
 	});
 

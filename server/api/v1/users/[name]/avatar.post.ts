@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
 import { processAvatar } from "~~/server/utils/helpers/files";
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const identity = await requireAuth(event);
@@ -21,18 +21,18 @@ export default defineEventHandler(async (event) => {
 
 	const avatar = await processAvatar(file.data, contentType);
 
-	const storage = useStorage(event);
+	const drive = useDrive(event);
 
 	const userId = identity.profileId;
 
 	const key = `avatars/${userId}.webp`;
 
-	await storage.put(key, avatar.buffer, {
+	await drive.put(key, avatar.buffer, {
 		contentType: avatar.contentType,
 		cacheControl: "public, max-age=31536000, immutable",
 	});
 
-	const url = await storage.signedUrl(key, {
+	const url = await drive.signedUrl(key, {
 		expiresIn: 60*60, // 1 hour
 	});
 

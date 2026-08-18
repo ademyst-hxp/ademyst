@@ -9,9 +9,9 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-type Storage = ReturnType<typeof createStorage>;
+type Storage = ReturnType<typeof createDrive>;
 
-function createStorage() {
+function createDrive() {
 	const endpoint = process.env.R2_ENDPOINT;
 	const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 	const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
@@ -137,14 +137,14 @@ function createStorage() {
 // so the storage client is created once per request.
 const storageByEvent = new WeakMap<H3Event, Storage>();
 
-export function useStorage(event: H3Event): Storage {
+export function useDrive(event: H3Event): Storage {
 	const cached = storageByEvent.get(event);
 
 	if (cached) {
 		return cached;
 	}
 
-	const storage = createStorage();
+	const storage = createDrive();
 
 	storageByEvent.set(event, storage);
 
