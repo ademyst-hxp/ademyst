@@ -4,6 +4,10 @@ const { session } = useAuthSession();
 
 const { theme } = useTheme();
 
+const route = useRoute();
+
+const isAuthRoute = route.path.startsWith("/auth");
+
 definePageMeta({
 	bodyAttrs: {
 		class: `theme-${theme.value}`,
@@ -12,7 +16,7 @@ definePageMeta({
 </script>
 <template>
 	<Teleport to="#__nuxt">
-		<Navbar v-if="session" />
+		<Navbar v-if="session && !isAuthRoute" />
 	</Teleport>
 	<NuxtLayout>
 		<NuxtPage />
