@@ -109,8 +109,11 @@ export async function retrieveCleanProfile(
 		badges: await retrieveSeveralCleanBadges(event, profileBadges),
 		level: profile.level,
 		links: links.map((link) => ({
-			url: link.url,
+			name: link.name,
 			type: link.type,
+			url: link.url,
+			resourceId: link.resourceId,
+			resourceName: link.resourceName,
 		})),
 		stats: {
 			followers: stats.followers,
@@ -262,8 +265,11 @@ export async function retrieveSeveralCleanProfiles(
 			badges: await retrieveSeveralCleanBadges(event, profileBadges),
 			level: profile.level,
 			links: links.map((link) => ({
-				url: link.url,
+				name: link.name,
 				type: link.type,
+				url: link.url,
+				resourceId: link.resourceId,
+				resourceName: link.resourceName,
 			})),
 			stats: {
 				followers: stats.followers,
