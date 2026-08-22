@@ -5,6 +5,8 @@ import { profiles, profileLinks } from "~~/server/db/schema/profiles";
 
 import { normalizeUUID } from "~~/server/utils/normalizers/ids";
 
+import { giveBeamBadge } from "~~/server/jobs/signup";
+
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
@@ -104,7 +106,9 @@ export default defineEventHandler(async (event) => {
 				displayName: res.display_name || undefined,
 				bio: res.description || undefined,
 				pronouns: res.pronouns || undefined,
-				birthday: res.birthday ? new Date(res.birthday).toISOString().split("T")[0] : undefined,
+				birthday: res.birthday
+					? new Date(res.birthday).toISOString().split("T")[0]
+					: undefined,
 			})
 			.where(eq(profiles.id, identity.profileId));
 	}
@@ -118,6 +122,9 @@ export default defineEventHandler(async (event) => {
 			resourceName: res.name,
 		},
 	]);
+
+	// Give the user the Beam badge if they linked their account before the deadline
+	await giveBeamBadge(event, identity.profileId, new Date(res.creation_date));
 
 	return {
 		status: "ok",
