@@ -73,6 +73,7 @@ const path = computed(() => useRoute().path);
 				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
 			>
 				<Avatar
+					:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
 					:color="
 						path == `/@${session?.profile.name}` ? undefined : null
 					"
@@ -102,7 +103,7 @@ const path = computed(() => useRoute().path);
 				class="cursor-pointer flex items-center gap-2 transition-colors duration-200 hover:text-primary"
 				@click="isMenuOpen = !isMenuOpen"
 			>
-				<Avatar />
+				<Avatar :src="`/api/v1/users/${session.profile.name}/avatar.webp`" />
 				{{ session.profile.displayName || session.profile.name }}
 			</div>
 		</div>

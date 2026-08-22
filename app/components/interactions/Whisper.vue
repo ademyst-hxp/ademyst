@@ -64,7 +64,12 @@ const textClass = computed(() =>
 			"
 			:style="{ color: data.textColor || 'inherit' }"
 		>
-			<Avatar v-if="minified" size="sm" class="shrink-0 mt-1.5" />
+			<Avatar
+				v-if="minified"
+				size="sm"
+				class="shrink-0 mt-1.5"
+				:src="`/api/v1/users/${data.profile.name}/avatar.webp`"
+			/>
 
 			<div
 				class="grow flex flex-col -space-y-1"

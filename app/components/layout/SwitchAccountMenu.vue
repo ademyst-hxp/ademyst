@@ -48,7 +48,7 @@ const handleAddAccount = async () => {
 					]"
 					@click="handleSwitchSession(session.id)"
 				>
-					<Avatar />
+					<Avatar :src="`/api/v1/users/${session.profile.name}/avatar.webp`" />
 					{{ session.profile.displayName || session.profile.name }}
 				</div>
 				<div

@@ -97,7 +97,7 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 		>
 			<div class="flex gap-4 items-center">
 				<img
-					src="/images/default_avatar.png"
+					:src="`/api/v1/users/${profile?.name}/avatar.webp`"
 					class="w-24 h-24 rounded-full"
 				/>
 
