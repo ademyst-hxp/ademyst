@@ -1,4 +1,5 @@
 import type { H3Event } from "h3";
+
 import {
 	DeleteObjectCommand,
 	GetObjectCommand,
@@ -12,29 +13,30 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 type Storage = ReturnType<typeof createDrive>;
 
 function createDrive() {
-	const endpoint = process.env.R2_ENDPOINT;
-	const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-	const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-	const bucket = process.env.R2_BUCKET;
+	const endpoint = process.env.S3_ENDPOINT;
+	const accessKeyId = process.env.S3_ACCESS_KEY_ID;
+	const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
+	const bucket = process.env.S3_BUCKET_NAME;
+	const region = process.env.S3_REGION ?? "auto";
 
 	if (!endpoint) {
-		throw new Error("No R2 endpoint found (R2_ENDPOINT)");
+		throw new Error("No S3 endpoint found (S3_ENDPOINT)");
 	}
 
 	if (!accessKeyId) {
-		throw new Error("No R2 access key found (R2_ACCESS_KEY_ID)");
+		throw new Error("No S3 access key found (S3_ACCESS_KEY_ID)");
 	}
 
 	if (!secretAccessKey) {
-		throw new Error("No R2 secret key found (R2_SECRET_ACCESS_KEY)");
+		throw new Error("No S3 secret key found (S3_SECRET_ACCESS_KEY)");
 	}
 
 	if (!bucket) {
-		throw new Error("No R2 bucket found (R2_BUCKET)");
+		throw new Error("No S3 bucket found (S3_BUCKET_NAME)");
 	}
 
 	const client = new S3Client({
-		region: "auto",
+		region,
 		endpoint,
 		credentials: {
 			accessKeyId,
@@ -145,7 +147,6 @@ export function useDrive(event: H3Event): Storage {
 	}
 
 	const storage = createDrive();
-
 	storageByEvent.set(event, storage);
 
 	return storage;
