@@ -33,13 +33,13 @@ export default defineEventHandler(async (event) => {
 
 	const drive = useDrive(event);
 
-	const avatarKey = `avatars/${profile.id}.webp`;
+	const avatarKey = `${profile.id}.webp`;
 
-	if (!(await drive.exists(avatarKey))) {
+	if (!(await drive.exists("avatars", avatarKey))) {
 		return sendRedirect(event, "/images/default_avatar.png", 302);
 	}
 
-	const url = await drive.signedUrl(avatarKey, {
+	const url = await drive.signedUrl("avatars", avatarKey, {
 		expiresIn: 60 * 60,
 	});
 

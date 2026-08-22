@@ -25,15 +25,15 @@ export default defineEventHandler(async (event) => {
 
 	const userId = identity.profileId;
 
-	const key = `avatars/${userId}.webp`;
+	const key = `${userId}.webp`;
 
-	await drive.put(key, avatar.buffer, {
+	await drive.put("avatars", key, avatar.buffer, {
 		contentType: avatar.contentType,
 		cacheControl: "public, max-age=31536000, immutable",
 	});
 
-	const url = await drive.signedUrl(key, {
-		expiresIn: 60*60, // 1 hour
+	const url = await drive.signedUrl("avatars", key, {
+		expiresIn: 60 * 60, // 1 hour
 	});
 
 	return {

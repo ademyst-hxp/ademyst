@@ -9,16 +9,16 @@ const props = withDefaults(
 	}>(),
 	{
 		src: "/images/default_avatar.png",
-		color: () => ["#4ade80", "#22d3ee"],
+		color: null,
 		size: "md",
 	},
 );
 
 const sizes = {
-	xs: 20,
-	sm: 28,
-	md: 40,
-	lg: 56,
+	xs: 24,
+	sm: 32,
+	md: 48,
+	lg: 64,
 	xl: 96,
 } as const;
 

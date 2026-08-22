@@ -9,10 +9,12 @@ const props = defineProps<{
 </script>
 <template>
 	<div
-		class="flex items-center gap-2"
+		class="cursor-pointer flex items-center gap-2"
 		@click="$router.push(`/@${data?.name || 'ghost'}`)"
 	>
-		<Avatar />
+		<Avatar
+			:src="'/api/v1/users/' + (data?.name || 'ghost') + '/avatar.webp'"
+		/>
 		<div class="flex flex-col -space-y-1">
 			<span class="font-semibold" v-if="data?.displayName">{{
 				data.displayName

@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 			s3Endpoint: process.env.S3_ENDPOINT || "",
 			s3AccessKeyId: process.env.S3_ACCESS_KEY_ID || "",
 			s3SecretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
-			s3Bucket: process.env.S3_BUCKET_NAME || "",
+			s3Region: process.env.S3_REGION || "",
 
 			jwtSecret: process.env.JWT_SECRET || "dev-secret",
 			jwtIssuer: process.env.JWT_ISSUER || "http://localhost:5000",

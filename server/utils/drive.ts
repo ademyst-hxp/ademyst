@@ -13,11 +13,12 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 type Storage = ReturnType<typeof createDrive>;
 
 function createDrive() {
-	const endpoint = process.env.S3_ENDPOINT;
-	const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-	const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
-	const bucket = process.env.S3_BUCKET_NAME;
-	const region = process.env.S3_REGION ?? "auto";
+	const config = useRuntimeConfig().private;
+
+	const endpoint = config.s3Endpoint;
+	const accessKeyId = config.s3AccessKeyId;
+	const secretAccessKey = config.s3SecretAccessKey;
+	const region = config.s3Region ?? "auto";
 
 	if (!endpoint) {
 		throw new Error("No S3 endpoint found (S3_ENDPOINT)");
@@ -31,11 +32,8 @@ function createDrive() {
 		throw new Error("No S3 secret key found (S3_SECRET_ACCESS_KEY)");
 	}
 
-	if (!bucket) {
-		throw new Error("No S3 bucket found (S3_BUCKET_NAME)");
-	}
-
 	const client = new S3Client({
+		forcePathStyle: true,
 		region,
 		endpoint,
 		credentials: {
@@ -46,9 +44,9 @@ function createDrive() {
 
 	return {
 		client,
-		bucket,
 
 		async put(
+			bucket: string,
 			key: string,
 			body: PutObjectCommand["input"]["Body"],
 			options?: {
@@ -71,7 +69,7 @@ function createDrive() {
 			);
 		},
 
-		async get(key: string) {
+		async get(bucket: string, key: string) {
 			return client.send(
 				new GetObjectCommand({
 					Bucket: bucket,
@@ -80,7 +78,7 @@ function createDrive() {
 			);
 		},
 
-		async delete(key: string) {
+		async delete(bucket: string, key: string) {
 			await client.send(
 				new DeleteObjectCommand({
 					Bucket: bucket,
@@ -89,7 +87,7 @@ function createDrive() {
 			);
 		},
 
-		async exists(key: string) {
+		async exists(bucket: string, key: string) {
 			try {
 				await client.send(
 					new HeadObjectCommand({
@@ -104,7 +102,7 @@ function createDrive() {
 			}
 		},
 
-		async list(prefix?: string) {
+		async list(bucket: string, prefix?: string) {
 			const response = await client.send(
 				new ListObjectsV2Command({
 					Bucket: bucket,
@@ -116,6 +114,7 @@ function createDrive() {
 		},
 
 		async signedUrl(
+			bucket: string,
 			key: string,
 			options?: {
 				expiresIn?: number;
