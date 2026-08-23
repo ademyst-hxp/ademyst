@@ -25,7 +25,7 @@ switch (props.size) {
 		_class +=
 			props.variant === "link"
 				? "text-sm"
-				: " gap-0.5 text-sm rounded-xl";
+				: " gap-1 text-sm rounded-xl";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -37,7 +37,7 @@ switch (props.size) {
 			}
 		}
 
-		_iconclass += " w-3 h-3";
+		_iconclass += " w-5 h-5";
 		break;
 	case "large":
 		_class +=
@@ -55,11 +55,11 @@ switch (props.size) {
 			}
 		}
 
-		_iconclass += " w-5 h-5";
+		_iconclass += " w-8 h-8";
 		break;
 	case "medium":
 	default:
-		_class += props.variant === "link" ? "" : " gap-1 rounded-full";
+		_class += props.variant === "link" ? "" : " gap-1.5 rounded-full";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -71,7 +71,7 @@ switch (props.size) {
 			}
 		}
 
-		_iconclass += " w-4 h-4";
+		_iconclass += " w-5 h-5";
 }
 
 switch (props.variant) {
