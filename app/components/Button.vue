@@ -17,7 +17,7 @@ const props = defineProps<{
 	disabled?: boolean;
 }>();
 
-let _class = "flex items-center text-medium font-medium w-fit";
+let _class = "flex items-center text-medium font-medium";
 let _iconclass = "";
 
 switch (props.size) {
@@ -29,11 +29,11 @@ switch (props.size) {
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
-				_class += " pl-2 pr-3 py-2";
+				_class += " w-fit pl-2 pr-3 py-2";
 			} else if (props.icon && !props.label) {
-				_class += " p-2";
+				_class += " justify-center w-8 h-8";
 			} else if (!props.icon && props.label) {
-				_class += " px-3 py-2";
+				_class += " w-fit px-3 py-2";
 			}
 		}
 
@@ -47,11 +47,11 @@ switch (props.size) {
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
-				_class += " pl-4 pr-6 py-4";
+				_class += " w-fit pl-4 pr-6 py-4";
 			} else if (props.icon && !props.label) {
-				_class += " p-4";
+				_class += " justify-center w-12 h-12";
 			} else if (!props.icon && props.label) {
-				_class += " px-6 py-4";
+				_class += " w-fit px-6 py-4";
 			}
 		}
 
@@ -63,11 +63,11 @@ switch (props.size) {
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
-				_class += " pl-4 pr-5 py-3";
+				_class += " w-fit pl-4 pr-5 py-3";
 			} else if (props.icon && !props.label) {
-				_class += " p-3";
+				_class += " justify-center w-10 h-10";
 			} else if (!props.icon && props.label) {
-				_class += " px-5 py-3";
+				_class += " w-fit px-5 py-3";
 			}
 		}
 
@@ -82,7 +82,7 @@ switch (props.variant) {
 		_class += " bg-accent text-white hover:bg-accent-darkened";
 		break;
 	case "secondary":
-		_class += " bg-secondary text-white";
+		_class += " bg-muted-background text-muted";
 		break;
 	case "tertiary":
 		_class += " bg-tertiary/15 text-white";

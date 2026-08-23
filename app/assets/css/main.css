@@ -31,6 +31,7 @@
 
 	--color-text: var(--clr-text);
 	--color-muted: var(--clr-muted);
+	--color-muted-background: var(--clr-muted-background);
 
 	--color-surface: var(--clr-surface);
 	--color-surface-text: var(--clr-surface-text);
