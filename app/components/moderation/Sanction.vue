@@ -29,7 +29,7 @@ const label = computed(() => {
 });
 </script>
 <template>
-	<Box :key="'post-' + data.id" class="shrink-0">
+	<Box :key="'sanction-' + data.id" class="shrink-0">
 		<div class="flex flex-col justify-center -space-y-1">
 			<h3 class="text-xl font-bold">{{ label }} - {{ data.reason }}</h3>
 			<span class="text-muted text-sm">

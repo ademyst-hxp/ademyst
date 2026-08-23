@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
+import {
+	FlagIcon,
+	ScaleIcon,
+	HeartIcon,
+	UserMinusIcon,
+	EllipsisVerticalIcon,
+} from "@heroicons/vue/24/outline";
 
 import Navbar from "~/components/layout/Navbar.vue";
 import PostView from "@/components/interactions/Post.vue";
+import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
 
 import type { Profile } from "~~/shared/models/profiles";
 import type { Post } from "~~/shared/models/interactions";
+import type { ProfileReport } from "~~/shared/models/reports";
 
 type Relationship = {
 	me: boolean;
@@ -24,6 +33,10 @@ const route = useRoute();
 const { $api } = useNuxtApp();
 
 const { followUser, unfollowUser, friendUser, unfriendUser } = useRelations();
+
+const { session, refresh: refreshSession } = useAuthSession();
+
+await refreshSession();
 
 const name = computed(() => {
 	const raw = route.params.name;
@@ -72,23 +85,142 @@ const canFollow = computed(
 		!relationship.value.blocking,
 );
 
+/*********************/
+
+const newReport = ref<ProfileReport>({
+	id: "",
+	reason: "",
+	details: "",
+	status: "pending",
+	reporter: {
+		id: "",
+		email: "",
+		createdAt: new Date(),
+		confirmedAt: new Date(),
+		updatedAt: new Date(),
+	},
+	reportedProfile: profile.value ?? {
+		id: "",
+		name: "",
+		displayName: "",
+		bio: "",
+		location: "",
+		corporation: "",
+		birthday: null,
+		pronouns: null,
+		links: [],
+		badge: null,
+		badges: [],
+		level: 0,
+		stats: { following: 0, followers: 0 },
+		relationships: {
+			me: false,
+			following: false,
+			followed: false,
+			friend: false,
+			blocking: false,
+		},
+		createdAt: new Date(),
+	},
+	createdAt: new Date(),
+});
+
+const submitReport = async () => {
+	if (!profile.value) return;
+
+	const response = await $api<ProfileReport>(
+		`/users/${encodeURIComponent(profile.value.name)}/report`,
+		{
+			method: "POST",
+			body: newReport.value,
+		},
+	);
+
+	if (response) {
+		newReport.value = response;
+	}
+};
+
+/*********************/
+
 const tab = ref("posts");
 
 const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
 		{ name: "Publications", value: "posts" },
-		{ name: "Pensées", value: "whispers" },
 		{ name: "Suivis", value: "follows" },
 		{ name: "Abonnés", value: "followers" },
 	];
 
-	if (relationship.value.me) {
-		_tabs.splice(2, 0, { name: "Collections", value: "collections" });
-		_tabs.push({ name: "Statistiques", value: "stats" });
-	}
-
 	return _tabs;
 });
+
+const profileMenuOptions = computed<
+	{
+		label: string;
+		description?: string;
+		icon?: Component;
+		danger?: boolean;
+		handler: string | (() => void);
+	}[]
+>(() => {
+	const options: {
+		label: string;
+		description?: string;
+		icon?: Component;
+		danger?: boolean;
+		handler: string | (() => void);
+	}[] = [];
+
+	if (relationship.value.friend) {
+		options.push({
+			label: "Supprimer un ami",
+			icon: UserMinusIcon,
+			handler: () => {
+				unfriendUser(profile.value!.name, () => {
+					relationship.value.friend = false;
+				});
+			},
+		});
+	} else if (relationship.value.following) {
+		options.push({
+			label: "Ajouter en ami",
+			description: `${profile.value?.displayName || profile.value?.name} pourra voir des publications exclusives.`,
+			icon: HeartIcon,
+			handler: () => {
+				friendUser(profile.value!.name, () => {
+					relationship.value.friend = true;
+				});
+			},
+		});
+	}
+
+	if (!relationship.value.me) {
+		options.push({
+			label: "Signaler le profil",
+			icon: FlagIcon,
+			danger: true,
+			handler: () => {
+				newReport.value.reportedProfile = profile.value!;
+				tab.value = "report";
+			},
+		});
+	}
+
+	if ((session.value?.profile.level ?? 0) >= 6) {
+		options.push({
+			label: "Modérer le profil",
+			icon: ScaleIcon,
+			handler: () => {
+				navigateTo(`/@${profile.value?.name}/moderate`);
+			},
+		});
+	}
+
+	return options;
+});
+
+const isProfileMenuOpen = ref(false);
 </script>
 <template>
 	<div class="mx-auto max-w-7xl lg:flex lg:gap-8">
@@ -148,38 +280,12 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 				</div>
 			</div>
 
-			<div v-if="profile" class="flex flex-wrap gap-2">
+			<div v-if="profile" class="flex flex-wrap gap-2 items-center">
 				<Button
 					v-if="isMe"
 					label="Modifier le profil"
 					size="medium"
 					handler="/account/edit"
-				/>
-
-				<Button
-					v-if="relationship.friend"
-					label="Supprimer un ami"
-					variant="danger"
-					size="medium"
-					:handler="
-						() =>
-							unfriendUser(profile!.name, () => {
-								relationship.friend = false;
-							})
-					"
-				/>
-
-				<Button
-					v-else-if="relationship.following"
-					label="Ajouter en ami"
-					variant="success"
-					size="medium"
-					:handler="
-						() =>
-							friendUser(profile!.name, () => {
-								relationship.friend = true;
-							})
-					"
 				/>
 
 				<Button
@@ -197,7 +303,7 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 				<Button
 					v-else-if="relationship.following"
 					label="Se désabonner"
-					variant="danger"
+					variant="secondary"
 					size="medium"
 					:handler="
 						() =>
@@ -205,6 +311,13 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 								relationship.following = false;
 							})
 					"
+				/>
+
+				<Button
+					:icon="EllipsisVerticalIcon"
+					size="medium"
+					variant="secondary"
+					:handler="() => (isProfileMenuOpen = !isProfileMenuOpen)"
 				/>
 			</div>
 
@@ -241,6 +354,29 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 					:data="post"
 				/>
 			</section>
+
+			<section v-if="tab === 'report'" class="space-y-4">
+				<ProfileReportBox
+					:key="newReport.id"
+					:data="newReport"
+					:editable="true"
+				>
+					<template #edit-actions>
+						<Button
+							label="Signaler"
+							:icon="FlagIcon"
+							variant="danger"
+							:handler="submitReport"
+						/>
+					</template>
+				</ProfileReportBox>
+			</section>
 		</main>
 	</div>
+	<Menu
+		v-if="isProfileMenuOpen"
+		label="Plus d'options"
+		:actions="profileMenuOptions"
+		@close="isProfileMenuOpen = false"
+	/>
 </template>

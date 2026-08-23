@@ -7,6 +7,7 @@ import type { Sanction } from "~~/shared/models/sanctions";
 import type { ProfileReport } from "~~/shared/models/reports";
 
 import SanctionView from "~/components/moderation/Sanction.vue";
+import ProfileReportView from "~/components/moderation/ProfileReport.vue";
 import Box from "~/components/base/Box.vue";
 
 type ProfileResponse = {
@@ -168,7 +169,7 @@ const submitNewSanction = async () => {
 		>
 			<div class="flex gap-4 items-center">
 				<img
-					src="/images/default_avatar.png"
+					:src="`/api/v1/users/${profile?.name}/avatar.webp`"
 					class="w-24 h-24 rounded-full"
 				/>
 
@@ -299,12 +300,24 @@ const submitNewSanction = async () => {
 				<div class="flex flex-col -space-y-1 px-8">
 					<h2 class="text-2xl font-bold">Signalements</h2>
 					<div
-						v-if="!reports || reports.length === 0"
+						v-if="
+							!reports ||
+							reports.length === 0
+						"
 						class="text-muted"
 					>
 						Aucun signalement pour
 						{{ profile?.displayName ?? profile?.name }}
 					</div>
+				</div>
+				<div class="flex flex-col gap-4">
+					<ProfileReportView
+						v-for="report in reports ?? []"
+						:key="report.id"
+						:data="report"
+						:editable="false"
+						:handlable="true"
+					/>
 				</div>
 			</section>
 
