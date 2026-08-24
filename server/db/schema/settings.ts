@@ -36,7 +36,6 @@ export const appearanceSettings = pgTable("appearance_settings", {
 
 	theme: text("theme").notNull().default("light"),
 	highContrast: boolean("high_contrast").notNull().default(false),
-	dyslexiaFriendly: boolean("dyslexia_friendly").notNull().default(false),
 	fontSize: integer("font_size").notNull().default(16),
 	uiDensity: ui_density_enum("ui_density").notNull().default("comfortable"),
 

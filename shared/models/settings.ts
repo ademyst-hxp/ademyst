@@ -10,7 +10,6 @@ export type UiDensity = "compact" | "comfortable";
 export type AppearanceSettings = {
 	theme: string;
 	highContrast: boolean;
-	dyslexiaFriendly: boolean;
 	fontSize: number;
 	uiDensity: UiDensity;
 	createdAt: Date;

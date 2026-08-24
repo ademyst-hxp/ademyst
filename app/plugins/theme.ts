@@ -19,10 +19,6 @@ export default defineNuxtPlugin(() => {
 		default: () => false,
 	});
 
-	const dyslexiaFriendly = useCookie<boolean>("dyslexia-friendly", {
-		default: () => false,
-	});
-
 	const currentTheme = useState("theme", () => theme.value);
 	const currentAlter = useState("alter", () => alter.value);
 
@@ -36,10 +32,6 @@ export default defineNuxtPlugin(() => {
 		"high-contrast",
 		() => highContrast.value,
 	);
-	const currentDyslexiaFriendly = useState(
-		"dyslexia-friendly",
-		() => dyslexiaFriendly.value,
-	);
 
 	// Watch for changes in the cookies and update the state accordingly
 	watchEffect(() => {
@@ -49,6 +41,5 @@ export default defineNuxtPlugin(() => {
 		currentSpacing.value = density.value === "compact" ? 3 : 4;
 		currentFontSize.value = fontSize.value;
 		currentHighContrast.value = highContrast.value;
-		currentDyslexiaFriendly.value = dyslexiaFriendly.value;
 	});
 });

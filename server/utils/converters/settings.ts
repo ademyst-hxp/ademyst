@@ -13,7 +13,6 @@ export function convertAppearanceSettings(
 	return {
 		theme: setting.theme,
 		highContrast: setting.highContrast,
-		dyslexiaFriendly: setting.dyslexiaFriendly,
 		fontSize: setting.fontSize,
 		uiDensity: setting.uiDensity,
 		createdAt: setting.createdAt,

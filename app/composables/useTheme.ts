@@ -14,9 +14,6 @@ export function useTheme() {
 	const highContrast_value = useState<boolean>("high-contrast");
 	const highContrast_cookie = useCookie<boolean>("high-contrast");
 
-	const dyslexiaFriendly_value = useState<boolean>("dyslexia-friendly");
-	const dyslexiaFriendly_cookie = useCookie<boolean>("dyslexia-friendly");
-
 	function initTheme() {
 		if (window && window.matchMedia) {
 			window
@@ -53,10 +50,6 @@ export function useTheme() {
 				document.documentElement.classList.add("high-contrast");
 			}
 
-			if (dyslexiaFriendly_value.value) {
-				document.documentElement.classList.add("dyslexia-friendly");
-			}
-
 			document.documentElement.style.setProperty(
 				"--txt-base",
 				fontSize_value.value + "px",
@@ -70,7 +63,6 @@ export function useTheme() {
 		density?: "compact" | "comfortable";
 		fontSize?: number;
 		highContrast?: boolean;
-		dyslexiaFriendly?: boolean;
 	}) {
 		const {
 			scheme,
@@ -78,7 +70,6 @@ export function useTheme() {
 			density,
 			fontSize,
 			highContrast,
-			dyslexiaFriendly
 		} = props;
 
 		if (scheme !== undefined) {
@@ -104,11 +95,6 @@ export function useTheme() {
 		if (highContrast !== undefined) {
 			highContrast_value.value = highContrast;
 			highContrast_cookie.value = highContrast;
-		}
-
-		if (dyslexiaFriendly !== undefined) {
-			dyslexiaFriendly_value.value = dyslexiaFriendly;
-			dyslexiaFriendly_cookie.value = dyslexiaFriendly;
 		}
 
 		initTheme();
