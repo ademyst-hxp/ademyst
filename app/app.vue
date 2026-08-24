@@ -2,15 +2,24 @@
 import Navbar from "./components/layout/Navbar.vue";
 const { session } = useAuthSession();
 
-const { theme } = useTheme();
+const { theme, initTheme } = useTheme();
 
 const route = useRoute();
 
-const isAuthRoute = route.path.startsWith("/auth");
+const isAuthRoute = computed(() => route.path.startsWith("/auth"));
+
+const _theme =
+	theme.value === "system"
+		? window?.matchMedia("(prefers-color-scheme: dark)")?.matches
+			? "dark"
+			: "light"
+		: theme.value;
+
+initTheme();
 
 definePageMeta({
 	bodyAttrs: {
-		class: `theme-${theme.value}`,
+		class: `scheme-${_theme}`,
 	},
 });
 </script>

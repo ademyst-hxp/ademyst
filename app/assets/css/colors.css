@@ -1,16 +1,18 @@
 :root,
 .scheme-light {
-	/* PALETTE */
-	--clr-primary: #ff7050; /* Revolred */
-	--clr-primary-dark: #cc5a40; /* Dark Revolred */
+	/* =========================
+       BASE PALETTE
+       ========================= */
 
-	--clr-secondary: #793cce; /* Dimmed Revolred */
-	--clr-tertiary: #ffffff; /* White */
+	--clr-primary: #ff7050;
+	--clr-primary-dark: #cc5a40;
+	--clr-secondary: #793cce;
+	--clr-tertiary: #ffffff;
 
-	--clr-whispers: #C19342; /* Gold */
-	--clr-whispers-text: #0a1921; /* Marine Blue */
+	--clr-whispers: #c19342;
+	--clr-whispers-text: #0a1921;
 
-	/* INFO PALETTE */
+	/* INFO */
 	--clr-danger: #ff0044;
 	--clr-danger-shaded: #ffb3c7;
 	--clr-danger-darkened: #cc0036;
@@ -24,20 +26,20 @@
 	--clr-success-darkened: #1eb961;
 
 	--clr-accent: #ff7050;
-	--clr-accent-shaded: #FF7E61;
-	--clr-accent-darkened: #F26A4C;
+	--clr-accent-shaded: #ff7e61;
+	--clr-accent-darkened: #f26a4c;
 
 	/* PAGE */
 	--clr-background-1: #0053ec;
 	--clr-background-2: #18ff9f;
 	--clr-background-3: #d518ff;
-	--clr-page: #f6f6f6ef;
 
+	--clr-page: #f6f6f6ef;
 	--clr-text: #102030;
 	--clr-muted: #102030c0;
 	--clr-muted-background: #dfdfdfc0;
 
-	/* BOXES */
+	/* SURFACES */
 	--clr-surface: #fdfdfdbd;
 	--clr-surface-text: #304050;
 	--clr-surface-border: #dedede;
@@ -52,10 +54,8 @@
 	/* BUTTONS */
 	--clr-button: var(--clr-accent);
 	--clr-button-text: #ffffff;
-
 	--clr-button-hover: var(--clr-accent-darkened);
 	--clr-button-hover-text: #ffffff;
-
 	--clr-button-active: #fdfdfd;
 	--clr-button-active-text: #102030;
 
@@ -63,4 +63,231 @@
 	--clr-input: #00000006;
 	--clr-input-text: #102030;
 	--clr-input-focus-ring: var(--clr-accent);
+}
+
+.scheme-dark {
+	--clr-danger-shaded: #62001a;
+	--clr-warning-shaded: #573600;
+	--clr-success-shaded: #095229;
+
+	--clr-page: #102030ef;
+	--clr-text: #f0f6ff;
+	--clr-muted: #f0f6ffc0;
+	--clr-muted-background: #203040c0;
+
+	--clr-surface: #304050bd;
+	--clr-surface-text: #f0f6ff;
+	--clr-surface-border: #405060c0;
+	--clr-surface-text-muted: #f0f6ffc0;
+
+	--clr-widget: #552696;
+	--clr-widget-text: #efe8e9;
+	--clr-widget-border: #cfb9ee;
+	--clr-widget-text-muted: #552696c0;
+
+	--clr-input-text: #f0f6ff;
+}
+
+/* =========================================================
+   ALTER
+   Change uniquement la palette.
+   ========================================================= */
+
+.alter {
+	/*
+     * Palette adaptée aux déficiences de perception
+     * des couleurs.
+     *
+     * Les états restent visuellement distincts sans
+     * dépendre de rouge vs vert.
+     */
+
+	--clr-primary: #0072b2;
+	--clr-primary-dark: #005a8c;
+	--clr-secondary: #7b2cbf;
+
+	--clr-danger: #d55e00;
+	--clr-danger-shaded: #ffe0cc;
+	--clr-danger-darkened: #a84300;
+
+	--clr-warning: #e69f00;
+	--clr-warning-shaded: #fff1cc;
+	--clr-warning-darkened: #a66f00;
+
+	--clr-success: #009e73;
+	--clr-success-shaded: #d1f2e7;
+	--clr-success-darkened: #007653;
+
+	--clr-accent: #0072b2;
+	--clr-accent-shaded: #cce7f5;
+	--clr-accent-darkened: #005a8c;
+
+	--clr-widget: #eee6f7;
+	--clr-widget-text: #54217f;
+	--clr-widget-border: #9b6fc2;
+	--clr-widget-text-muted: #54217fc0;
+}
+
+/* =========================================================
+   DARK + ALTER
+   ========================================================= */
+
+.scheme-dark.alter {
+	--clr-primary: #56b4e9;
+	--clr-primary-dark: #7bc7f0;
+	--clr-secondary: #c77cff;
+
+	--clr-danger: #e69f00;
+	--clr-danger-shaded: #4a3200;
+	--clr-danger-darkened: #ffbd35;
+
+	--clr-warning: #f0e442;
+	--clr-warning-shaded: #403c00;
+	--clr-warning-darkened: #fff06a;
+
+	--clr-success: #56b4e9;
+	--clr-success-shaded: #07364b;
+	--clr-success-darkened: #8bd3f2;
+
+	--clr-accent: #56b4e9;
+	--clr-accent-shaded: #123b4e;
+	--clr-accent-darkened: #7bc7f0;
+
+	--clr-widget: #35204d;
+	--clr-widget-text: #ead8ff;
+	--clr-widget-border: #c28bea;
+	--clr-widget-text-muted: #ead8ffc0;
+}
+
+/* =========================================================
+   HIGH CONTRAST
+   Augmente le contraste des couleurs actuellement utilisées.
+   ========================================================= */
+
+.high-contrast {
+	--clr-text: #000000;
+	--clr-muted: #202020;
+	--clr-muted-background: #eeeeee;
+
+	--clr-surface: #ffffff;
+	--clr-surface-text: #000000;
+	--clr-surface-border: #000000;
+	--clr-surface-text-muted: #202020;
+
+	--clr-widget-border: #32106f;
+
+	--clr-input: #ffffff;
+	--clr-input-text: #000000;
+	--clr-input-focus-ring: #000000;
+}
+
+/* =========================================================
+   DARK + HIGH CONTRAST
+   ========================================================= */
+
+.scheme-dark.high-contrast {
+	--clr-text: #ffffff;
+	--clr-muted: #eeeeee;
+	--clr-muted-background: #202020;
+
+	--clr-surface: #101010;
+	--clr-surface-text: #ffffff;
+	--clr-surface-border: #ffffff;
+	--clr-surface-text-muted: #eeeeee;
+
+	--clr-input: #101010;
+	--clr-input-text: #ffffff;
+	--clr-input-focus-ring: #ffffff;
+}
+
+/* =========================================================
+   ALTER + HIGH CONTRAST
+   ========================================================= */
+
+/* LIGHT */
+.scheme-light.high-contrast.alter {
+	/* Palette ALTER */
+	--clr-primary: #005a8c;
+	--clr-primary-dark: #003f63;
+	--clr-secondary: #5420a8;
+
+	--clr-danger: #a84300;
+	--clr-danger-shaded: #fff0e8;
+	--clr-danger-darkened: #7a3000;
+
+	--clr-warning: #8a5700;
+	--clr-warning-shaded: #fff8df;
+	--clr-warning-darkened: #5f3c00;
+
+	--clr-success: #006b4f;
+	--clr-success-shaded: #e0f8ef;
+	--clr-success-darkened: #004c38;
+
+	--clr-accent: #005a8c;
+	--clr-accent-shaded: #d9effb;
+	--clr-accent-darkened: #003f63;
+
+	/* Contraste renforcé */
+	--clr-page: #ffffff;
+	--clr-text: #000000;
+	--clr-muted: #202020;
+	--clr-muted-background: #eeeeee;
+
+	--clr-surface: #ffffff;
+	--clr-surface-text: #000000;
+	--clr-surface-border: #000000;
+	--clr-surface-text-muted: #202020;
+
+	--clr-widget: #eee6f7;
+	--clr-widget-text: #54217f;
+	--clr-widget-border: #54217f;
+	--clr-widget-text-muted: #32104f;
+
+	--clr-input: #ffffff;
+	--clr-input-text: #000000;
+	--clr-input-focus-ring: #000000;
+}
+
+/* DARK */
+.scheme-dark.high-contrast.alter {
+	/* Palette ALTER */
+	--clr-primary: #7bc7f0;
+	--clr-primary-dark: #a5ddf8;
+	--clr-secondary: #d3a8ff;
+
+	--clr-danger: #ffbd35;
+	--clr-danger-shaded: #4a3200;
+	--clr-danger-darkened: #ffd477;
+
+	--clr-warning: #fff06a;
+	--clr-warning-shaded: #403c00;
+	--clr-warning-darkened: #fff59a;
+
+	--clr-success: #8bd3f2;
+	--clr-success-shaded: #07364b;
+	--clr-success-darkened: #b5e5f7;
+
+	--clr-accent: #7bc7f0;
+	--clr-accent-shaded: #123b4e;
+	--clr-accent-darkened: #a5ddf8;
+
+	/* Contraste renforcé */
+	--clr-page: #000000;
+	--clr-text: #ffffff;
+	--clr-muted: #eeeeee;
+	--clr-muted-background: #202020;
+
+	--clr-surface: #101010;
+	--clr-surface-text: #ffffff;
+	--clr-surface-border: #ffffff;
+	--clr-surface-text-muted: #eeeeee;
+
+	--clr-widget: #35204d;
+	--clr-widget-text: #f0ddff;
+	--clr-widget-border: #d3a8ff;
+	--clr-widget-text-muted: #ead8ff;
+
+	--clr-input: #101010;
+	--clr-input-text: #ffffff;
+	--clr-input-focus-ring: #ffffff;
 }

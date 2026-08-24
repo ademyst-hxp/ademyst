@@ -1,20 +1,125 @@
 export function useTheme() {
-	const theme = useState<"light" | "dark" | "system" | "fox">("theme");
-	const cookie = useCookie<"light" | "dark" | "system" | "fox">("theme");
+	const theme_value = useState<"light" | "dark" | "system">("theme");
+	const theme_cookie = useCookie<"light" | "dark" | "system">("theme");
 
-	function setTheme(value: "light" | "dark" | "system" | "fox") {
-		theme.value = value;
-		cookie.value = value;
+	const alter_value = useState<boolean>("alter");
+	const alter_cookie = useCookie<boolean>("alter");
+
+	const density_value = useState<"compact" | "comfortable" | "auto">("density");
+	const density_cookie = useCookie<"compact" | "comfortable" | "auto">("density");
+
+	const fontSize_value = useState<number>("font-size");
+	const fontSize_cookie = useCookie<number>("font-size");
+
+	const highContrast_value = useState<boolean>("high-contrast");
+	const highContrast_cookie = useCookie<boolean>("high-contrast");
+
+	const dyslexiaFriendly_value = useState<boolean>("dyslexia-friendly");
+	const dyslexiaFriendly_cookie = useCookie<boolean>("dyslexia-friendly");
+
+	function initTheme() {
+		if (window && window.matchMedia) {
+			window
+				.matchMedia("(prefers-color-scheme: dark)")
+				.addEventListener("change", (e) => {
+					if (theme_value.value === "system") {
+						const newTheme = e.matches ? "dark" : "light";
+						if (document && document.documentElement) {
+							document.documentElement.className = "scheme-" + newTheme;
+						}
+					}
+				});
+		}
+
+		const _theme =
+			theme_value.value === "system"
+				? window?.matchMedia("(prefers-color-scheme: dark)")?.matches
+					? "dark"
+					: "light"
+				: theme_value.value;
 
 		if (document && document.documentElement) {
-			document.documentElement.className = value;
+			document.documentElement.className = "scheme-" + _theme;
+
+			if (alter_value.value) {
+				document.documentElement.classList.add("alter");
+			}
+
+			if (density_value.value) {
+				document.documentElement.classList.add("density-" + density_value.value);
+			}
+
+			if (highContrast_value.value) {
+				document.documentElement.classList.add("high-contrast");
+			}
+
+			if (dyslexiaFriendly_value.value) {
+				document.documentElement.classList.add("dyslexia-friendly");
+			}
+
+			document.documentElement.style.setProperty(
+				"--txt-base",
+				fontSize_value.value + "px",
+			);
 		}
+	}
+
+	function setTheme(props: {
+		scheme?: "light" | "dark" | "system";
+		alter?: boolean;
+		density?: "compact" | "comfortable" | "auto";
+		fontSize?: number;
+		highContrast?: boolean;
+		dyslexiaFriendly?: boolean;
+	}) {
+		const {
+			scheme,
+			alter,
+			density,
+			fontSize,
+			highContrast,
+			dyslexiaFriendly
+		} = props;
+
+		if (scheme !== undefined) {
+			theme_value.value = scheme;
+			theme_cookie.value = scheme;
+		}
+
+		if (alter !== undefined) {
+			alter_value.value = alter;
+			alter_cookie.value = alter;
+		}
+
+		if (density !== undefined) {
+			density_value.value = density;
+			density_cookie.value = density;
+		}
+
+		if (fontSize !== undefined) {
+			fontSize_value.value = fontSize;
+			fontSize_cookie.value = fontSize;
+		}
+
+		if (highContrast !== undefined) {
+			highContrast_value.value = highContrast;
+			highContrast_cookie.value = highContrast;
+		}
+
+		if (dyslexiaFriendly !== undefined) {
+			dyslexiaFriendly_value.value = dyslexiaFriendly;
+			dyslexiaFriendly_cookie.value = dyslexiaFriendly;
+		}
+
+		initTheme();
+
 
 		// éventuellement appeler ton API pour sauvegarder en BDD
 	}
 
 	return {
-		theme,
+		theme: theme_value,
+		initTheme,
 		setTheme,
 	};
 }
