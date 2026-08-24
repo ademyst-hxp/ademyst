@@ -5,7 +5,7 @@ export type Visibility =
 	| "friends"
 	| "me";
 
-export type UiDensity = "compact" | "comfortable" | "auto";
+export type UiDensity = "compact" | "comfortable";
 
 export type AppearanceSettings = {
 	theme: string;

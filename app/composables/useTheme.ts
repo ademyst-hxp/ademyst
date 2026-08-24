@@ -5,8 +5,8 @@ export function useTheme() {
 	const alter_value = useState<boolean>("alter");
 	const alter_cookie = useCookie<boolean>("alter");
 
-	const density_value = useState<"compact" | "comfortable" | "auto">("density");
-	const density_cookie = useCookie<"compact" | "comfortable" | "auto">("density");
+	const density_value = useState<"compact" | "comfortable">("density");
+	const density_cookie = useCookie<"compact" | "comfortable">("density");
 
 	const fontSize_value = useState<number>("font-size");
 	const fontSize_cookie = useCookie<number>("font-size");
@@ -67,7 +67,7 @@ export function useTheme() {
 	function setTheme(props: {
 		scheme?: "light" | "dark" | "system";
 		alter?: boolean;
-		density?: "compact" | "comfortable" | "auto";
+		density?: "compact" | "comfortable";
 		fontSize?: number;
 		highContrast?: boolean;
 		dyslexiaFriendly?: boolean;

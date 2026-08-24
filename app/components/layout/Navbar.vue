@@ -83,7 +83,7 @@ const path = computed(() => useRoute().path);
 	</nav>
 	<nav v-else id="navbar" class="sticky top-4 z-5000 px-4">
 		<div
-			class="flex items-center gap-6 bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-3xl h-20 px-8"
+			class="flex items-center gap-6 bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-3xl h-[80px] px-8"
 		>
 			<RouterLink to="/">
 				<Logo

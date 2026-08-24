@@ -1,5 +1,6 @@
 @import url("./fonts.css");
 @import url("./colors.css");
+@import url("./sizing.css");
 @import "tailwindcss";
 
 @theme {
@@ -57,6 +58,21 @@
 	--color-input-focus-ring: var(--clr-input-focus-ring);
 
 	--font-sans: var(--font-sans);
+
+	--txt-base: 1rem;
+	--text-base: var(--txt-base);
+	--text-sm: calc(var(--text-base) * 0.875);
+	--text-xs: calc(var(--text-base) * 0.75);
+	--text-lg: calc(var(--text-base) * 1.125);
+	--text-xl: calc(var(--text-base) * 1.25);
+	--text-2xl: calc(var(--text-base) * 1.5);
+	--text-3xl: calc(var(--text-base) * 1.875);
+	--text-4xl: calc(var(--text-base) * 2.25);
+	--text-5xl: calc(var(--text-base) * 3);
+	--text-6xl: calc(var(--text-base) * 3.75);
+	--text-7xl: calc(var(--text-base) * 4.5);
+	--text-8xl: calc(var(--text-base) * 6);
+	--text-9xl: calc(var(--text-base) * 8);
 }
 
 html {
@@ -74,6 +90,7 @@ html {
 	background-color: var(--color-page);
 	color: var(--color-text);
 	min-height: 100vh;
+	font-size: var(--text-base);
 }
 
 #__nuxt > *:not(._no_container) {

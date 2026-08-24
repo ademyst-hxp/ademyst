@@ -7,8 +7,8 @@ export default defineNuxtPlugin(() => {
 		default: () => false,
 	});
 
-	const density = useCookie<"compact" | "comfortable" | "auto">("density", {
-		default: () => "auto",
+	const density = useCookie<"compact" | "comfortable">("density", {
+		default: () => "comfortable",
 	});
 
 	const fontSize = useCookie<number>("font-size", {
@@ -25,7 +25,12 @@ export default defineNuxtPlugin(() => {
 
 	const currentTheme = useState("theme", () => theme.value);
 	const currentAlter = useState("alter", () => alter.value);
+
 	const currentDensity = useState("density", () => density.value);
+	const currentSpacing = useState("spacing", () =>
+		density.value === "compact" ? 3 : 4,
+	);
+
 	const currentFontSize = useState("font-size", () => fontSize.value);
 	const currentHighContrast = useState(
 		"high-contrast",
@@ -41,6 +46,7 @@ export default defineNuxtPlugin(() => {
 		currentTheme.value = theme.value;
 		currentAlter.value = alter.value;
 		currentDensity.value = density.value;
+		currentSpacing.value = density.value === "compact" ? 3 : 4;
 		currentFontSize.value = fontSize.value;
 		currentHighContrast.value = highContrast.value;
 		currentDyslexiaFriendly.value = dyslexiaFriendly.value;

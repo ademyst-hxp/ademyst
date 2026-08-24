@@ -14,12 +14,14 @@ const props = withDefaults(
 	},
 );
 
+const spacing = useState<number>("spacing") || ref<number>(3);
+
 const sizes = {
-	xs: 24,
-	sm: 32,
-	md: 48,
-	lg: 64,
-	xl: 96,
+	xs: 6 * spacing.value,
+	sm: 8 * spacing.value,
+	md: 12 * spacing.value,
+	lg: 16 * spacing.value,
+	xl: 24 * spacing.value,
 } as const;
 
 const globalSize = computed<number>(() => {
