@@ -59,7 +59,7 @@ export const profileLinks = pgTable("profile_links", {
 	name: varchar("name", { length: 32 }).notNull(),
 	type: text("type").notNull(),
 
-	url: text("url"), // utilisé si il s'agit d'un lien direct vers un site web (ex: https://www.example.com)
+	url: text("url").notNull(),
 	resourceId: text("resource_id"), // utilisé si il s'agit d'un compte identifiable par ID (ex: Discord, Twitter, etc.)
 	resourceName: text("resource_name"), // utilisé si il s'agit d'un compte identifiable par nom (ex: Instagram, TikTok, Beam etc.)
 

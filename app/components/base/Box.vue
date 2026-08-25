@@ -1,15 +1,28 @@
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	scale?: "sm" | "md";
+	layout?: "horizontal" | "vertical";
 	customColor?: string;
-}>();
+}>(), {
+	scale: "md",
+	layout: "vertical",
+});
 
 const root = computed<{
 	rootClass: string;
 	rootStyle: Record<string, any>;
 }>(() => {
 	let rootClass =
-		"flex flex-col backdrop-blur-lg text-surface-text border";
+		"flex backdrop-blur-lg text-surface-text border";
+
+	switch (props.layout) {
+		case "horizontal":
+			rootClass += " flex-row";
+			break;
+		case "vertical":
+		default:
+			rootClass += " flex-col";
+	}
 
 	switch (props.scale) {
 		case "sm":

@@ -6,11 +6,14 @@ import {
 	HeartIcon,
 	UserMinusIcon,
 	EllipsisVerticalIcon,
+	ChevronRightIcon,
+	ShareIcon,
+	AtSymbolIcon,
 } from "@heroicons/vue/24/outline";
 
-import Navbar from "~/components/layout/Navbar.vue";
 import PostView from "@/components/interactions/Post.vue";
 import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
+import SocialIcon from "@/components/profile/SocialIcon.vue";
 
 import type { Profile } from "~~/shared/models/profiles";
 import type { Post } from "~~/shared/models/interactions";
@@ -170,7 +173,26 @@ const profileMenuOptions = computed<
 		icon?: Component;
 		danger?: boolean;
 		handler: string | (() => void);
-	}[] = [];
+	}[] = [
+		{
+			label: "Partager le profil",
+			icon: ShareIcon,
+			handler: () => {
+				navigator.clipboard.writeText(
+					`https://beam.ejnalo.me/@${profile.value?.name}`,
+				);
+				alert("Lien copié dans le presse-papiers !");
+			},
+		},
+		{
+			label: "Copier le nom d'utilisateur",
+			icon: AtSymbolIcon,
+			handler: () => {
+				navigator.clipboard.writeText(profile.value?.name ?? "");
+				alert("Lien copié dans le presse-papiers !");
+			},
+		},
+	];
 
 	if (relationship.value.friend) {
 		options.push({
@@ -285,7 +307,7 @@ const isProfileMenuOpen = ref(false);
 					v-if="isMe"
 					label="Modifier le profil"
 					size="medium"
-					handler="/account/edit"
+					handler="/settings/profile"
 				/>
 
 				<Button
@@ -338,6 +360,20 @@ const isProfileMenuOpen = ref(false);
 					<BuildingOffice2Icon class="w-5 h-5 text-muted" />
 					{{ profile.corporation }}
 				</li>
+			</ul>
+
+			<ul class="flex flex-col items-start gap-1 px-4">
+				<a
+					class="flex items-center gap-2 cursor-pointer text-muted group"
+					v-for="link in profile?.links ?? []"
+					:href="link.url"
+					target="_blank"
+				>
+					<SocialIcon :icon="link.type" class="w-5 h-5" />
+					<p class="grow font-medium group-hover:underline">
+						{{ link.resourceName || link.name || link.url }}
+					</p>
+				</a>
 			</ul>
 		</header>
 		<main
