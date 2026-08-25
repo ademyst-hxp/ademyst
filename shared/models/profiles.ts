@@ -30,6 +30,7 @@ export type Profile = {
 };
 
 export type ProfileLink = {
+	id: string;
 	name: string;
 	type: string;
 	url: string | null; // utilisé si il s'agit d'un lien direct vers un site web (ex: https://www.example.com)

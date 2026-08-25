@@ -109,6 +109,7 @@ export async function retrieveCleanProfile(
 		badges: await retrieveSeveralCleanBadges(event, profileBadges),
 		level: profile.level,
 		links: links.map((link) => ({
+			id: link.id,
 			name: link.name,
 			type: link.type,
 			url: link.url,
@@ -265,6 +266,7 @@ export async function retrieveSeveralCleanProfiles(
 			badges: await retrieveSeveralCleanBadges(event, profileBadges),
 			level: profile.level,
 			links: links.map((link) => ({
+				id: link.id,
 				name: link.name,
 				type: link.type,
 				url: link.url,
