@@ -272,8 +272,13 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 							v-if="(session?.profile.level ?? 0) >= 4"
 							scale="sm"
 							layout="horizontal"
-							class="items-center w-full cursor-pointer text-white hover:scale-101 duration-200 transition-transform"
+							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
 							:customColor="session?.profile.badge?.color"
+							:class="
+								session?.profile.badge?.color
+									? 'text-white'
+									: ''
+							"
 							@click="navigateTo('/settings/badges')"
 						>
 							<div class="flex items-center gap-2 w-full">
@@ -281,7 +286,14 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 								<p class="grow text-lg font-medium">
 									Certifications et badges
 								</p>
-								<ChevronRightIcon class="h-5 w-5" />
+								<ChevronRightIcon
+									class="h-5 w-5"
+									:class="
+										session?.profile.badge?.color
+											? 'text-white'
+											: 'text-surface-text-muted'
+									"
+								/>
 							</div>
 						</Box>
 						<Box
