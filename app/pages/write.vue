@@ -131,7 +131,7 @@ const handlePublish = async () => {
 		if (editPostId) {
 			// Update the existing post
 			try {
-				await $api(`/posts/${editPostId}`, {
+				await $api(`/posts/${editPostId}/edit`, {
 					method: "PUT",
 					body: preparingPost.value,
 				});
