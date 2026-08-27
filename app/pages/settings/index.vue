@@ -73,8 +73,12 @@ useHead({
 							<div class="flex items-center gap-2 w-full">
 								<UserIcon class="h-8 w-8" />
 								<p class="grow text-lg font-medium">Profil</p>
-								<LightBulbIcon class="h-5 w-5 text-yellow-400" />
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<LightBulbIcon
+									class="h-5 w-5 text-yellow-400"
+								/>
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 						<Box
@@ -85,9 +89,15 @@ useHead({
 						>
 							<div class="flex items-center gap-2 w-full">
 								<GlobeAltIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">Accessibilité</p>
-								<LightBulbIcon class="h-5 w-5 text-yellow-400" />
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<p class="grow text-lg font-medium">
+									Accessibilité
+								</p>
+								<LightBulbIcon
+									class="h-5 w-5 text-yellow-400"
+								/>
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 					</div>
@@ -104,7 +114,9 @@ useHead({
 							<div class="flex items-center gap-2 w-full">
 								<UserIcon class="h-8 w-8" />
 								<p class="grow text-lg font-medium">Profil</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 						<Box
@@ -113,6 +125,11 @@ useHead({
 							layout="horizontal"
 							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
 							:customColor="session?.profile.badge?.color"
+							:class="
+								session?.profile.badge?.color
+									? 'text-white'
+									: ''
+							"
 							@click="navigateTo('/settings/badges')"
 						>
 							<div class="flex items-center gap-2 w-full">
@@ -120,7 +137,14 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Certifications et badges
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="h-5 w-5"
+									:class="
+										session?.profile.badge?.color
+											? ''
+											: 'text-surface-text-muted'
+									"
+								/>
 							</div>
 						</Box>
 						<Box
@@ -134,7 +158,9 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Compte et accès
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 					</div>
@@ -153,7 +179,9 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Apparence et accessibilité
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 						<Box
@@ -167,7 +195,9 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Confidentialité
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 						<Box
@@ -181,7 +211,9 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Notifications et mails
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 					</div>
@@ -200,7 +232,9 @@ useHead({
 								<p class="grow text-lg font-medium">
 									Inviter tes amis
 								</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
+								<ChevronRightIcon
+									class="text-surface-text-muted h-5 w-5"
+								/>
 							</div>
 						</Box>
 					</div>

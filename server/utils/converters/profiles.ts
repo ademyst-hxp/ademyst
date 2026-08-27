@@ -75,8 +75,8 @@ export async function retrieveCleanProfile(
 			)
 			.innerJoin(badges, eq(badges.id, badgesEntitlements.badgeId))
 	)
-		.map((row) => row.badges)
-		.filter((badge): badge is NonNullable<typeof badge> => badge !== null);
+		.filter((badge): badge is NonNullable<typeof badge> => badge !== null)
+		.filter((b) => b.badges_entitlements?.enabled === true);
 
 	const [followersCount] = await db
 		.select({ count: count() })
@@ -88,7 +88,12 @@ export async function retrieveCleanProfile(
 		.from(follows)
 		.where(eq(follows.followerId, profile.id));
 
-	const badge = profileBadges.find((b) => b.family === "level") || null;
+	const badge =
+		profileBadges.find(
+			(b) =>
+				b.badges.family === "level" ||
+				b.badges.family === "certifications",
+		)?.badges || null;
 
 	const stats = {
 		followers: followersCount?.count || 0,
@@ -106,7 +111,12 @@ export async function retrieveCleanProfile(
 		corporation: profile.corporation,
 		createdAt: profile.createdAt,
 		badge: (badge ? await retrieveCleanBadge(event, badge) : null) || null,
-		badges: await retrieveSeveralCleanBadges(event, profileBadges),
+		badges: await retrieveSeveralCleanBadges(
+			event,
+			profileBadges
+				.map((b) => b.badges)
+				.filter((b): b is NonNullable<typeof b> => b !== null),
+		),
 		level: profile.level,
 		links: links.map((link) => ({
 			id: link.id,
@@ -233,12 +243,23 @@ export async function retrieveSeveralCleanProfiles(
 
 		const badge =
 			every_badges
-				.filter((b) => b.badges_entitlements?.profileId === profile.id)
+				.filter(
+					(b) =>
+						b.badges_entitlements?.profileId === profile.id &&
+						b.badges_entitlements?.enabled === true,
+				)
 				.map((b) => b.badges)
-				.find((b) => b?.family === "level") || null;
+				.find(
+					(b) =>
+						b?.family === "level" || b?.family === "certifications",
+				) || null;
 
 		const profileBadges = every_badges
-			.filter((b) => b.badges_entitlements?.profileId === profile.id)
+			.filter(
+				(b) =>
+					b.badges_entitlements?.profileId === profile.id &&
+					b.badges_entitlements?.enabled === true,
+			)
 			.map((b) => b.badges)
 			.filter((b): b is NonNullable<typeof b> => b !== null);
 

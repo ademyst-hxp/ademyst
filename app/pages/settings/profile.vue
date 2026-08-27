@@ -264,7 +264,7 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 							v-if="(session?.profile.level ?? 0) >= 4"
 							scale="sm"
 							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
+							class="items-center w-full cursor-pointer text-white hover:scale-101 duration-200 transition-transform"
 							:customColor="session?.profile.badge?.color"
 							@click="navigateTo('/settings/badges')"
 						>
@@ -274,7 +274,7 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 									Certifications et badges
 								</p>
 								<ChevronRightIcon
-									class="text-surface-text-muted h-5 w-5"
+									class="h-5 w-5"
 								/>
 							</div>
 						</Box>

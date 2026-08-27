@@ -151,3 +151,56 @@ export async function processAvatar(input: Buffer, contentType: string) {
 		contentType: "image/webp" as const,
 	};
 }
+
+export async function processBadgeIcon(input: Buffer, contentType: string) {
+	if (contentType !== "image/png") {
+		throw createError({
+			statusCode: 415,
+			statusMessage: "Unsupported image type",
+		});
+	}
+
+	if (input.length > MAX_FILE_SIZE) {
+		throw createError({
+			statusCode: 413,
+			statusMessage: "Badge icon is too large",
+		});
+	}
+
+	const image = sharp(input, {
+		limitInputPixels: MAX_PIXELS,
+	});
+
+	const metadata = await image.metadata();
+
+	if (!metadata.width || !metadata.height) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid image",
+		});
+	}
+
+	if (metadata.width * metadata.height > MAX_PIXELS) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Image contains too many pixels",
+		});
+	}
+
+	const buffer = await image
+		.resize(512, 512, {
+			fit: "cover",
+			position: "centre",
+			withoutEnlargement: false,
+		})
+		.png()
+		.toBuffer();
+
+	return {
+		buffer,
+		width: 512,
+		height: 512,
+		size: buffer.length,
+		contentType: "image/png" as const,
+	};
+}

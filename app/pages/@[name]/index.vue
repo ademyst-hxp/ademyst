@@ -261,11 +261,17 @@ const isProfileMenuOpen = ref(false);
 						class="bg-muted rounded-full h-3 w-32 animate-pulse"
 					/>
 
-					<h1 v-else class="text-3xl font-bold">
+					<h1 v-else class="flex items-center gap-2 text-3xl font-bold">
 						{{
 							profile?.displayName ??
 							(profile?.name ? `@${profile.name}` : "Ghost")
 						}}
+						<img
+							v-if="profile?.badge"
+							:src="`/api/v1/badges/${profile?.badge?.id}/icon.png`"
+							:alt="profile?.badge?.name"
+							class="h-6 w-6"
+						/>
 					</h1>
 
 					<div
