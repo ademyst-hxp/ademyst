@@ -6,7 +6,6 @@ import {
 	HeartIcon,
 	UserMinusIcon,
 	EllipsisVerticalIcon,
-	ChevronRightIcon,
 	ShareIcon,
 	AtSymbolIcon,
 } from "@heroicons/vue/24/outline";
@@ -14,10 +13,12 @@ import {
 import PostView from "@/components/interactions/Post.vue";
 import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
 import SocialIcon from "@/components/profile/SocialIcon.vue";
+import BadgeInfo from "@/components/profile/BadgeInfo.vue";
 
 import type { Profile } from "~~/shared/models/profiles";
 import type { Post } from "~~/shared/models/interactions";
 import type { ProfileReport } from "~~/shared/models/reports";
+import type { Badge } from "~~/shared/models/shop";
 
 type Relationship = {
 	me: boolean;
@@ -243,6 +244,8 @@ const profileMenuOptions = computed<
 });
 
 const isProfileMenuOpen = ref(false);
+
+const focusedBadge = ref<Badge | null>(null);
 </script>
 <template>
 	<div class="mx-auto max-w-7xl lg:flex lg:gap-8">
@@ -261,7 +264,10 @@ const isProfileMenuOpen = ref(false);
 						class="bg-muted rounded-full h-3 w-32 animate-pulse"
 					/>
 
-					<h1 v-else class="flex items-center gap-2 text-3xl font-bold">
+					<h1
+						v-else
+						class="flex items-center gap-2 text-3xl font-bold"
+					>
 						{{
 							profile?.displayName ??
 							(profile?.name ? `@${profile.name}` : "Ghost")
@@ -283,6 +289,20 @@ const isProfileMenuOpen = ref(false);
 						{{ `@${profile?.name ?? "ghost"}` }}
 					</span>
 				</div>
+			</div>
+
+			<div
+				v-if="profile?.badges && profile?.badges.length > 0"
+				class="flex items-center gap-1.5 px-4"
+			>
+				<template :key="badge.id" v-for="badge in profile?.badges">
+					<img
+						:src="`/api/v1/badges/${badge.id}/icon.png`"
+						:alt="badge.name"
+						class="cursor-pointer h-5 w-5"
+						@click="focusedBadge = badge"
+					/>
+				</template>
 			</div>
 
 			<div class="flex items-center gap-4 px-4">
@@ -420,5 +440,10 @@ const isProfileMenuOpen = ref(false);
 		label="Plus d'options"
 		:actions="profileMenuOptions"
 		@close="isProfileMenuOpen = false"
+	/>
+	<BadgeInfo
+		v-if="focusedBadge"
+		:badge="focusedBadge"
+		@close="focusedBadge = null"
 	/>
 </template>

@@ -221,14 +221,14 @@ const focusedBadge = ref<Badge | null>(null);
 							</div>
 							<Button
 								v-if="!entitlement.enabled"
-								label="Activer"
+								label="Porter"
 								size="small"
 								variant="success"
 								:handler="() => enableEntitlement(entitlement)"
 							/>
 							<Button
 								v-else
-								label="Désactiver"
+								label="Masquer"
 								size="small"
 								variant="secondary"
 								:handler="() => disableEntitlement(entitlement)"
@@ -264,14 +264,14 @@ const focusedBadge = ref<Badge | null>(null);
 							</div>
 							<Button
 								v-if="!entitlement.enabled"
-								label="Activer"
+								label="Porter"
 								size="small"
 								variant="success"
 								:handler="() => enableEntitlement(entitlement)"
 							/>
 							<Button
 								v-else
-								label="Désactiver"
+								label="Masquer"
 								size="small"
 								variant="secondary"
 								:handler="() => disableEntitlement(entitlement)"
@@ -311,14 +311,14 @@ const focusedBadge = ref<Badge | null>(null);
 							</div>
 							<Button
 								v-if="!entitlement.enabled"
-								label="Activer"
+								label="Porter"
 								size="small"
 								variant="success"
 								:handler="() => enableEntitlement(entitlement)"
 							/>
 							<Button
 								v-else
-								label="Désactiver"
+								label="Masquer"
 								size="small"
 								variant="secondary"
 								:handler="() => disableEntitlement(entitlement)"
