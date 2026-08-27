@@ -11,6 +11,7 @@ const validatePayload = (
 ): {
 	name?: string;
 	displayName?: string;
+	pronouns?: string;
 	bio?: string;
 	location?: string;
 	corporation?: string;
@@ -22,11 +23,12 @@ const validatePayload = (
 		});
 	}
 
-	const { name, displayName, bio, location, corporation } = payload;
+	const { name, displayName, pronouns, bio, location, corporation } = payload;
 
 	if (
 		(name !== undefined && typeof name !== "string") ||
 		(displayName !== undefined && typeof displayName !== "string") ||
+		(pronouns !== undefined && typeof pronouns !== "string") ||
 		(bio !== undefined && typeof bio !== "string") ||
 		(location !== undefined && typeof location !== "string") ||
 		(corporation !== undefined && typeof corporation !== "string")
@@ -55,6 +57,14 @@ const validatePayload = (
 		});
 	}
 
+	if (pronouns && pronouns.trim().length > 16) {
+		throw createError({
+			statusCode: 400,
+			statusMessage:
+				"Pronouns are too long. They must be 16 characters or less.",
+		});
+	}
+
 	if (bio && bio.trim().length > 256) {
 		throw createError({
 			statusCode: 400,
@@ -63,17 +73,18 @@ const validatePayload = (
 		});
 	}
 
-	if (location && location.trim().length > 64) {
+	if (location && location.trim().length > 128) {
 		throw createError({
 			statusCode: 400,
 			statusMessage:
-				"Location is too long. It must be 64 characters or less.",
+				"Location is too long. It must be 128 characters or less.",
 		});
 	}
 
 	return {
 		name: name?.trim(),
 		displayName: displayName?.trim(),
+		pronouns: pronouns?.trim(),
 		bio: bio?.trim(),
 		location: location?.trim(),
 		corporation: corporation?.trim(),

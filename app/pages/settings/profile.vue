@@ -50,6 +50,7 @@ useHead({
 const payload = ref({
 	name: session?.value?.profile.name || "",
 	displayName: session?.value?.profile.displayName || "",
+	pronouns: session?.value?.profile.pronouns || "",
 	bio: session?.value?.profile.bio || "",
 	location: session?.value?.profile.location || "",
 	corporation: session?.value?.profile.corporation || "",
@@ -179,21 +180,28 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 								@enter="updateProfile"
 							/>
 							<Input
-								v-model="payload.location"
-								label="Localisation"
-								placeholder="Localisation"
+								v-model="payload.pronouns"
+								label="Pronoms"
+								placeholder="Pronoms"
 								@enter="updateProfile"
 							/>
 						</div>
 					</div>
-					<div class="flex flex-col gap-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<Input
-							v-model="payload.corporation"
-							label="Entreprise / Organisation"
-							placeholder="Entreprise / Organisation"
+							v-model="payload.location"
+							label="Localisation"
+							placeholder="Localisation"
 							@enter="updateProfile"
 						/>
 						<Input
+							v-model="payload.corporation"
+							label="Entreprise / Organisation"
+							placeholder="Ademyst Co."
+							@enter="updateProfile"
+						/>
+						<Input
+							class="col-span-1 md:col-span-2"
 							type="textarea"
 							v-model="payload.bio"
 							label="Bio"
@@ -273,9 +281,7 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 								<p class="grow text-lg font-medium">
 									Certifications et badges
 								</p>
-								<ChevronRightIcon
-									class="h-5 w-5"
-								/>
+								<ChevronRightIcon class="h-5 w-5" />
 							</div>
 						</Box>
 						<Box
