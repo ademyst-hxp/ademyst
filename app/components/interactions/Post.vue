@@ -37,6 +37,13 @@ const { session } = useAuthSession();
 
 const post = ref<Post>(props.data);
 
+watch(
+	() => props.data,
+	(newPost) => {
+		post.value = newPost;
+	},
+);
+
 const { likePost, unlikePost } = usePostInteractions();
 
 const copyToClipboard = async () => {
