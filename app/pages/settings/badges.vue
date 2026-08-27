@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import Box from "~/components/base/Box.vue";
 
+import BadgeInfo from "~/components/profile/BadgeInfo.vue";
+
 import {
 	UserIcon,
 	ChevronRightIcon,
 } from "@heroicons/vue/24/outline";
 
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
+import type { Badge } from "~~/shared/models/shop";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();
@@ -122,6 +125,8 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 		alert("Une erreur est survenue lors de la désactivation du badge.");
 	}
 };
+
+const focusedBadge = ref<Badge | null>(null);
 </script>
 <template>
 	<div class="md:flex">
@@ -207,7 +212,8 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 								<img
 									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
 									:alt="entitlement.badge.name"
-									class="h-8 w-8"
+									class="cursor-pointer h-8 w-8"
+									@click="focusedBadge = entitlement.badge"
 								/>
 								<p class="font-medium">
 									{{ entitlement.badge.name }}
@@ -249,7 +255,8 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 								<img
 									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
 									:alt="entitlement.badge.name"
-									class="h-8 w-8"
+									class="cursor-pointer h-8 w-8"
+									@click="focusedBadge = entitlement.badge"
 								/>
 								<p class="font-medium">
 									{{ entitlement.badge.name }}
@@ -295,7 +302,8 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 								<img
 									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
 									:alt="entitlement.badge.name"
-									class="h-8 w-8"
+									class="cursor-pointer h-8 w-8"
+									@click="focusedBadge = entitlement.badge"
 								/>
 								<p class="font-medium">
 									{{ entitlement.badge.name }}
@@ -358,4 +366,9 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
 		></aside>
 	</div>
+	<BadgeInfo
+		v-if="focusedBadge"
+		:badge="focusedBadge"
+		@close="focusedBadge = null"
+	/>
 </template>
