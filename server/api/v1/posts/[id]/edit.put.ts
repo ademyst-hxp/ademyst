@@ -47,12 +47,15 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const { content, visibility } = validatePayload(body);
+	let updatedAt = undefined;
+	if (content) updatedAt = new Date();
 
 	const [editedPost] = await db
 		.update(posts)
 		.set({
 			content,
 			visibility,
+			updatedAt,
 		})
 		.where(eq(posts.id, id))
 		.returning();

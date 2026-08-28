@@ -5,6 +5,8 @@ import Box from "../base/Box.vue";
 
 import ProfileRow from "../profile/ProfileRow.vue";
 
+import { convertToLitteralDuration } from "~/utils/date";
+
 import {
 	EllipsisVerticalIcon,
 	HeartIcon as HeartSolidIcon,
@@ -136,9 +138,20 @@ const rendered = computed(() => {
 </script>
 <template>
 	<Box :key="'post-' + post.id" class="shrink-0">
-		<div class="flex items-center">
+		<div class="flex items-center gap-2">
 			<ProfileRow :data="post.profile" />
 			<div class="grow" />
+			<span
+				class="text-surface-text-muted"
+				:class="post.updatedAt ? 'italic' : ''"
+			>
+				{{
+					convertToLitteralDuration(
+						new Date(),
+						new Date(post.updatedAt || post.createdAt),
+					)
+				}}
+			</span>
 			<EllipsisVerticalIcon
 				@click="isMenuOpen = !isMenuOpen"
 				class="h-5 w-5 cursor-pointer"

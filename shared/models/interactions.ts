@@ -32,6 +32,7 @@ export type Post = {
 	content: string;
 	visibility: PostVisibility;
 	createdAt: Date;
+	updatedAt: Date | null;
 	attachments: Attachment[];
 	flags: PostFlag[];
 	interaction: {

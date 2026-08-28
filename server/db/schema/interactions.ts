@@ -37,6 +37,7 @@ export const posts = pgTable(
 			.default("everyone"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at"),
 	},
 	(table) => [
 		foreignKey({
@@ -104,26 +105,30 @@ export const whisperVisibilityEnum = pgEnum("whisper_visibility", [
 	"me",
 ]);
 
-export const whispers = pgTable("whispers", {
-	id: varchar("id", { length: 10 }).primaryKey(),
+export const whispers = pgTable(
+	"whispers",
+	{
+		id: varchar("id", { length: 10 }).primaryKey(),
 
-	profileId: varchar("profile_id", { length: 10 })
-		.notNull()
-		.references(() => profiles.id, { onDelete: "cascade" }),
+		profileId: varchar("profile_id", { length: 10 })
+			.notNull()
+			.references(() => profiles.id, { onDelete: "cascade" }),
 
-	content: text("content").notNull(),
-	image: text("image"), // URL to the image
-	color: varchar("color", { length: 7 }), // Hex code for the whisper color
-	textColor: varchar("text_color", { length: 7 }), // Hex code for the text color
+		content: text("content").notNull(),
+		image: text("image"), // URL to the image
+		color: varchar("color", { length: 7 }), // Hex code for the whisper color
+		textColor: varchar("text_color", { length: 7 }), // Hex code for the text color
 
-	visibility: whisperVisibilityEnum("visibility")
-		.notNull()
-		.default("everyone"),
+		visibility: whisperVisibilityEnum("visibility")
+			.notNull()
+			.default("everyone"),
 
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-	check("whispers_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
-]).enableRLS();
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		check("whispers_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
+	],
+).enableRLS();
 
 export type Whisper = typeof whispers.$inferSelect;
 

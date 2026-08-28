@@ -84,6 +84,7 @@ export async function retrieveCleanPost(
 		content: shouldTruncate ? "" : post.content,
 		visibility: post.visibility,
 		createdAt: post.createdAt,
+		updatedAt: post.updatedAt,
 		attachments: shouldTruncate ? [] : files,
 		flags: flags.map((flag) => convertPostFlag(flag)),
 		stats: {
@@ -205,6 +206,7 @@ export async function retrieveSeveralCleanPosts(
 			content: access ? post.content : "",
 			visibility: post.visibility,
 			createdAt: post.createdAt,
+			updatedAt: post.updatedAt,
 			attachments: files,
 			flags: flags.map(convertPostFlag),
 			stats: {
