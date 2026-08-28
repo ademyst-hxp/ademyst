@@ -13,10 +13,51 @@ import {
 import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
+const validatePayload = (
+	payload: any,
+	specs: {
+		max_length: number;
+	},
+): { content: string; visibility: PostVisibility } => {
+	if (!payload) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing payload",
+		});
+	}
+
+	const content = normalizeOptionalText(payload?.content);
+	const visibility = normalizeVisibility(payload?.visibility) || "everyone";
+
+	if (!content) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing content field",
+		});
+	}
+
+	if (content.length > specs.max_length) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `Post content exceeds maximum length of ${specs.max_length} characters`,
+		});
+	}
+
+	return { content, visibility };
+};
+
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
+	const user = await getUser(event, identity);
+
+	if (!user) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+		});
+	}
 
 	const quotedPostId = normalizeId(event.context.params?.id);
 
@@ -28,8 +69,17 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const body = await readBody(event);
-	const content = normalizeOptionalText(body?.content) ?? "";
-	const visibility = normalizeVisibility(body?.visibility) ?? "everyone";
+	const specs = {
+		max_length:
+			user.profile.level >= 5
+				? 5000
+				: user.profile.level >= 4
+					? 2000
+					: 1000,
+	};
+
+	const { content, visibility } = validatePayload(body, specs);
+
 	const id = generateHexId();
 
 	const [createdPost] = await db
