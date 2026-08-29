@@ -89,6 +89,94 @@ const canFollow = computed(
 		!relationship.value.blocking,
 );
 
+/********************/
+
+useHead({
+	title: profile.value
+		? `${profile.value.displayName || profile.value.name} | Ademyst`
+		: "Profil introuvable | Ademyst",
+	meta: [
+		{
+			name: "description",
+			content: profile.value?.bio ?? "Profil utilisateur sur Ademyst.",
+		},
+		{
+			name: "keywords",
+			content: `Beam, Ademyst, Profil, ${
+				profile.value?.displayName ||
+				profile.value?.name ||
+				"Utilisateur"
+			}`,
+		},
+		{
+			name: "author",
+			content:
+				profile.value?.displayName || profile.value?.name || "Ademyst",
+		},
+		{
+			name: "viewport",
+			content: "width=device-width, initial-scale=1.0",
+		},
+		{
+			name: "robots",
+			content:
+				profile.value && (profile.value?.level ?? 0) > 5
+					? "index, follow"
+					: "noindex, nofollow",
+		},
+		{
+			name: "theme-color",
+			content: profile.value?.badge?.color ?? "#ff7050",
+		},
+		{
+			property: "og:title",
+			content: profile.value
+				? `${profile.value.displayName || profile.value.name} | Ademyst`
+				: "Profil introuvable | Ademyst",
+		},
+		{
+			property: "og:description",
+			content: profile.value?.bio ?? "Profil utilisateur sur Ademyst.",
+		},
+		{
+			property: "og:image",
+			content: profile.value
+				? `/api/v1/users/${profile.value.name}/avatar.webp`
+				: "/images/default_avatar.png",
+		},
+		{
+			property: "og:url",
+			content: profile.value
+				? `https://ademyst.ejnalo.me/@${profile.value.name}`
+				: "https://ademyst.ejnalo.me/",
+		},
+		{
+			property: "og:type",
+			content: "profile",
+		},
+		{
+			name: "twitter:card",
+			content: "summary_large_image",
+		},
+		{
+			name: "twitter:title",
+			content: profile.value
+				? `${profile.value.displayName || profile.value.name} | Ademyst`
+				: "Profil introuvable | Ademyst",
+		},
+		{
+			name: "twitter:description",
+			content: profile.value?.bio ?? "Profil utilisateur sur Ademyst.",
+		},
+		{
+			name: "twitter:image",
+			content: profile.value
+				? `/api/v1/users/${profile.value.name}/avatar.webp`
+				: "/images/default_avatar.png",
+		},
+	],
+});
+
 /*********************/
 
 const newReport = ref<ProfileReport>({
