@@ -43,6 +43,7 @@ export type Post = {
 	stats: {
 		reactions: Record<PostReactionType, number>;
 		answers: number;
+		score: number;
 	};
 };
 

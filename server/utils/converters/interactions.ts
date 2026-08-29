@@ -29,6 +29,7 @@ import type {
 import { Profile } from "~~/shared/models/profiles";
 
 import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
+import { calculateRatingScore } from "~~/shared/utils/interactions";
 
 export async function retrieveCleanPost(
 	event: H3Event,
@@ -77,6 +78,15 @@ export async function retrieveCleanPost(
 
 	const shouldTruncate = !access;
 
+	const computedReactions: Record<PostReactionType, number> = reactions.reduce(
+		(acc, reaction) => {
+			acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
+			return acc;
+		},
+		{} as Record<PostReactionType, number>,
+	);
+
+
 	return {
 		id: post.id,
 		profile: profile,
@@ -88,14 +98,17 @@ export async function retrieveCleanPost(
 		attachments: shouldTruncate ? [] : files,
 		flags: flags.map((flag) => convertPostFlag(flag)),
 		stats: {
-			reactions: reactions.reduce(
-				(acc, reaction) => {
-					acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
-					return acc;
-				},
-				{} as Record<PostReactionType, number>,
-			),
+			reactions: computedReactions,
 			answers: answers?.count || 0,
+			score: calculateRatingScore(
+				post.createdAt,
+				shouldTruncate ? "" : post.content,
+				profile.level ?? 0,
+				{
+					reactions: computedReactions,
+					answers: answers?.count || 0,
+				},
+			),
 		},
 		interaction: {
 			liked: reactions.some((reaction) => reaction.profileId === identity?.profileId && reaction.reaction === 'like'),
@@ -199,6 +212,14 @@ export async function retrieveSeveralCleanPosts(
 		const flags = flagsMap.get(post.id) ?? [];
 		const files = access ? (attachmentsMap.get(post.id) ?? []) : [];
 
+		const computedReactions: Record<PostReactionType, number> = reactions.reduce(
+			(acc, reaction) => {
+				acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
+				return acc;
+			},
+			{} as Record<PostReactionType, number>,
+		);
+
 		return {
 			id: post.id,
 			profile: author,
@@ -210,15 +231,17 @@ export async function retrieveSeveralCleanPosts(
 			attachments: files,
 			flags: flags.map(convertPostFlag),
 			stats: {
-				reactions: reactions.reduce(
-					(acc, reaction) => {
-						acc[reaction.reaction] =
-							(acc[reaction.reaction] ?? 0) + 1;
-						return acc;
-					},
-					{} as Record<PostReactionType, number>,
-				),
+				reactions: computedReactions,
 				answers: answersMap.get(post.id) ?? 0,
+				score: calculateRatingScore(
+					post.createdAt,
+					access ? post.content : "",
+					author.level ?? 0,
+					{
+						reactions: computedReactions,
+						answers: answersMap.get(post.id) ?? 0,
+					},
+				),
 			},
 			interaction: {
 				liked: reactions.some(

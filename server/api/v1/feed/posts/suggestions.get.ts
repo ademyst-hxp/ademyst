@@ -31,15 +31,20 @@ export default defineEventHandler(async (event) => {
 
 	const filteredPosts = resolvedPosts
 		.filter((post): post is NonNullable<typeof post> => post !== null)
+		.filter(
+			(post) =>
+				!post.flags.some((flag) =>
+					[
+						"NFE",
+						"AI",
+						"joke",
+						"misinformation",
+						"suspicious",
+					].includes(flag.flag),
+				),
+		)
 		.sort((a, b) => {
-			let score = 0;
-			score += b.createdAt.getTime() - a.createdAt.getTime() > 0 ? 1 : -1;
-			score +=
-				b.stats.reactions.like - a.stats.reactions.like > 0 ? 6 : -6;
-			score +=
-				(b.profile.level ?? 0) - (a.profile.level ?? 0) > 0 ? 3 : -3;
-
-			return score;
+			return b.stats.score - a.stats.score;
 		});
 
 	return {
