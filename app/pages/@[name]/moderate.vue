@@ -161,6 +161,16 @@ const submitNewSanction = async () => {
 		throw error;
 	}
 };
+
+useHead({
+	title: `Modération de ${profile.value?.displayName ?? profile.value?.name ?? "Ghost"} | Ademyst`,
+	meta: [
+		{
+			name: "description",
+			content: `Modération du profil de ${profile.value?.displayName ?? profile.value?.name ?? "Ghost"}.`,
+		},
+	],
+});
 </script>
 <template>
 	<div class="mx-auto max-w-7xl lg:flex lg:gap-8">
