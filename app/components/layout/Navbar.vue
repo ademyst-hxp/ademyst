@@ -87,7 +87,7 @@ const path = computed(() => useRoute().path);
 		>
 			<RouterLink to="/">
 				<Logo
-					class="w-auto h-6 transition-colors duration-200 hover:text-primary"
+					class="w-auto h-5 transition-colors duration-200 hover:text-primary"
 				/>
 			</RouterLink>
 			<RouterLink
@@ -96,6 +96,13 @@ const path = computed(() => useRoute().path);
 			>
 				<FireIcon class="w-7 h-7" />
 				Discover
+			</RouterLink>
+			<RouterLink
+				to="/write"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+			>
+				<PencilIcon class="w-7 h-7" />
+				Écrire
 			</RouterLink>
 			<div class="grow"></div>
 			<div
