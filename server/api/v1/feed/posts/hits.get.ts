@@ -20,12 +20,10 @@ export default defineEventHandler(async (event) => {
 
 	const rawPosts = await db
 		.select()
-		.from(follows)
-		.where(eq(follows.followerId, identity.profileId))
-		.innerJoin(
-			posts,
+		.from(posts)
+		.where(
 			and(
-				eq(follows.followingId, posts.profileId),
+				eq(posts.visibility, "everyone"),
 				lt(
 					posts.createdAt,
 					new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
@@ -39,7 +37,7 @@ export default defineEventHandler(async (event) => {
 	const resolvedPosts = await retrieveSeveralCleanPosts(
 		event,
 		identity,
-		rawPosts.map((row) => row.posts),
+		rawPosts,
 	);
 
 	const filteredPosts = resolvedPosts
