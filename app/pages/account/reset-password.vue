@@ -24,6 +24,28 @@ const handlePasswordReset = async () => {
 
 	// await navigateTo("/auth/login");
 };
+
+useHead({
+	title: "Réinitialisation du mot de passe | Ademyst",
+	meta: [
+		{
+			name: "description",
+			content: "Réinitialisez votre mot de passe Beam.",
+		},
+		{
+			name: "keywords",
+			content: "Beam, Ademyst, Réinitialisation du mot de passe",
+		},
+		{
+			name: "author",
+			content: "Ejnalo",
+		},
+		{
+			name: "viewport",
+			content: "width=device-width, initial-scale=1.0",
+		},
+	],
+});
 </script>
 <template>
 	<header

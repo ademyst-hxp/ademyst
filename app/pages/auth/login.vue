@@ -19,6 +19,28 @@ const handleLogin = async () => {
 		await navigateTo("/discover");
 	}
 };
+
+useHead({
+	title: "Connexion | Ademyst",
+	meta: [
+		{
+			name: "description",
+			content: "Connectez-vous à votre compte Beam.",
+		},
+		{
+			name: "keywords",
+			content: "Beam, Ademyst, Connexion",
+		},
+		{
+			name: "author",
+			content: "Ejnalo",
+		},
+		{
+			name: "viewport",
+			content: "width=device-width, initial-scale=1.0",
+		},
+	],
+});
 </script>
 <template>
 	<header

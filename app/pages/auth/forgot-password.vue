@@ -21,6 +21,28 @@ const handleEmailSend = async () => {
 
 	await navigateTo("/auth/login");
 };
+
+useHead({
+	title: "Mot de passe oublié | Ademyst",
+	meta: [
+		{
+			name: "description",
+			content: "Réinitialisez votre mot de passe Beam.",
+		},
+		{
+			name: "keywords",
+			content: "Beam, Ademyst, Mot de passe oublié",
+		},
+		{
+			name: "author",
+			content: "Ejnalo",
+		},
+		{
+			name: "viewport",
+			content: "width=device-width, initial-scale=1.0",
+		},
+	],
+});
 </script>
 <template>
 	<header

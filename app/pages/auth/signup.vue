@@ -66,6 +66,28 @@ const handleSignup = async () => {
 		console.error("Signup failed:", error);
 	}
 };
+
+useHead({
+	title: "Inscription | Ademyst",
+	meta: [
+		{
+			name: "description",
+			content: "Créez un compte Beam pour accéder à toutes les fonctionnalités.",
+		},
+		{
+			name: "keywords",
+			content: "Beam, Ademyst, Inscription",
+		},
+		{
+			name: "author",
+			content: "Ejnalo",
+		},
+		{
+			name: "viewport",
+			content: "width=device-width, initial-scale=1.0",
+		},
+	],
+});
 </script>
 <template>
 	<header
