@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
 	}
 
 	await db.insert(postReports).values({
-		reporterId: identity.profileId,
+		reporterId: identity.accountId,
 		reportedPostId: postId,
 		reason,
 		details,

@@ -99,7 +99,7 @@ const actions = computed(() => {
 			icon: FlagIcon,
 			danger: true,
 			handler: () => {
-				navigateTo("/post/" + props.data.id + "/report");
+				navigateTo("/posts/" + props.data.id + "/report");
 			},
 		});
 	}
@@ -121,7 +121,7 @@ const actions = computed(() => {
 			label: "Modérer la publication",
 			icon: ScaleIcon,
 			handler: () => {
-				navigateTo("/post/" + props.data.id + "/moderate");
+				navigateTo("/posts/" + props.data.id + "/moderate");
 			},
 		});
 	}
