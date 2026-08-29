@@ -18,7 +18,7 @@ const validatePayload = (
 	specs: {
 		max_length: number;
 	},
-): { content: string; visibility: PostVisibility } => {
+): { parentId: string | null; content: string; visibility: PostVisibility } => {
 	if (!payload) {
 		throw createError({
 			statusCode: 400,
@@ -26,8 +26,16 @@ const validatePayload = (
 		});
 	}
 
+	const parentId = normalizeId(payload?.parentId) || null;
 	const content = normalizeOptionalText(payload?.content);
 	const visibility = normalizeVisibility(payload?.visibility) || "everyone";
+
+	if (payload?.parentId && !parentId) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid parent post id",
+		});
+	}
 
 	if (!content) {
 		throw createError({
@@ -43,7 +51,7 @@ const validatePayload = (
 		});
 	}
 
-	return { content, visibility };
+	return { parentId, content, visibility };
 };
 
 export default defineEventHandler(async (event) => {
@@ -59,15 +67,6 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const quotedPostId = normalizeId(event.context.params?.id);
-
-	if (event.context.params?.id && !quotedPostId) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid quoted post id",
-		});
-	}
-
 	const body = await readBody(event);
 	const specs = {
 		max_length:
@@ -78,7 +77,7 @@ export default defineEventHandler(async (event) => {
 					: 1000,
 	};
 
-	const { content, visibility } = validatePayload(body, specs);
+	const { parentId, content, visibility } = validatePayload(body, specs);
 
 	const id = generateHexId();
 
@@ -87,7 +86,7 @@ export default defineEventHandler(async (event) => {
 		.values({
 			id,
 			profileId: identity.profileId,
-			parentId: quotedPostId,
+			parentId,
 			content,
 			visibility,
 		})
