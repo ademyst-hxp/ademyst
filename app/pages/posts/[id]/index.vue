@@ -107,6 +107,7 @@ const preparingPost = ref<Post>({
 	visibility: "everyone",
 	content: "",
 	createdAt: new Date(),
+	updatedAt: null,
 	attachments: [],
 	flags: [],
 	interaction: {
@@ -119,6 +120,7 @@ const preparingPost = ref<Post>({
 			like: 0,
 		},
 		answers: 0,
+		score: 0,
 	},
 });
 
