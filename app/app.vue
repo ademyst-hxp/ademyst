@@ -17,11 +17,10 @@ const _theme =
 
 initTheme();
 
-definePageMeta({
-	bodyAttrs: {
-		class: `scheme-${_theme}`,
-	},
-});
+if (document) {
+	document.documentElement.setAttribute("data-theme", _theme);
+	document.documentElement.classList.add(`theme-${_theme}`);
+}
 </script>
 <template>
 	<Teleport to="#__nuxt">
