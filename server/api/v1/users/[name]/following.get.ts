@@ -70,22 +70,23 @@ export default defineEventHandler(async (event) => {
 		};
 	}
 
-	const following = await db
+	const following = (await db
 		.select({
 			profile: profiles,
 		})
 		.from(follows)
-		.innerJoin(profiles, eq(profiles.id, follows.followingId))
 		.where(eq(follows.followerId, profile.id))
+		.innerJoin(profiles, eq(profiles.id, follows.followingId))
 		.limit(limit)
-		.offset(offset);
+		.offset(offset))
+		.map((row) => row.profile);
 
 	return {
 		status: "ok",
-		following: retrieveSeveralCleanProfiles(
+		following: await retrieveSeveralCleanProfiles(
 			event,
 			identity,
-			following.map((row) => row.profile),
+			following,
 		),
 		next: offset + limit,
 		hasNext: following.length === limit,
