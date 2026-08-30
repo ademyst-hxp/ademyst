@@ -215,7 +215,7 @@ export async function retrieveSeveralCleanProfiles(
 			(link) => link.profileId === profile.id,
 		);
 
-		const r = relationship;
+		const { blocked, friended, ...r } = relationship;
 
 		if (!access.profile) {
 			result.push({
