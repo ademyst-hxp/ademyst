@@ -97,11 +97,45 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
 		{ name: "Aperçu", value: "overview" },
 		{ name: "Signalements", value: "reports" },
-		// { name: "Flags", value: "flags" },
+		{ name: "Flags", value: "flags" },
 	];
 
 	return _tabs;
 });
+
+/*****************/
+const flagsPayload = ref({
+	spam: post.value?.flags.spam || false,
+	NFE: post.value?.flags.NFE || false,
+	AI: post.value?.flags.AI || false,
+	misinformation: post.value?.flags.misinformation || false,
+	joke: post.value?.flags.joke || false,
+	suspicious: post.value?.flags.suspicious || false,
+});
+
+const submitFlags = async () => {
+	if (!postId) return;
+
+	try {
+		const response = await $fetch(
+			`/api/v1/moderation/posts/${encodeURIComponent(postId)}/flags`,
+			{
+				method: "PUT",
+				body: flagsPayload.value,
+			},
+		);
+
+		if (response) {
+			await refresh();
+			alert("Flags mis à jour avec succès !");
+		}
+	} catch (error: any) {
+		alert(
+			error?.message ||
+				"Une erreur est survenue lors de la mise à jour des flags.",
+		);
+	}
+};
 </script>
 <template>
 	<div class="mx-auto max-w-7xl lg:flex">
@@ -168,7 +202,9 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 					</Box>
 					<Box class="flex-0 -space-y-1" scale="sm">
 						<span class="text-2xl font-bold">{{
-							Object.values(post?.flags || {}).some((v) => v === true)
+							Object.values(post?.flags || {}).some(
+								(v) => v === true,
+							)
 								? "Oui"
 								: "Aucun"
 						}}</span>
@@ -194,6 +230,57 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 						:data="report"
 						:editable="false"
 						:handlable="true"
+					/>
+				</div>
+			</section>
+
+			<section v-if="tab === 'flags'" class="space-y-2">
+				<div class="flex flex-col -space-y-1 px-8">
+					<h2 class="text-2xl font-bold">Flags</h2>
+				</div>
+				<div class="flex flex-col gap-2 px-8">
+					<div
+						v-if="post?.flags.reported"
+						class="flex items-center gap-2 bg-danger/20 text-danger border border-danger/40 rounded-xl p-4 -mx-8"
+					>
+						<p class="text-sm font-semibold">
+							Cette publication aété signalée de nombreuses fois.
+						</p>
+					</div>
+					<Input
+						v-model="flagsPayload.NFE"
+						label="Nudité, violence, contenu explicite ou choquant"
+						type="checkbox"
+					/>
+					<Input
+						v-model="flagsPayload.AI"
+						label="Contenu généré partiellement ou totalement par une intelligence artificielle"
+						type="checkbox"
+					/>
+					<Input
+						v-model="flagsPayload.spam"
+						label="Spam"
+						type="checkbox"
+					/>
+					<Input
+						v-model="flagsPayload.misinformation"
+						label="Désinformation"
+						type="checkbox"
+					/>
+					<Input
+						v-model="flagsPayload.joke"
+						label="Blague ou contenu humoristique"
+						type="checkbox"
+					/>
+					<Input
+						v-model="flagsPayload.suspicious"
+						label="Contenu suspect ou douteux"
+						type="checkbox"
+					/>
+					<Button
+						label="Mettre à jour les flags"
+						variant="primary"
+						:handler="submitFlags"
 					/>
 				</div>
 			</section>
