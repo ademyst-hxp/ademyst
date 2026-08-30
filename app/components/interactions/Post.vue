@@ -226,7 +226,7 @@ const rendered = computed(() => {
 				/>
 				<HeartIcon class="h-6 w-6 cursor-pointer" v-else />
 				<span class="text-lg">{{
-					post.stats.reactions.like || 0
+					toLitteral(post.stats.reactions.like || 0)
 				}}</span>
 			</div>
 			<div
@@ -236,7 +236,7 @@ const rendered = computed(() => {
 				<ChatBubbleOvalLeftEllipsisIcon
 					class="h-6 w-6 cursor-pointer"
 				/>
-				<span class="text-lg">{{ post.stats.answers || 0 }}</span>
+				<span class="text-lg">{{ toLitteral(post.stats.answers || 0) }}</span>
 			</div>
 			<div class="grow" />
 			<div class="flex items-center gap-1" @click="copyLinkToClipboard">

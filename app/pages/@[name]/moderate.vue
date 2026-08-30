@@ -210,21 +210,21 @@ useHead({
 			<div class="flex items-center gap-4 px-4">
 				<div class="flex flex-col w-1/3 -space-y-1">
 					<span class="text-2xl font-bold">{{
-						posts?.length ?? 0
+						toLitteral(posts?.length ?? 0)
 					}}</span>
 					<span class="text-muted">Publications</span>
 				</div>
 
 				<div class="flex flex-col w-1/3 -space-y-1">
 					<span class="text-2xl font-bold">{{
-						stats.following
+						toLitteral(stats.following)
 					}}</span>
 					<span class="text-muted">Suivis</span>
 				</div>
 
 				<div class="flex flex-col w-1/3 -space-y-1">
 					<span class="text-2xl font-bold">{{
-						stats.followers
+						toLitteral(stats.followers)
 					}}</span>
 					<span class="text-muted">Abonnés</span>
 				</div>
