@@ -31,9 +31,14 @@ function createDb(connectionString: string) {
 	};
 }
 
-// One database client per HTTP request.
-// The same client is reused for every SQL query during that request.
+// Cloudflare Workers can't reuse I/O objects (sockets) across requests, so the
+// db client must be created fresh per request instead of cached at module scope.
 const dbByEvent = new WeakMap<H3Event, Database>();
+
+// Kept separately so the connection can be closed after the response is sent
+// (see closeDb below) — calling client.end() closes it for *new* queries
+// immediately, so it must only happen once this request's queries are done.
+const clientByEvent = new WeakMap<H3Event, ReturnType<typeof postgres>>();
 
 export function useDb(event: H3Event): Database {
 	const cached = dbByEvent.get(event);
@@ -42,15 +47,31 @@ export function useDb(event: H3Event): Database {
 		return cached;
 	}
 
-	const connectionString = process.env.DATABASE_URL;
+	// Local development
+	const databaseUrl = process.env.DATABASE_URL;
+
+	const connectionString = databaseUrl;
 
 	if (!connectionString) {
-		throw new Error("No database connection found (DATABASE_URL)");
+		throw new Error(
+			"No database connection found (DATABASE_URL)",
+		);
 	}
 
-	const { db } = createDb(connectionString);
+	const { client, db } = createDb(connectionString);
 
 	dbByEvent.set(event, db);
+	clientByEvent.set(event, client);
 
 	return db;
+}
+
+// Called from the "afterResponse" nitro hook (server/plugins/close-db.ts),
+// once this request's queries have all completed.
+export function closeDb(event: H3Event): void {
+	const client = clientByEvent.get(event);
+
+	if (client) {
+		event.waitUntil(client.end());
+	}
 }
