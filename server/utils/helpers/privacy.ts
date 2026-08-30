@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, or, inArray } from "drizzle-orm";
 
 import { useDb } from "#server/db";
 import type { H3Event } from "h3";
@@ -24,11 +24,9 @@ export const getRelationshipStatus = async (
 	A?: Profile | Identity | null,
 	B?: Profile | null,
 ): Promise<Relationship> => {
-	// Relation from A to B (e.g. A following B, A followed by B...)
-
 	const db = useDb(event);
 
-	const relationships: Relationship = {
+	const relationship: Relationship = {
 		me: false,
 		following: false,
 		followed: false,
@@ -39,136 +37,135 @@ export const getRelationshipStatus = async (
 	};
 
 	if (!A || !B) {
-		return relationships;
+		return relationship;
 	}
 
 	let issuer: Profile;
 
 	if ((A as Identity).profileId) {
-		const [author] = await db
+		const [profile] = await db
 			.select()
 			.from(profiles)
 			.where(eq(profiles.id, (A as Identity).profileId))
 			.limit(1);
 
-		if (author) {
-			issuer = author;
-		} else {
-			return relationships;
+		if (!profile) {
+			return relationship;
 		}
+
+		issuer = profile;
 	} else {
 		issuer = A as Profile;
 	}
 
 	const target = B;
 
-	if (!issuer || !target) {
-		return relationships;
-	}
+	relationship.me = issuer.accountId === target.accountId;
 
-	relationships.me = issuer?.accountId === target.accountId;
-
-	const [blocked] = await db
-		.select()
+	/*
+	 * ============================================================
+	 * Blocks
+	 * ============================================================
+	 *
+	 * issuer -> target => blocking
+	 * target -> issuer => blocked
+	 */
+	const [blockRelation] = await db
+		.select({
+			blockerId: blocks.blockerId,
+			blockedId: blocks.blockedId,
+		})
 		.from(blocks)
 		.where(
-			and(
-				eq(blocks.blockedId, target.id),
-				eq(blocks.blockerId, issuer.id),
+			or(
+				and(
+					eq(blocks.blockerId, issuer.id),
+					eq(blocks.blockedId, target.id),
+				),
+				and(
+					eq(blocks.blockerId, target.id),
+					eq(blocks.blockedId, issuer.id),
+				),
 			),
 		)
 		.limit(1);
 
-	if (blocked) {
-		relationships.blocked = true;
+	if (blockRelation) {
+		relationship.blocking = blockRelation.blockerId === issuer.id;
+		relationship.blocked = blockRelation.blockedId === issuer.id;
+
+		if (relationship.blocking || relationship.blocked) {
+			return relationship;
+		}
 	}
 
-	const [blocking] = await db
-		.select()
-		.from(blocks)
-		.where(
-			and(
-				eq(blocks.blockedId, issuer.id),
-				eq(blocks.blockerId, target.id),
-			),
-		)
-		.limit(1);
-
-	if (blocking) {
-		relationships.blocking = true;
-	}
-
-	if (blocking || blocked) {
-		return relationships;
-	}
-
-	/* ==================================================== */
-
-	const [following] = await db
-		.select()
+	/*
+	 * ============================================================
+	 * Follows
+	 * ============================================================
+	 *
+	 * issuer -> target => following
+	 * target -> issuer => followed
+	 */
+	const [followRelation] = await db
+		.select({
+			followerId: follows.followerId,
+			followingId: follows.followingId,
+		})
 		.from(follows)
 		.where(
-			and(
-				eq(follows.followerId, issuer.id),
-				eq(follows.followingId, target.id),
+			or(
+				and(
+					eq(follows.followerId, issuer.id),
+					eq(follows.followingId, target.id),
+				),
+				and(
+					eq(follows.followerId, target.id),
+					eq(follows.followingId, issuer.id),
+				),
 			),
 		)
 		.limit(1);
 
-	if (following) {
-		relationships.following = true;
+	if (followRelation) {
+		relationship.following = followRelation.followerId === issuer.id;
+		relationship.followed = followRelation.followingId === issuer.id;
 	}
 
-	const [followed] = await db
-		.select()
-		.from(follows)
-		.where(
-			and(
-				eq(follows.followerId, target.id),
-				eq(follows.followingId, issuer.id),
-			),
-		)
-		.limit(1);
-
-	if (followed) {
-		relationships.followed = true;
-	}
-
-	/* ==================================================== */
-
-	const [friend] = await db
-		.select()
+	/*
+	 * ============================================================
+	 * Friendships
+	 * ============================================================
+	 *
+	 * issuer -> target => friend
+	 * target -> issuer => friended
+	 */
+	const [friendRelation] = await db
+		.select({
+			profileAId: friendships.profileAId,
+			profileBId: friendships.profileBId,
+		})
 		.from(friendships)
 		.where(
-			and(
-				eq(friendships.profileBId, target.id),
-				eq(friendships.profileAId, issuer.id),
+			or(
+				and(
+					eq(friendships.profileAId, issuer.id),
+					eq(friendships.profileBId, target.id),
+				),
+				and(
+					eq(friendships.profileAId, target.id),
+					eq(friendships.profileBId, issuer.id),
+				),
 			),
 		)
 		.limit(1);
 
-	if (friend) {
-		relationships.friend = true;
+	if (friendRelation) {
+		relationship.friend = friendRelation.profileAId === issuer.id;
+		relationship.friended = friendRelation.profileBId === issuer.id;
 	}
 
-	const [friended] = await db
-		.select()
-		.from(friendships)
-		.where(
-			and(
-				eq(friendships.profileBId, issuer.id),
-				eq(friendships.profileAId, target.id),
-			),
-		)
-		.limit(1);
-
-	if (friended) {
-		relationships.friended = true;
-	}
-
-	/* ==================================================== */
-
-	return relationships;
+	return relationship;
 };
 
 export const getPrivacySettings = async (
@@ -289,7 +286,6 @@ export const getSeveralRelationshipStatus = async (
 	A: Profile | Identity | null | undefined,
 	B: Profile[],
 ): Promise<Record<Profile["id"], Relationship>> => {
-	// Relation from A to B (e.g. A following B, A followed by B...)
 	const db = useDb(event);
 
 	const base: Relationship = {
@@ -302,166 +298,196 @@ export const getSeveralRelationshipStatus = async (
 		blocked: false,
 	};
 
-	let relationships: Record<Profile["id"], Relationship> = {};
+	const relationships: Record<Profile["id"], Relationship> = {};
 
-	for (let i = 0; i < B.length; i++) {
-		relationships[B[i]!.id] = base;
+	for (const target of B) {
+		relationships[target.id] = { ...base };
 	}
 
-	if (!A || !B) {
+	if (!A || B.length === 0) {
 		return relationships;
 	}
 
 	let issuer: Profile;
 
 	if ((A as Identity).profileId) {
-		const [author] = await db
+		const [profile] = await db
 			.select()
 			.from(profiles)
 			.where(eq(profiles.id, (A as Identity).profileId))
 			.limit(1);
 
-		if (author) {
-			issuer = author;
-		} else {
+		if (!profile) {
 			return relationships;
 		}
+
+		issuer = profile;
 	} else {
 		issuer = A as Profile;
 	}
 
-	const targets = B;
+	const targetIds = B.map((target) => target.id);
 
-	if (!issuer || !targets) {
-		return relationships;
-	}
-
-	const blocked = (
-		await db
-			.select()
-			.from(blocks)
-			.where(
+	/*
+	 * ============================================================
+	 * Blocks
+	 * ============================================================
+	 *
+	 * On récupère les relations dans les deux directions :
+	 *
+	 *   target -> issuer  => blocked
+	 *   issuer -> target  => blocking
+	 */
+	const blockRelations = await db
+		.select({
+			blockerId: blocks.blockerId,
+			blockedId: blocks.blockedId,
+		})
+		.from(blocks)
+		.where(
+			or(
 				and(
 					eq(blocks.blockedId, issuer.id),
-					inArray(
-						blocks.blockerId,
-						targets.map((t) => t.id),
-					),
+					inArray(blocks.blockerId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((b) => b.blockerId);
-
-	const blocking = (
-		await db
-			.select()
-			.from(blocks)
-			.where(
 				and(
 					eq(blocks.blockerId, issuer.id),
-					inArray(
-						blocks.blockedId,
-						targets.map((t) => t.id),
-					),
+					inArray(blocks.blockedId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((b) => b.blockedId);
+			),
+		);
 
-	const following = (
-		await db
-			.select()
-			.from(follows)
-			.where(
+	/*
+	 * ============================================================
+	 * Follows
+	 * ============================================================
+	 *
+	 *   issuer -> target  => following
+	 *   target -> issuer  => followed
+	 */
+	const followRelations = await db
+		.select({
+			followerId: follows.followerId,
+			followingId: follows.followingId,
+		})
+		.from(follows)
+		.where(
+			or(
 				and(
 					eq(follows.followerId, issuer.id),
-					inArray(
-						follows.followingId,
-						targets.map((t) => t.id),
-					),
+					inArray(follows.followingId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((f) => f.followingId);
-
-	const followed = (
-		await db
-			.select()
-			.from(follows)
-			.where(
 				and(
 					eq(follows.followingId, issuer.id),
-					inArray(
-						follows.followerId,
-						targets.map((t) => t.id),
-					),
+					inArray(follows.followerId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((f) => f.followerId);
+			),
+		);
 
-	const friend = (
-		await db
-			.select()
-			.from(friendships)
-			.where(
+	/*
+	 * ============================================================
+	 * Friendships
+	 * ============================================================
+	 *
+	 *   issuer -> target  => friend
+	 *   target -> issuer  => friended
+	 */
+	const friendRelations = await db
+		.select({
+			profileAId: friendships.profileAId,
+			profileBId: friendships.profileBId,
+		})
+		.from(friendships)
+		.where(
+			or(
 				and(
 					eq(friendships.profileAId, issuer.id),
-					inArray(
-						friendships.profileBId,
-						targets.map((t) => t.id),
-					),
+					inArray(friendships.profileBId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((f) => f.profileBId);
-
-	const friended = (
-		await db
-			.select()
-			.from(friendships)
-			.where(
 				and(
 					eq(friendships.profileBId, issuer.id),
-					inArray(
-						friendships.profileAId,
-						targets.map((t) => t.id),
-					),
+					inArray(friendships.profileAId, targetIds),
 				),
-			)
-			.limit(1)
-	).map((f) => f.profileAId);
+			),
+		);
 
-	for (const target of targets) {
-		let _base = { ...base };
+	/*
+	 * ============================================================
+	 * Process relations
+	 * ============================================================
+	 */
 
-		_base.me = issuer?.accountId === target.accountId;
+	const blocked = new Set<Profile["id"]>();
+	const blocking = new Set<Profile["id"]>();
 
-		if (blocked.includes(target.id)) _base.blocked = true;
-		if (blocking.includes(target.id)) _base.blocking = true;
+	for (const relation of blockRelations) {
+		if (relation.blockedId === issuer.id) {
+			blocked.add(relation.blockerId);
+		}
 
-		if (blocking.includes(target.id) || blocked.includes(target.id)) {
-			relationships[target.id] = _base;
+		if (relation.blockerId === issuer.id) {
+			blocking.add(relation.blockedId);
+		}
+	}
+
+	const following = new Set<Profile["id"]>();
+	const followed = new Set<Profile["id"]>();
+
+	for (const relation of followRelations) {
+		if (relation.followerId === issuer.id) {
+			following.add(relation.followingId);
+		}
+
+		if (relation.followingId === issuer.id) {
+			followed.add(relation.followerId);
+		}
+	}
+
+	const friend = new Set<Profile["id"]>();
+	const friended = new Set<Profile["id"]>();
+
+	for (const relation of friendRelations) {
+		if (relation.profileAId === issuer.id) {
+			friend.add(relation.profileBId);
+		}
+
+		if (relation.profileBId === issuer.id) {
+			friended.add(relation.profileAId);
+		}
+	}
+
+	/*
+	 * ============================================================
+	 * Build result
+	 * ============================================================
+	 */
+
+	for (const target of B) {
+		const relationship: Relationship = {
+			...base,
+			me: issuer.accountId === target.accountId,
+			blocked: blocked.has(target.id),
+			blocking: blocking.has(target.id),
+		};
+
+		// A block takes precedence over the other relationships.
+		if (relationship.blocked || relationship.blocking) {
+			relationships[target.id] = relationship;
 			continue;
 		}
 
-		/* ==================================================== */
+		relationship.following = following.has(target.id);
+		relationship.followed = followed.has(target.id);
 
-		if (following.includes(target.id)) _base.following = true;
-		if (followed.includes(target.id)) _base.followed = true;
+		relationship.friend = friend.has(target.id);
+		relationship.friended = friended.has(target.id);
 
-		/* ==================================================== */
-
-		if (friend.includes(target.id)) _base.friend = true;
-		if (friended.includes(target.id)) _base.friended = true;
-
-		relationships[target.id] = _base;
+		relationships[target.id] = relationship;
 	}
-
-	/* ==================================================== */
 
 	return relationships;
 };
+
 
 export const getSeveralPrivacySettings = async (
 	event: H3Event,
@@ -490,6 +516,8 @@ export const getSeveralPrivacySettings = async (
 			accountId: profile.accountId,
 			profileVisibility: "me",
 			birthdayVisibility: "me",
+			termsOfServiceConsent: false,
+			privacyPolicyConsent: false,
 			createdAt: new Date(),
 			updatedAt: new Date(),
 		};
