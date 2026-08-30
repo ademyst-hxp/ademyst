@@ -209,7 +209,7 @@ export async function retrieveSeveralCleanProfiles(
 		.groupBy(follows.followerId);
 
 	for (const profile of _profiles) {
-		const relationship = relationships[profile.accountId!]!;
+		const relationship = relationships[profile.id!]!;
 		const access = accesses[profile.id]!;
 		const links = every_links.filter(
 			(link) => link.profileId === profile.id,
