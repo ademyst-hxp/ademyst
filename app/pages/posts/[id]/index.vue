@@ -109,7 +109,16 @@ const preparingPost = ref<Post>({
 	createdAt: new Date(),
 	updatedAt: null,
 	attachments: [],
-	flags: [],
+	flags: {
+		NFE: false,
+		AI: false,
+		joke: false,
+		misinformation: false,
+		spam: false,
+		suspicious: false,
+		suicide: false,
+		reported: false,
+	},
 	interaction: {
 		liked: false,
 		reported: false,

@@ -42,14 +42,18 @@ export default defineEventHandler(async (event) => {
 
 	const filteredPosts = resolvedPosts
 		.filter((post): post is NonNullable<typeof post> => post !== null)
-		.sort((a, b) => {
-			let score = 0;
-
-			score += 1 * (b.stats.reactions.like - a.stats.reactions.like);
-			score += 1.5 * (b.stats.answers - a.stats.answers);
-
-			return score;
-		});
+		.filter(
+			(post) =>
+				!(
+					post.flags.spam ||
+					post.flags.NFE ||
+					post.flags.AI ||
+					post.flags.misinformation ||
+					post.flags.reported ||
+					(post.profile.level ?? 0) < 3
+				),
+		)
+		.sort((a, b) => b.stats.reactions.like - a.stats.reactions.like);
 
 	return {
 		status: "ok",

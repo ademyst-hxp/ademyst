@@ -10,13 +10,14 @@ export type PostVisibility =
 
 export type PostReactionType = "like";
 export type PostFlagType =
-	| "NFE"
-	| "AI"
-	| "joke"
-	| "misinformation"
-	| "spam"
-	| "suspicious"
-	| "suicide";
+	| "NFE" // Not Family Friendly
+	| "AI" // AI Generated
+	| "joke" // Joke or Satire
+	| "misinformation" // Flagged for misinformation
+	| "spam" // Flagged for spam
+	| "suspicious" // Suspicious content
+	| "suicide" // Deals with suicide or self-harm
+	| "reported"; // Reported several times
 
 export type WhisperVisibility =
 	| "outside"
@@ -34,7 +35,9 @@ export type Post = {
 	createdAt: Date;
 	updatedAt: Date | null;
 	attachments: Attachment[];
-	flags: PostFlag[];
+	flags: {
+		[flag in PostFlagType]: boolean;
+	};
 	interaction: {
 		liked: boolean;
 		reported: boolean;
@@ -58,7 +61,7 @@ export type PostReaction = {
 export type PostFlag = {
 	id: string;
 	postId: string;
-	flag: PostFlagType;
+	type: PostFlagType;
 	createdAt: Date;
 };
 

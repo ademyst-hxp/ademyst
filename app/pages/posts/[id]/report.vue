@@ -125,7 +125,16 @@ const newReport = ref<PostReport>({
 			score: 0,
 		},
 		attachments: [],
-		flags: [],
+		flags: {
+			NFE: false,
+			AI: false,
+			joke: false,
+			misinformation: false,
+			spam: false,
+			suspicious: false,
+			suicide: false,
+			reported: false,
+		},
 		interaction: {
 			liked: false,
 			reported: false,

@@ -33,14 +33,12 @@ export default defineEventHandler(async (event) => {
 		.filter((post): post is NonNullable<typeof post> => post !== null)
 		.filter(
 			(post) =>
-				!post.flags.some((flag) =>
-					[
-						"NFE",
-						"AI",
-						"joke",
-						"misinformation",
-						"suspicious",
-					].includes(flag.flag),
+				!(
+					post.flags.spam ||
+					post.flags.NFE ||
+					post.flags.AI ||
+					post.flags.misinformation ||
+					post.flags.reported
 				),
 		)
 		.sort((a, b) => {

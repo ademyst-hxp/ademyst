@@ -168,7 +168,9 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 					</Box>
 					<Box class="flex-0 -space-y-1" scale="sm">
 						<span class="text-2xl font-bold">{{
-							post?.flags?.length ?? 0
+							Object.values(post?.flags || {}).some((v) => v === true)
+								? "Oui"
+								: "Aucun"
 						}}</span>
 						<span class="text-muted">Flags</span>
 					</Box>

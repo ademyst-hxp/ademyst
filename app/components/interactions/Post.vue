@@ -169,9 +169,9 @@ const rendered = computed(() => {
 			v-html="rendered || '<em>Vide.</em>'"
 			@click.self="$router.push(`/posts/${post.id}`)"
 		/>
-		<div class="flex flex-col gap-2" v-if="post.flags.length > 0">
+		<div class="flex flex-col gap-2" v-if="post.flags.NFE || post.flags.AI">
 			<div
-				v-if="post.flags.some((flag: PostFlag) => flag.flag === 'AI')"
+				v-if="post.flags.AI"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">
@@ -180,7 +180,7 @@ const rendered = computed(() => {
 				</p>
 			</div>
 			<div
-				v-if="post.flags.some((flag: PostFlag) => flag.flag === 'NFE')"
+				v-if="post.flags.NFE"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">

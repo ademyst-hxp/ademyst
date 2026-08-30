@@ -1,7 +1,7 @@
 import { useDb } from "~~/server/db";
 import type { H3Event } from "h3";
 
-import { eq, inArray, count } from "drizzle-orm";
+import { eq, and, or, inArray, count } from "drizzle-orm";
 
 import {
 	type Post as DbPost,
@@ -12,6 +12,8 @@ import {
 	postReactions,
 	postsFlags,
 } from "~~/server/db/schema/interactions";
+
+import { postReports } from "~~/server/db/schema/reports";
 
 import { profiles } from "~~/server/db/schema/profiles";
 import { attachments } from "~~/server/db/schema/drive";
@@ -78,14 +80,30 @@ export async function retrieveCleanPost(
 
 	const shouldTruncate = !access;
 
-	const computedReactions: Record<PostReactionType, number> = reactions.reduce(
-		(acc, reaction) => {
-			acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
-			return acc;
-		},
-		{} as Record<PostReactionType, number>,
-	);
+	const computedReactions: Record<PostReactionType, number> =
+		reactions.reduce(
+			(acc, reaction) => {
+				acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
+				return acc;
+			},
+			{} as Record<PostReactionType, number>,
+		);
 
+	const reports = await db
+		.select()
+		.from(postReports)
+		.where(
+			and(
+				eq(postReports.reportedPostId, post.id),
+				or(
+					eq(postReports.reporterId, identity?.accountId || ""),
+					eq(postReports.status, "pending"),
+				)
+			),
+		) || [];
+
+	const pendingReports = reports.filter((report) => report.status === "pending");
+	const myReports = reports.filter((report) => report.reporterId === identity?.accountId);
 
 	return {
 		id: post.id,
@@ -96,7 +114,16 @@ export async function retrieveCleanPost(
 		createdAt: post.createdAt,
 		updatedAt: post.updatedAt,
 		attachments: shouldTruncate ? [] : files,
-		flags: flags.map((flag) => convertPostFlag(flag)),
+		flags: {
+			...flags.reduce(
+				(acc, flag) => {
+					acc[flag.type] = true;
+					return acc;
+				},
+				{} as Record<PostFlag["type"], boolean>,
+			),
+			reported: pendingReports.length > 3, // 3 pour l'instant, augmenter au fur et à mesure que la communauté grandit
+		},
 		stats: {
 			reactions: computedReactions,
 			answers: answers?.count || 0,
@@ -111,8 +138,12 @@ export async function retrieveCleanPost(
 			),
 		},
 		interaction: {
-			liked: reactions.some((reaction) => reaction.profileId === identity?.profileId && reaction.reaction === 'like'),
-			reported: false,
+			liked: reactions.some(
+				(reaction) =>
+					reaction.profileId === identity?.profileId &&
+					reaction.reaction === "like",
+			),
+			reported: myReports.length > 0,
 			saved: false,
 		},
 	};
@@ -160,7 +191,12 @@ export async function retrieveSeveralCleanPosts(
 	const allAttachments = await db
 		.select()
 		.from(attachments)
-		.where(inArray(attachments.postId, dbPosts.map((p) => p.id)));
+		.where(
+			inArray(
+				attachments.postId,
+				dbPosts.map((p) => p.id),
+			),
+		);
 
 	const attachmentsMap = groupBy(allAttachments, (a) => a.postId);
 
@@ -168,7 +204,12 @@ export async function retrieveSeveralCleanPosts(
 	const allReactions = await db
 		.select()
 		.from(postReactions)
-		.where(inArray(postReactions.postId, dbPosts.map((p) => p.id)));
+		.where(
+			inArray(
+				postReactions.postId,
+				dbPosts.map((p) => p.id),
+			),
+		);
 
 	const reactionsMap = groupBy(allReactions, (r) => r.postId);
 
@@ -176,7 +217,12 @@ export async function retrieveSeveralCleanPosts(
 	const allFlags = await db
 		.select()
 		.from(postsFlags)
-		.where(inArray(postsFlags.postId, dbPosts.map((p) => p.id)));
+		.where(
+			inArray(
+				postsFlags.postId,
+				dbPosts.map((p) => p.id),
+			),
+		);
 
 	const flagsMap = groupBy(allFlags, (f) => f.postId);
 
@@ -187,10 +233,33 @@ export async function retrieveSeveralCleanPosts(
 			count: count(),
 		})
 		.from(posts)
-		.where(inArray(posts.parentId, dbPosts.map((p) => p.id)))
+		.where(
+			inArray(
+				posts.parentId,
+				dbPosts.map((p) => p.id),
+			),
+		)
 		.groupBy(posts.parentId);
 
 	const answersMap = new Map(answerCounts.map((a) => [a.parentId!, a.count]));
+
+	const allReports = await db
+		.select()
+		.from(postReports)
+		.where(
+			and(
+				inArray(
+					postReports.reportedPostId,
+					dbPosts.map((p) => p.id),
+				),
+				or(
+					eq(postReports.reporterId, identity?.accountId || ""),
+					eq(postReports.status, "pending"),
+				)
+			),
+		) || [];
+
+	const reportsMap = groupBy(allReports, (r) => r.reportedPostId);
 
 	return dbPosts.map((post) => {
 		const author = authors[post.profileId];
@@ -202,23 +271,24 @@ export async function retrieveSeveralCleanPosts(
 		const relationship = all_relationships[author.id]!;
 		const privacy = all_privacy[author.id]!;
 
-		const access = canAccessEntity(
-			privacy,
-			relationship,
-			post.visibility,
-		);
+		const access = canAccessEntity(privacy, relationship, post.visibility);
 
 		const reactions = reactionsMap.get(post.id) ?? [];
 		const flags = flagsMap.get(post.id) ?? [];
 		const files = access ? (attachmentsMap.get(post.id) ?? []) : [];
 
-		const computedReactions: Record<PostReactionType, number> = reactions.reduce(
-			(acc, reaction) => {
-				acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
-				return acc;
-			},
-			{} as Record<PostReactionType, number>,
-		);
+		const computedReactions: Record<PostReactionType, number> =
+			reactions.reduce(
+				(acc, reaction) => {
+					acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
+					return acc;
+				},
+				{} as Record<PostReactionType, number>,
+			);
+
+		const computedReports = reportsMap.get(post.id) ?? [];
+		const pendingReports = computedReports.filter((report) => report.status === "pending");
+		const myReports = computedReports.filter((report) => report.reporterId === identity?.accountId);
 
 		return {
 			id: post.id,
@@ -229,7 +299,16 @@ export async function retrieveSeveralCleanPosts(
 			createdAt: post.createdAt,
 			updatedAt: post.updatedAt,
 			attachments: files,
-			flags: flags.map(convertPostFlag),
+			flags: {
+				...flags.reduce(
+					(acc, flag) => {
+						acc[flag.type] = true;
+						return acc;
+					},
+					{} as Record<PostFlag["type"], boolean>,
+				),
+				reported: pendingReports.length > 3, // 3 pour l'instant, augmenter au fur et à mesure que la communauté grandit
+			},
 			stats: {
 				reactions: computedReactions,
 				answers: answersMap.get(post.id) ?? 0,
@@ -249,7 +328,7 @@ export async function retrieveSeveralCleanPosts(
 						reaction.profileId === identity?.profileId &&
 						reaction.reaction === "like",
 				),
-				reported: false,
+				reported: myReports.length > 0,
 				saved: false,
 			},
 		};
@@ -408,7 +487,9 @@ export async function retrieveSeveralCleanWhispers(
 
 		const shouldTruncate = !access;
 
-		const image = whisper.image ? (images.get(whisper.image) ?? null) : null;
+		const image = whisper.image
+			? (images.get(whisper.image) ?? null)
+			: null;
 
 		return {
 			id: whisper.id,
