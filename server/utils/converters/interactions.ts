@@ -75,8 +75,8 @@ export async function retrieveCleanPost(
 		.where(eq(postsFlags.postId, post.id));
 	const [answers] = await db
 		.select({ count: count() })
-		.from(postsFlags)
-		.where(eq(postsFlags.postId, post.id));
+		.from(posts)
+		.where(eq(posts.parentId, post.id));
 
 	const shouldTruncate = !access;
 
