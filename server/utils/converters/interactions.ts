@@ -89,21 +89,28 @@ export async function retrieveCleanPost(
 			{} as Record<PostReactionType, number>,
 		);
 
-	const reports = await db
-		.select()
-		.from(postReports)
-		.where(
-			and(
-				eq(postReports.reportedPostId, post.id),
-				or(
-					eq(postReports.reporterId, identity?.accountId || ""),
-					eq(postReports.status, "pending"),
-				)
-			),
-		) || [];
+	const reports =
+		(await db
+			.select()
+			.from(postReports)
+			.where(
+				and(
+					eq(postReports.reportedPostId, post.id),
+					or(
+						identity
+							? eq(postReports.reporterId, identity.accountId)
+							: undefined,
+						eq(postReports.status, "pending"),
+					),
+				),
+			)) || [];
 
-	const pendingReports = reports.filter((report) => report.status === "pending");
-	const myReports = reports.filter((report) => report.reporterId === identity?.accountId);
+	const pendingReports = reports.filter(
+		(report) => report.status === "pending",
+	);
+	const myReports = reports.filter(
+		(report) => report.reporterId === identity?.accountId,
+	);
 
 	return {
 		id: post.id,
@@ -243,21 +250,24 @@ export async function retrieveSeveralCleanPosts(
 
 	const answersMap = new Map(answerCounts.map((a) => [a.parentId!, a.count]));
 
-	const allReports = await db
-		.select()
-		.from(postReports)
-		.where(
-			and(
-				inArray(
-					postReports.reportedPostId,
-					dbPosts.map((p) => p.id),
+	const allReports =
+		(await db
+			.select()
+			.from(postReports)
+			.where(
+				and(
+					inArray(
+						postReports.reportedPostId,
+						dbPosts.map((p) => p.id),
+					),
+					or(
+						identity
+							? eq(postReports.reporterId, identity.accountId)
+							: undefined,
+						eq(postReports.status, "pending"),
+					),
 				),
-				or(
-					eq(postReports.reporterId, identity?.accountId || ""),
-					eq(postReports.status, "pending"),
-				)
-			),
-		) || [];
+			)) || [];
 
 	const reportsMap = groupBy(allReports, (r) => r.reportedPostId);
 
@@ -287,8 +297,12 @@ export async function retrieveSeveralCleanPosts(
 			);
 
 		const computedReports = reportsMap.get(post.id) ?? [];
-		const pendingReports = computedReports.filter((report) => report.status === "pending");
-		const myReports = computedReports.filter((report) => report.reporterId === identity?.accountId);
+		const pendingReports = computedReports.filter(
+			(report) => report.status === "pending",
+		);
+		const myReports = computedReports.filter(
+			(report) => report.reporterId === identity?.accountId,
+		);
 
 		return {
 			id: post.id,
