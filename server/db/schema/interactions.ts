@@ -88,7 +88,7 @@ export const postsFlags = pgTable("post_flags", {
 		.notNull()
 		.references(() => posts.id, { onDelete: "cascade" }),
 
-	type: postsFlagEnum("flag").notNull(),
+	type: postsFlagEnum("type").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 }).enableRLS();
