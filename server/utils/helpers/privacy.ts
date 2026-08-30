@@ -18,7 +18,6 @@ export type Relationship = {
 	blocking: boolean; // A blocking B
 	blocked: boolean; // A blocked by B
 };
-
 export const getRelationshipStatus = async (
 	event: H3Event,
 	A?: Profile | Identity | null,
@@ -36,12 +35,11 @@ export const getRelationshipStatus = async (
 		blocked: false,
 	};
 
-	if (!A || !B) {
-		await client.end();
-		return relationship;
-	}
-
 	try {
+		if (!A || !B) {
+			return relationship;
+		}
+
 		let issuer: Profile;
 
 		if ((A as Identity).profileId) {
@@ -71,6 +69,8 @@ export const getRelationshipStatus = async (
 		 *
 		 * issuer -> target => blocking
 		 * target -> issuer => blocked
+		 *
+		 * A block is terminal: no other relationship should be exposed.
 		 */
 		const [blockRelation] = await db
 			.select({
@@ -94,10 +94,9 @@ export const getRelationshipStatus = async (
 
 		if (blockRelation) {
 			relationship.blocking = blockRelation.blockerId === issuer.id;
-			relationship.blocked = blockRelation.blockedId === issuer.id;
+			relationship.blocked = blockRelation.blockerId === target.id;
 
 			if (relationship.blocking || relationship.blocked) {
-				await client.end();
 				return relationship;
 			}
 		}
@@ -110,7 +109,7 @@ export const getRelationshipStatus = async (
 		 * issuer -> target => following
 		 * target -> issuer => followed
 		 */
-		const [followRelation] = await db
+		const followRelations = await db
 			.select({
 				followerId: follows.followerId,
 				followingId: follows.followingId,
@@ -127,12 +126,22 @@ export const getRelationshipStatus = async (
 						eq(follows.followingId, issuer.id),
 					),
 				),
-			)
-			.limit(1);
+			);
 
-		if (followRelation) {
-			relationship.following = followRelation.followerId === issuer.id;
-			relationship.followed = followRelation.followingId === issuer.id;
+		for (const followRelation of followRelations) {
+			if (
+				followRelation.followerId === issuer.id &&
+				followRelation.followingId === target.id
+			) {
+				relationship.following = true;
+			}
+
+			if (
+				followRelation.followerId === target.id &&
+				followRelation.followingId === issuer.id
+			) {
+				relationship.followed = true;
+			}
 		}
 
 		/*
@@ -143,7 +152,7 @@ export const getRelationshipStatus = async (
 		 * issuer -> target => friend
 		 * target -> issuer => friended
 		 */
-		const [friendRelation] = await db
+		const friendRelations = await db
 			.select({
 				profileAId: friendships.profileAId,
 				profileBId: friendships.profileBId,
@@ -160,12 +169,22 @@ export const getRelationshipStatus = async (
 						eq(friendships.profileBId, issuer.id),
 					),
 				),
-			)
-			.limit(1);
+			);
 
-		if (friendRelation) {
-			relationship.friend = friendRelation.profileAId === issuer.id;
-			relationship.friended = friendRelation.profileBId === issuer.id;
+		for (const friendRelation of friendRelations) {
+			if (
+				friendRelation.profileAId === issuer.id &&
+				friendRelation.profileBId === target.id
+			) {
+				relationship.friend = true;
+			}
+
+			if (
+				friendRelation.profileAId === target.id &&
+				friendRelation.profileBId === issuer.id
+			) {
+				relationship.friended = true;
+			}
 		}
 
 		return relationship;
@@ -173,6 +192,7 @@ export const getRelationshipStatus = async (
 		await client.end();
 	}
 };
+
 
 export const getPrivacySettings = async (
 	event: H3Event,
@@ -298,28 +318,27 @@ export const getSeveralRelationshipStatus = async (
 ): Promise<Record<Profile["id"], Relationship>> => {
 	const { db, client } = createDb();
 
-	const base: Relationship = {
-		me: false,
-		following: false,
-		followed: false,
-		friend: false,
-		friended: false,
-		blocking: false,
-		blocked: false,
-	};
-
-	const relationships: Record<Profile["id"], Relationship> = {};
-
-	for (const target of B) {
-		relationships[target.id] = { ...base };
-	}
-
-	if (!A || B.length === 0) {
-		await client.end();
-		return relationships;
-	}
-
 	try {
+		const base: Relationship = {
+			me: false,
+			following: false,
+			followed: false,
+			friend: false,
+			friended: false,
+			blocking: false,
+			blocked: false,
+		};
+
+		const relationships: Record<Profile["id"], Relationship> = {};
+
+		for (const target of B) {
+			relationships[target.id] = { ...base };
+		}
+
+		if (!A || B.length === 0) {
+			return relationships;
+		}
+
 		let issuer: Profile;
 
 		if ((A as Identity).profileId) {
@@ -340,94 +359,65 @@ export const getSeveralRelationshipStatus = async (
 
 		const targetIds = B.map((target) => target.id);
 
-		/*
-		 * ============================================================
-		 * Blocks
-		 * ============================================================
-		 *
-		 * On récupère les relations dans les deux directions :
-		 *
-		 *   target -> issuer  => blocked
-		 *   issuer -> target  => blocking
-		 */
-		const blockRelations = await db
-			.select({
-				blockerId: blocks.blockerId,
-				blockedId: blocks.blockedId,
-			})
-			.from(blocks)
-			.where(
-				or(
-					and(
-						eq(blocks.blockedId, issuer.id),
-						inArray(blocks.blockerId, targetIds),
+		const [blockRelations, followRelations, friendRelations] =
+			await Promise.all([
+				db
+					.select({
+						blockerId: blocks.blockerId,
+						blockedId: blocks.blockedId,
+					})
+					.from(blocks)
+					.where(
+						or(
+							and(
+								eq(blocks.blockedId, issuer.id),
+								inArray(blocks.blockerId, targetIds),
+							),
+							and(
+								eq(blocks.blockerId, issuer.id),
+								inArray(blocks.blockedId, targetIds),
+							),
+						),
 					),
-					and(
-						eq(blocks.blockerId, issuer.id),
-						inArray(blocks.blockedId, targetIds),
-					),
-				),
-			);
 
-		/*
-		 * ============================================================
-		 * Follows
-		 * ============================================================
-		 *
-		 *   issuer -> target  => following
-		 *   target -> issuer  => followed
-		 */
-		const followRelations = await db
-			.select({
-				followerId: follows.followerId,
-				followingId: follows.followingId,
-			})
-			.from(follows)
-			.where(
-				or(
-					and(
-						eq(follows.followerId, issuer.id),
-						inArray(follows.followingId, targetIds),
+				db
+					.select({
+						followerId: follows.followerId,
+						followingId: follows.followingId,
+					})
+					.from(follows)
+					.where(
+						or(
+							and(
+								eq(follows.followerId, issuer.id),
+								inArray(follows.followingId, targetIds),
+							),
+							and(
+								eq(follows.followingId, issuer.id),
+								inArray(follows.followerId, targetIds),
+							),
+						),
 					),
-					and(
-						eq(follows.followingId, issuer.id),
-						inArray(follows.followerId, targetIds),
-					),
-				),
-			);
 
-		/*
-		 * ============================================================
-		 * Friendships
-		 * ============================================================
-		 *
-		 *   issuer -> target  => friend
-		 *   target -> issuer  => friended
-		 */
-		const friendRelations = await db
-			.select({
-				profileAId: friendships.profileAId,
-				profileBId: friendships.profileBId,
-			})
-			.from(friendships)
-			.where(
-				or(
-					and(
-						eq(friendships.profileAId, issuer.id),
-						inArray(friendships.profileBId, targetIds),
+				db
+					.select({
+						profileAId: friendships.profileAId,
+						profileBId: friendships.profileBId,
+					})
+					.from(friendships)
+					.where(
+						or(
+							and(
+								eq(friendships.profileAId, issuer.id),
+								inArray(friendships.profileBId, targetIds),
+							),
+							and(
+								eq(friendships.profileBId, issuer.id),
+								inArray(friendships.profileAId, targetIds),
+							),
+						),
 					),
-					and(
-						eq(friendships.profileBId, issuer.id),
-						inArray(friendships.profileAId, targetIds),
-					),
-				),
-			);
-
-		/*
-		 * ============================================================
-		 * Process relations
-		 * ============================================================
-		 */
+			]);
 
 		const blocked = new Set<Profile["id"]>();
 		const blocking = new Set<Profile["id"]>();
@@ -468,12 +458,6 @@ export const getSeveralRelationshipStatus = async (
 			}
 		}
 
-		/*
-		 * ============================================================
-		 * Build result
-		 * ============================================================
-		 */
-
 		for (const target of B) {
 			const relationship: Relationship = {
 				...base,
@@ -482,7 +466,6 @@ export const getSeveralRelationshipStatus = async (
 				blocking: blocking.has(target.id),
 			};
 
-			// A block takes precedence over the other relationships.
 			if (relationship.blocked || relationship.blocking) {
 				relationships[target.id] = relationship;
 				continue;
@@ -490,7 +473,6 @@ export const getSeveralRelationshipStatus = async (
 
 			relationship.following = following.has(target.id);
 			relationship.followed = followed.has(target.id);
-
 			relationship.friend = friend.has(target.id);
 			relationship.friended = friended.has(target.id);
 
@@ -502,6 +484,7 @@ export const getSeveralRelationshipStatus = async (
 		await client.end();
 	}
 };
+
 
 export const getSeveralPrivacySettings = async (
 	event: H3Event,
