@@ -1,6 +1,6 @@
 import { eq, inArray, desc } from "drizzle-orm";
 
-import { useDb } from "#server/db";
+import { createDb } from "#server/db";
 
 import { profiles } from "#server/db/schema/profiles";
 import { follows } from "~~/server/db/schema/relations";
@@ -9,50 +9,54 @@ import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanProfiles } from "#server/utils/converters/profiles";
 
 export default defineEventHandler(async (event) => {
-	const db = useDb(event);
+	const { db, client } = createDb();
 
-	const identity = await requireAuth(event);
+	try {
+		const identity = await requireAuth(event);
 
-	const query = getQuery(event);
+		const query = getQuery(event);
 
-	const limit = Math.min(Number(query.limit) || 100, 100);
-	const offset = Math.max(Number(query.offset) || 0, 0);
+		const limit = Math.min(Number(query.limit) || 100, 100);
+		const offset = Math.max(Number(query.offset) || 0, 0);
 
-	const following = await db
-		.select()
-		.from(follows)
-		.where(eq(follows.followerId, identity.profileId))
-		.offset(offset)
-		.limit(limit);
-
-	const rawProfiles = (
-		await db
-			.select({
-				profiles,
-			})
+		const following = await db
+			.select()
 			.from(follows)
-			.innerJoin(profiles, eq(follows.followingId, profiles.id))
-			.where(
-				inArray(
-					follows.followerId,
-					following.map((f) => f.followingId),
-				),
-			)
-			.orderBy(desc(profiles.createdAt))
+			.where(eq(follows.followerId, identity.profileId))
 			.offset(offset)
-			.limit(limit)
-	).map((row) => row.profiles);
+			.limit(limit);
 
-	const resolvedProfiles = await retrieveSeveralCleanProfiles(
-		event,
-		identity,
-		rawProfiles,
-	);
+		const rawProfiles = (
+			await db
+				.select({
+					profiles,
+				})
+				.from(follows)
+				.innerJoin(profiles, eq(follows.followingId, profiles.id))
+				.where(
+					inArray(
+						follows.followerId,
+						following.map((f) => f.followingId),
+					),
+				)
+				.orderBy(desc(profiles.createdAt))
+				.offset(offset)
+				.limit(limit)
+		).map((row) => row.profiles);
 
-	return {
-		status: "ok",
-		users: resolvedProfiles,
-		next: offset + limit,
-		hasNext: rawProfiles.length === limit,
-	};
+		const resolvedProfiles = await retrieveSeveralCleanProfiles(
+			event,
+			identity,
+			rawProfiles,
+		);
+
+		return {
+			status: "ok",
+			users: resolvedProfiles,
+			next: offset + limit,
+			hasNext: rawProfiles.length === limit,
+		};
+	} finally {
+		await client.end();
+	}
 });

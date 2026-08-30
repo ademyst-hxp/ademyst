@@ -26,6 +26,8 @@ export function convertPrivacySettings(
 	return {
 		profileVisibility: setting.profileVisibility,
 		birthdayVisibility: setting.birthdayVisibility,
+		termsOfServiceConsent: setting.termsOfServiceConsent,
+		privacyPolicyConsent: setting.privacyPolicyConsent,
 		createdAt: setting.createdAt,
 		updatedAt: setting.updatedAt,
 	};

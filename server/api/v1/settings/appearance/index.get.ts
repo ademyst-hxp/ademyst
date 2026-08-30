@@ -1,15 +1,17 @@
+import type { H3Event } from "h3";
+
+import { createDb } from "#server/db";
+import { eq } from "drizzle-orm";
+
 import { appearanceSettings } from "#server/db/schema/settings";
 import type { AppearanceSettings } from "#shared/models/settings";
 
-import { useDb } from "#server/db";
-import { eq } from "drizzle-orm";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 function generateDefaultAppearanceSettings(): AppearanceSettings {
 	return {
 		theme: "light",
 		highContrast: false,
-		dyslexiaFriendly: false,
 		fontSize: 16,
 		uiDensity: "comfortable",
 		createdAt: new Date(),
@@ -17,33 +19,37 @@ function generateDefaultAppearanceSettings(): AppearanceSettings {
 	};
 }
 
-export default defineEventHandler(async (event) => {
-	const db = useDb(event);
+export default defineEventHandler(async (event: H3Event) => {
+	const { db, client } = createDb();
 
-	const identity = await requireAuth(event);
+	try {
+		const identity = await requireAuth(event);
 
-	const [settings] = await db
-		.select()
-		.from(appearanceSettings)
-		.where(eq(appearanceSettings.accountId, identity.accountId))
-		.limit(1);
+		const [settings] = await db
+			.select()
+			.from(appearanceSettings)
+			.where(eq(appearanceSettings.accountId, identity.accountId))
+			.limit(1);
 
-	if (!settings) {
-		const defaultSettings = generateDefaultAppearanceSettings();
+		if (!settings) {
+			const defaultSettings = generateDefaultAppearanceSettings();
 
-		await db.insert(appearanceSettings).values({
-			...defaultSettings,
-			accountId: identity.accountId,
-		});
+			await db.insert(appearanceSettings).values({
+				...defaultSettings,
+				accountId: identity.accountId,
+			});
+
+			return {
+				status: "ok",
+				settings: defaultSettings,
+			};
+		}
 
 		return {
 			status: "ok",
-			settings: defaultSettings,
+			settings,
 		};
+	} finally {
+		await client.end();
 	}
-
-	return {
-		status: "ok",
-		settings,
-	};
 });

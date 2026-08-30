@@ -1,4 +1,6 @@
-import { useDb } from "~~/server/db";
+import type { H3Event } from "h3";
+
+import { createDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
 
 import { profiles, profileLinks } from "~~/server/db/schema/profiles";
@@ -81,75 +83,78 @@ const validatePayload = (payload: unknown): LinkPayload => {
 	};
 };
 
+export default defineEventHandler(async (event: H3Event) => {
+	const { db, client } = createDb();
 
-export default defineEventHandler(async (event) => {
-	const db = useDb(event);
+	try {
+		const identity = await getIdentity(event);
 
-	const identity = await getIdentity(event);
+		const url = await readBody<string>(event);
+		const payload = validatePayload(url);
 
-	const url = await readBody<string>(event);
-	const payload = validatePayload(url);
+		const username = event.context.params?.name;
 
-	const username = event.context.params?.name;
+		if (!username) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Missing username",
+			});
+		}
 
-	if (!username) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Missing username",
-		});
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
+
+		const [profile] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.name, username))
+			.limit(1);
+
+		if (!profile) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "User not found",
+			});
+		}
+
+		if (profile.id !== identity.profileId) {
+			throw createError({
+				statusCode: 403,
+				statusMessage:
+					"You are not authorized to add links to this profile",
+			});
+		}
+
+		const [link] = await db
+			.insert(profileLinks)
+			.values({
+				profileId: profile.id,
+				name: payload.name,
+				type: payload.type,
+				url: payload.url,
+				resourceId: payload.resourceId,
+				resourceName: payload.resourceName,
+			})
+			.returning();
+
+		if (!link) {
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to add link",
+			});
+		}
+
+		const { profileId: _, ...linkWithoutProfileId } = link;
+
+		return {
+			status: "ok",
+			link: linkWithoutProfileId,
+		};
+	} finally {
+		await client.end();
 	}
-
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
-
-	const [profile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.name, username))
-		.limit(1);
-
-	if (!profile) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "User not found",
-		});
-	}
-
-	if (profile.id !== identity.profileId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage:
-				"You are not authorized to add links to this profile",
-		});
-	}
-
-	const [link] = await db
-		.insert(profileLinks)
-		.values({
-			profileId: profile.id,
-			name: payload.name,
-			type: payload.type,
-			url: payload.url,
-			resourceId: payload.resourceId,
-			resourceName: payload.resourceName,
-		})
-		.returning();
-
-	if (!link) {
-		throw createError({
-			statusCode: 500,
-			statusMessage: "Failed to add link",
-		});
-	}
-
-	const { profileId: _, ...linkWithoutProfileId } = link;
-
-	return {
-		status: "ok",
-		link: linkWithoutProfileId,
-	};
 });

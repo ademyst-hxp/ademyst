@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import { eq } from "drizzle-orm";
 
-import { useDb } from "#server/db";
+import { createDb } from "#server/db";
 import { accounts, passwordResetTokens } from "#server/db/schema/accounts";
 import { sendResetPasswordEmail } from "#server/utils/mail";
 
@@ -34,52 +34,56 @@ function getAppUrl(): string {
 }
 
 export default defineEventHandler(async (event) => {
-	const db = useDb(event);
+	const { db, client } = createDb();
 
-	const body = await readBody(event);
+	try {
+		const body = await readBody(event);
 
-	const email = normalizeEmail(body?.email);
+		const email = normalizeEmail(body?.email);
 
-	if (!email) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid email",
+		if (!email) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Invalid email",
+			});
+		}
+
+		const [account] = await db
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(eq(accounts.email, email))
+			.limit(1);
+
+		if (!account) {
+			return { ok: true };
+		}
+
+		const ipAddress = getRequestIP(event) ?? null;
+		const userAgent = getHeader(event, "user-agent") ?? null;
+		const token = generateToken();
+
+		await db.insert(passwordResetTokens).values({
+			accountId: account.id,
+			token,
+			ipAddress,
+			userAgent,
 		});
-	}
 
-	const [account] = await db
-		.select({ id: accounts.id })
-		.from(accounts)
-		.where(eq(accounts.email, email))
-		.limit(1);
+		const resetUrl = `${getAppUrl()}/account/reset-password?token=${encodeURIComponent(token)}`;
+		const timestamp = new Date();
+		const safeUserAgent = userAgent ?? "unknown";
+		const safeIp = ipAddress ?? "unknown";
 
-	if (!account) {
+		await sendResetPasswordEmail(
+			email,
+			resetUrl,
+			timestamp,
+			safeUserAgent,
+			safeIp,
+		);
+
 		return { ok: true };
+	} finally {
+		await client.end();
 	}
-
-	const ipAddress = getRequestIP(event) ?? null;
-	const userAgent = getHeader(event, "user-agent") ?? null;
-	const token = generateToken();
-
-	await db.insert(passwordResetTokens).values({
-		accountId: account.id,
-		token,
-		ipAddress,
-		userAgent,
-	});
-
-	const resetUrl = `${getAppUrl()}/account/reset-password?token=${encodeURIComponent(token)}`;
-	const timestamp = new Date();
-	const safeUserAgent = userAgent ?? "unknown";
-	const safeIp = ipAddress ?? "unknown";
-
-	await sendResetPasswordEmail(
-		email,
-		resetUrl,
-		timestamp,
-		safeUserAgent,
-		safeIp,
-	);
-
-	return { ok: true };
 });

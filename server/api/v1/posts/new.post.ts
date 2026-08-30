@@ -1,7 +1,9 @@
-import { createError, readBody } from "h3";
+import type { H3Event } from "h3";
 
-import { useDb } from "#server/db";
+import { createDb } from "#server/db";
+
 import { posts } from "#server/db/schema/interactions";
+
 import { generateHexId } from "#server/utils/ids";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -54,55 +56,59 @@ const validatePayload = (
 	return { parentId, content, visibility };
 };
 
-export default defineEventHandler(async (event) => {
-	const db = useDb(event);
+export default defineEventHandler(async (event: H3Event) => {
+	const { db, client } = createDb();
 
-	const identity = await requireAuth(event, { min_level: 2 });
-	const user = await getUser(event, identity);
+	try {
+		const identity = await requireAuth(event, { min_level: 2 });
+		const user = await getUser(event, identity);
 
-	if (!user) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
+		if (!user) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
+
+		const body = await readBody(event);
+		const specs = {
+			max_length:
+				user.profile.level >= 5
+					? 5000
+					: user.profile.level >= 4
+						? 2000
+						: 1000,
+		};
+
+		const { parentId, content, visibility } = validatePayload(body, specs);
+
+		const id = generateHexId();
+
+		const [createdPost] = await db
+			.insert(posts)
+			.values({
+				id,
+				profileId: identity.profileId,
+				parentId,
+				content,
+				visibility,
+			})
+			.returning();
+
+		if (!createdPost) {
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to create post",
+			});
+		}
+
+		const post = await retrieveCleanPost(event, identity, createdPost);
+
+		return {
+			status: "ok",
+			data: post,
+		};
+	} finally {
+		await client.end();
 	}
-
-	const body = await readBody(event);
-	const specs = {
-		max_length:
-			user.profile.level >= 5
-				? 5000
-				: user.profile.level >= 4
-					? 2000
-					: 1000,
-	};
-
-	const { parentId, content, visibility } = validatePayload(body, specs);
-
-	const id = generateHexId();
-
-	const [createdPost] = await db
-		.insert(posts)
-		.values({
-			id,
-			profileId: identity.profileId,
-			parentId,
-			content,
-			visibility,
-		})
-		.returning();
-
-	if (!createdPost) {
-		throw createError({
-			statusCode: 500,
-			statusMessage: "Failed to create post",
-		});
-	}
-
-	const post = await retrieveCleanPost(event, identity, createdPost);
-
-	return {
-		status: "ok",
-		data: post,
-	};
 });

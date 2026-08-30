@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { useDb } from "~~/server/db";
+import { createDb } from "~~/server/db";
 import { eq, or, and, inArray } from "drizzle-orm";
 
 import type {
@@ -37,157 +37,41 @@ export async function retrieveCleanProfileReport(
 	identity: Identity | null | undefined,
 	report: DbProfileReport,
 ): Promise<ProfileReport> {
-	const db = useDb(event);
+	const { db, client } = createDb();
 
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
 
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
 
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
 
-	if (issuer.level < 6 && report.reporterId !== identity.accountId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
+		if (issuer.level < 6 && report.reporterId !== identity.accountId) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
 
-	const [reportedProfile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, report.reportedProfileId))
-		.limit(1);
-
-	if (!reportedProfile) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported profile not found",
-		});
-	}
-
-	const [reporter] = await db
-		.select()
-		.from(accounts)
-		.where(eq(accounts.id, report.reporterId))
-		.limit(1);
-
-	if (!reporter) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	return {
-		id: report.id,
-		reporter: convertAccount(reporter),
-		reportedProfile: await retrieveCleanProfile(
-			event,
-			identity,
-			reportedProfile,
-		),
-		reason: report.reason,
-		details: report.details ?? null,
-		status: report.status,
-		createdAt: report.createdAt,
-	};
-}
-
-export async function retrieveSeveralCleanProfileReports(
-	event: H3Event,
-	identity: Identity | null | undefined,
-	_reports: DbProfileReport[],
-): Promise<ProfileReport[]> {
-	const db = useDb(event);
-
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
-
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
-
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
-
-	if (issuer.level < 6) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
-
-	const reportedProfiles = await db
-		.select()
-		.from(profiles)
-		.where(
-			inArray(
-				profiles.id,
-				_reports.map((r) => r.reportedProfileId),
-			),
-		);
-
-	if (!reportedProfiles) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported profile not found",
-		});
-	}
-
-	const reporters = await db
-		.select()
-		.from(accounts)
-		.where(
-			inArray(
-				accounts.id,
-				_reports.map((r) => r.reporterId),
-			),
-		);
-
-	if (!reporters) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	const cleanReporters = reporters.map((reporter) =>
-		convertAccount(reporter),
-	);
-	const cleanProfiles = await retrieveSeveralCleanProfiles(
-		event,
-		identity,
-		reportedProfiles,
-	);
-
-	const profileReports: ProfileReport[] = _reports.map((report) => {
-		const reportedProfile = cleanProfiles.find(
-			(p) => p.id === report.reportedProfileId,
-		);
+		const [reportedProfile] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, report.reportedProfileId))
+			.limit(1);
 
 		if (!reportedProfile) {
 			throw createError({
@@ -196,7 +80,11 @@ export async function retrieveSeveralCleanProfileReports(
 			});
 		}
 
-		const reporter = cleanReporters.find((a) => a.id === report.reporterId);
+		const [reporter] = await db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, report.reporterId))
+			.limit(1);
 
 		if (!reporter) {
 			throw createError({
@@ -207,16 +95,138 @@ export async function retrieveSeveralCleanProfileReports(
 
 		return {
 			id: report.id,
-			reporter,
-			reportedProfile,
+			reporter: convertAccount(reporter),
+			reportedProfile: await retrieveCleanProfile(
+				event,
+				identity,
+				reportedProfile,
+			),
 			reason: report.reason,
 			details: report.details ?? null,
 			status: report.status,
 			createdAt: report.createdAt,
 		};
-	});
+	} finally {
+		await client.end();
+	}
+}
 
-	return Promise.all(profileReports);
+export async function retrieveSeveralCleanProfileReports(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	_reports: DbProfileReport[],
+): Promise<ProfileReport[]> {
+	const { db, client } = createDb();
+
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
+
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
+
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
+
+		if (issuer.level < 6) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
+
+		const reportedProfiles = await db
+			.select()
+			.from(profiles)
+			.where(
+				inArray(
+					profiles.id,
+					_reports.map((r) => r.reportedProfileId),
+				),
+			);
+
+		if (!reportedProfiles) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reported profile not found",
+			});
+		}
+
+		const reporters = await db
+			.select()
+			.from(accounts)
+			.where(
+				inArray(
+					accounts.id,
+					_reports.map((r) => r.reporterId),
+				),
+			);
+
+		if (!reporters) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reporter account not found",
+			});
+		}
+
+		const cleanReporters = reporters.map((reporter) =>
+			convertAccount(reporter),
+		);
+		const cleanProfiles = await retrieveSeveralCleanProfiles(
+			event,
+			identity,
+			reportedProfiles,
+		);
+
+		const profileReports: ProfileReport[] = _reports.map((report) => {
+			const reportedProfile = cleanProfiles.find(
+				(p) => p.id === report.reportedProfileId,
+			);
+
+			if (!reportedProfile) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reported profile not found",
+				});
+			}
+
+			const reporter = cleanReporters.find(
+				(a) => a.id === report.reporterId,
+			);
+
+			if (!reporter) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reporter account not found",
+				});
+			}
+
+			return {
+				id: report.id,
+				reporter,
+				reportedProfile,
+				reason: report.reason,
+				details: report.details ?? null,
+				status: report.status,
+				createdAt: report.createdAt,
+			};
+		});
+
+		return Promise.all(profileReports);
+	} finally {
+		await client.end();
+	}
 }
 
 // ============================================================
@@ -226,153 +236,41 @@ export async function retrieveCleanPostReport(
 	identity: Identity | null | undefined,
 	report: DbPostReport,
 ): Promise<PostReport> {
-	const db = useDb(event);
+	const { db, client } = createDb();
 
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
 
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
 
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
 
-	if (issuer.level < 6 && report.reporterId !== identity.accountId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
+		if (issuer.level < 6 && report.reporterId !== identity.accountId) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
 
-	const [reportedPost] = await db
-		.select()
-		.from(posts)
-		.where(eq(posts.id, report.reportedPostId))
-		.limit(1);
-
-	if (!reportedPost) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported post not found",
-		});
-	}
-
-	const [reporter] = await db
-		.select()
-		.from(accounts)
-		.where(eq(accounts.id, report.reporterId))
-		.limit(1);
-
-	if (!reporter) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	return {
-		id: report.id,
-		reporter: convertAccount(reporter),
-		reportedPost: await retrieveCleanPost(event, identity, reportedPost),
-		reason: report.reason,
-		details: report.details ?? null,
-		status: report.status,
-		createdAt: report.createdAt,
-	};
-}
-
-export async function retrieveSeveralCleanPostReports(
-	event: H3Event,
-	identity: Identity | null | undefined,
-	_reports: DbPostReport[],
-): Promise<PostReport[]> {
-	const db = useDb(event);
-
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
-
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
-
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
-
-	if (issuer.level < 6) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
-
-	const reportedPosts = await db
-		.select()
-		.from(posts)
-		.where(
-			inArray(
-				posts.id,
-				_reports.map((r) => r.reportedPostId),
-			),
-		);
-
-	if (!reportedPosts) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported post not found",
-		});
-	}
-
-	const reporters = await db
-		.select()
-		.from(accounts)
-		.where(
-			inArray(
-				accounts.id,
-				_reports.map((r) => r.reporterId),
-			),
-		);
-
-	if (!reporters) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	const cleanReporters = reporters.map((reporter) =>
-		convertAccount(reporter),
-	);
-	const cleanPosts = await retrieveSeveralCleanPosts(
-		event,
-		identity,
-		reportedPosts,
-	);
-
-	const postReports: PostReport[] = _reports.map((report) => {
-		const reportedPost = cleanPosts.find(
-			(p) => p.id === report.reportedPostId,
-		);
+		const [reportedPost] = await db
+			.select()
+			.from(posts)
+			.where(eq(posts.id, report.reportedPostId))
+			.limit(1);
 
 		if (!reportedPost) {
 			throw createError({
@@ -381,7 +279,11 @@ export async function retrieveSeveralCleanPostReports(
 			});
 		}
 
-		const reporter = cleanReporters.find((a) => a.id === report.reporterId);
+		const [reporter] = await db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, report.reporterId))
+			.limit(1);
 
 		if (!reporter) {
 			throw createError({
@@ -392,16 +294,138 @@ export async function retrieveSeveralCleanPostReports(
 
 		return {
 			id: report.id,
-			reporter,
-			reportedPost,
+			reporter: convertAccount(reporter),
+			reportedPost: await retrieveCleanPost(
+				event,
+				identity,
+				reportedPost,
+			),
 			reason: report.reason,
 			details: report.details ?? null,
 			status: report.status,
 			createdAt: report.createdAt,
 		};
-	});
+	} finally {
+		await client.end();
+	}
+}
 
-	return Promise.all(postReports);
+export async function retrieveSeveralCleanPostReports(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	_reports: DbPostReport[],
+): Promise<PostReport[]> {
+	const { db, client } = createDb();
+
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
+
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
+
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
+
+		if (issuer.level < 6) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
+
+		const reportedPosts = await db
+			.select()
+			.from(posts)
+			.where(
+				inArray(
+					posts.id,
+					_reports.map((r) => r.reportedPostId),
+				),
+			);
+
+		if (!reportedPosts) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reported post not found",
+			});
+		}
+
+		const reporters = await db
+			.select()
+			.from(accounts)
+			.where(
+				inArray(
+					accounts.id,
+					_reports.map((r) => r.reporterId),
+				),
+			);
+
+		if (!reporters) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reporter account not found",
+			});
+		}
+
+		const cleanReporters = reporters.map((reporter) =>
+			convertAccount(reporter),
+		);
+		const cleanPosts = await retrieveSeveralCleanPosts(
+			event,
+			identity,
+			reportedPosts,
+		);
+
+		const postReports: PostReport[] = _reports.map((report) => {
+			const reportedPost = cleanPosts.find(
+				(p) => p.id === report.reportedPostId,
+			);
+
+			if (!reportedPost) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reported post not found",
+				});
+			}
+
+			const reporter = cleanReporters.find(
+				(a) => a.id === report.reporterId,
+			);
+
+			if (!reporter) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reporter account not found",
+				});
+			}
+
+			return {
+				id: report.id,
+				reporter,
+				reportedPost,
+				reason: report.reason,
+				details: report.details ?? null,
+				status: report.status,
+				createdAt: report.createdAt,
+			};
+		});
+
+		return Promise.all(postReports);
+	} finally {
+		await client.end();
+	}
 }
 
 // ============================================================
@@ -411,157 +435,41 @@ export async function retrieveCleanWhisperReport(
 	identity: Identity | null | undefined,
 	report: DbWhisperReport,
 ): Promise<WhisperReport> {
-	const db = useDb(event);
+	const { db, client } = createDb();
 
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
 
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
 
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
 
-	if (issuer.level < 6 && report.reporterId !== identity.accountId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
+		if (issuer.level < 6 && report.reporterId !== identity.accountId) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
 
-	const [reportedWhisper] = await db
-		.select()
-		.from(whispers)
-		.where(eq(whispers.id, report.reportedWhisperId))
-		.limit(1);
-
-	if (!reportedWhisper) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported whisper not found",
-		});
-	}
-
-	const [reporter] = await db
-		.select()
-		.from(accounts)
-		.where(eq(accounts.id, report.reporterId))
-		.limit(1);
-
-	if (!reporter) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	return {
-		id: report.id,
-		reporter: convertAccount(reporter),
-		reportedWhisper: await retrieveCleanWhisper(
-			event,
-			identity,
-			reportedWhisper,
-		),
-		reason: report.reason,
-		details: report.details ?? null,
-		status: report.status,
-		createdAt: report.createdAt,
-	};
-}
-
-export async function retrieveSeveralCleanWhisperReports(
-	event: H3Event,
-	identity: Identity | null | undefined,
-	_reports: DbWhisperReport[],
-): Promise<WhisperReport[]> {
-	const db = useDb(event);
-
-	if (!identity) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
-
-	const [issuer] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, identity?.profileId))
-		.limit(1);
-
-	if (!issuer) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Issuer profile not found",
-		});
-	}
-
-	if (issuer.level < 6) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
-
-	const reportedWhispers = await db
-		.select()
-		.from(whispers)
-		.where(
-			inArray(
-				whispers.id,
-				_reports.map((r) => r.reportedWhisperId),
-			),
-		);
-
-	if (!reportedWhispers) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reported whisper not found",
-		});
-	}
-
-	const reporters = await db
-		.select()
-		.from(accounts)
-		.where(
-			inArray(
-				accounts.id,
-				_reports.map((r) => r.reporterId),
-			),
-		);
-
-	if (!reporters) {
-		throw createError({
-			statusCode: 404,
-			statusMessage: "Reporter account not found",
-		});
-	}
-
-	const cleanReporters = reporters.map((reporter) =>
-		convertAccount(reporter),
-	);
-	const cleanWhispers = await retrieveSeveralCleanWhispers(
-		event,
-		identity,
-		reportedWhispers,
-	);
-
-	const whisperReports: WhisperReport[] = _reports.map((report) => {
-		const reportedWhisper = cleanWhispers.find(
-			(s) => s.id === report.reportedWhisperId,
-		);
+		const [reportedWhisper] = await db
+			.select()
+			.from(whispers)
+			.where(eq(whispers.id, report.reportedWhisperId))
+			.limit(1);
 
 		if (!reportedWhisper) {
 			throw createError({
@@ -570,7 +478,11 @@ export async function retrieveSeveralCleanWhisperReports(
 			});
 		}
 
-		const reporter = cleanReporters.find((a) => a.id === report.reporterId);
+		const [reporter] = await db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, report.reporterId))
+			.limit(1);
 
 		if (!reporter) {
 			throw createError({
@@ -581,14 +493,136 @@ export async function retrieveSeveralCleanWhisperReports(
 
 		return {
 			id: report.id,
-			reporter,
-			reportedWhisper,
+			reporter: convertAccount(reporter),
+			reportedWhisper: await retrieveCleanWhisper(
+				event,
+				identity,
+				reportedWhisper,
+			),
 			reason: report.reason,
 			details: report.details ?? null,
 			status: report.status,
 			createdAt: report.createdAt,
 		};
-	});
+	} finally {
+		await client.end();
+	}
+}
 
-	return Promise.all(whisperReports);
+export async function retrieveSeveralCleanWhisperReports(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	_reports: DbWhisperReport[],
+): Promise<WhisperReport[]> {
+	const { db, client } = createDb();
+
+	try {
+		if (!identity) {
+			throw createError({
+				statusCode: 401,
+				statusMessage: "Unauthorized",
+			});
+		}
+
+		const [issuer] = await db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, identity?.profileId))
+			.limit(1);
+
+		if (!issuer) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Issuer profile not found",
+			});
+		}
+
+		if (issuer.level < 6) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Insufficient permissions",
+			});
+		}
+
+		const reportedWhispers = await db
+			.select()
+			.from(whispers)
+			.where(
+				inArray(
+					whispers.id,
+					_reports.map((r) => r.reportedWhisperId),
+				),
+			);
+
+		if (!reportedWhispers) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reported whisper not found",
+			});
+		}
+
+		const reporters = await db
+			.select()
+			.from(accounts)
+			.where(
+				inArray(
+					accounts.id,
+					_reports.map((r) => r.reporterId),
+				),
+			);
+
+		if (!reporters) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Reporter account not found",
+			});
+		}
+
+		const cleanReporters = reporters.map((reporter) =>
+			convertAccount(reporter),
+		);
+		const cleanWhispers = await retrieveSeveralCleanWhispers(
+			event,
+			identity,
+			reportedWhispers,
+		);
+
+		const whisperReports: WhisperReport[] = _reports.map((report) => {
+			const reportedWhisper = cleanWhispers.find(
+				(s) => s.id === report.reportedWhisperId,
+			);
+
+			if (!reportedWhisper) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reported whisper not found",
+				});
+			}
+
+			const reporter = cleanReporters.find(
+				(a) => a.id === report.reporterId,
+			);
+
+			if (!reporter) {
+				throw createError({
+					statusCode: 404,
+					statusMessage: "Reporter account not found",
+				});
+			}
+
+			return {
+				id: report.id,
+				reporter,
+				reportedWhisper,
+				reason: report.reason,
+				details: report.details ?? null,
+				status: report.status,
+				createdAt: report.createdAt,
+			};
+		});
+
+		return Promise.all(whisperReports);
+	} finally {
+		await client.end();
+	}
 }
