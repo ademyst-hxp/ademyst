@@ -49,6 +49,12 @@ const name = computed(() => {
 
 const requestKey = computed(() => `profile-${name.value ?? "missing"}`);
 const postsRequestKey = computed(() => `posts-${name.value ?? "missing"}`);
+const followingRequestKey = computed(
+	() => `following-${name.value ?? "missing"}`,
+);
+const followersRequestKey = computed(
+	() => `followers-${name.value ?? "missing"}`,
+);
 
 const { data, pending } = await useAsyncData(requestKey, async () => {
 	if (!name.value) throw createError({ statusCode: 400 });
@@ -65,6 +71,36 @@ const { data: posts } = await useAsyncData(postsRequestKey, async () => {
 		)
 	).posts;
 });
+
+const { data: following } = await useAsyncData(
+	followingRequestKey,
+	async () => {
+		if (!name.value) throw createError({ statusCode: 400 });
+
+		return (
+			await $api<{
+				following: Profile[];
+				hasNext: boolean;
+				next: number | null;
+			}>(`/users/${encodeURIComponent(name.value)}/following`)
+		).following;
+	},
+);
+
+const { data: followers } = await useAsyncData(
+	followersRequestKey,
+	async () => {
+		if (!name.value) throw createError({ statusCode: 400 });
+
+		return (
+			await $api<{
+				followers: Profile[];
+				hasNext: boolean;
+				next: number | null;
+			}>(`/users/${encodeURIComponent(name.value)}/followers`)
+		).followers;
+	},
+);
 
 const profile = computed(() => data.value?.profile ?? null);
 const stats = computed(
@@ -240,7 +276,7 @@ const tab = ref("posts");
 const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
 		{ name: "Publications", value: "posts" },
-		{ name: "Suivis", value: "follows" },
+		{ name: "Suivis", value: "following" },
 		{ name: "Abonnés", value: "followers" },
 	];
 
@@ -503,6 +539,30 @@ const focusedBadge = ref<Badge | null>(null);
 					:key="post.id"
 					:data="post"
 				/>
+			</section>
+
+			<section v-if="tab === 'following'" class="space-y-4">
+				<div class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3">
+					<ProfileBox
+						v-for="followed in following ?? []"
+						:key="followed.id"
+						:data="followed"
+						class="cursor-pointer"
+						@click="$router.push(`/@${followed.name}`)"
+					/>
+				</div>
+			</section>
+
+			<section v-if="tab === 'followers'" class="space-y-4">
+				<div class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3">
+					<ProfileBox
+						v-for="follower in followers ?? []"
+						:key="follower.id"
+						:data="follower"
+						class="cursor-pointer"
+						@click="$router.push(`/@${follower.name}`)"
+					/>
+				</div>
 			</section>
 
 			<section v-if="tab === 'report'" class="space-y-4">
