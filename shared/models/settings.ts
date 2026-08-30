@@ -19,6 +19,8 @@ export type AppearanceSettings = {
 export type PrivacySettings = {
 	profileVisibility: Visibility;
 	birthdayVisibility: Visibility;
+	termsOfServiceConsent: boolean;
+	privacyPolicyConsent: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 };
