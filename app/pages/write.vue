@@ -163,10 +163,6 @@ const handlePublish = async () => {
 					e.message ||
 					"Erreur lors de la création de la publication.";
 			}
-			await $api("/posts/new", {
-				method: "POST",
-				body: preparingPost.value,
-			});
 		}
 
 		await navigateTo("/discover");
