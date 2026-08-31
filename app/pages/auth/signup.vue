@@ -11,27 +11,23 @@ const step = ref<number>(0);
 const regex = {
 	email: /\S+@\S+\.\S+/,
 	password: /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/,
-	name: /^[a-zA-Z0-9_\.]{3,16}$/,
+	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
 };
 
 const payload = ref<{
 	email: string;
 	password: string;
 	confirm_password: string;
-	name: string;
-	display_name: string;
-	birthday: string;
-	country: string;
-	profile_visibility: boolean;
+	token: string;
+	termsOfServiceConsent: boolean;
+	privacyPolicyConsent: boolean;
 }>({
 	email: "",
 	password: "",
 	confirm_password: "",
-	name: "",
-	display_name: "",
-	birthday: "",
-	country: "",
-	profile_visibility: false,
+	token: "",
+	termsOfServiceConsent: false,
+	privacyPolicyConsent: false,
 });
 
 const valid = computed(() => ({
@@ -42,16 +38,12 @@ const valid = computed(() => ({
 		regex.password.test(payload.value.password),
 	password_confirmation:
 		payload.value.password === payload.value.confirm_password,
-	name:
-		payload.value.name.length > 3 &&
-		payload.value.name.length < 17 &&
-		regex.name.test(payload.value.name),
-	display_name:
-		payload.value.display_name.length > 0 &&
-		payload.value.display_name.length < 33,
-	birthday: payload.value.birthday.length > 0,
-	country: true,
-	profile_visibility: true,
+	termsOfServiceConsent:
+		payload.value.termsOfServiceConsent,
+	privacyPolicyConsent:
+		payload.value.privacyPolicyConsent,
+	token:
+		payload.value.token.length > 0 && regex.sudo.test(payload.value.token),
 }));
 
 const handleSignup = async () => {
@@ -72,7 +64,8 @@ useHead({
 	meta: [
 		{
 			name: "description",
-			content: "Créez un compte Beam pour accéder à toutes les fonctionnalités.",
+			content:
+				"Créez un compte Ademyst pour accéder à toutes les fonctionnalités.",
 		},
 		{
 			name: "keywords",
@@ -110,7 +103,7 @@ useHead({
 			</div>
 			<Box class="w-full md:max-w-lg">
 				<h1 class="text-2xl text-center font-bold">
-					Créer un compte ({{ step + 1 }}/3)
+					Créer un compte
 				</h1>
 				<form v-if="step === 0" class="flex flex-col gap-6">
 					<Input
@@ -135,12 +128,52 @@ useHead({
 					>
 						<template #indications>
 							<p>Le mot de passe doit contenir :</p>
-							<ul class="list-disc list-inside">
-								<li>Au moins 8 caractères</li>
-								<li>Au moins une lettre majuscule</li>
-								<li>Au moins une lettre minuscule</li>
-								<li>Au moins un chiffre</li>
-								<li>Au moins un caractère spécial</li>
+							<ul>
+								<li class="flex items-center gap-2">
+									<div
+										class="inline-block w-2 h-2 rounded-full"
+										:class="
+											payload.password.length >= 8 ? 'bg-success' : 'bg-danger'
+										"
+									></div>
+									Au moins 8 caractères
+								</li>
+								<li class="flex items-center gap-2">
+									<div
+										class="inline-block w-2 h-2 rounded-full"
+										:class="
+											payload.password.match(/[A-Z]/) ? 'bg-success' : 'bg-danger'
+										"
+									></div>
+									Au moins une lettre majuscule
+								</li>
+								<li class="flex items-center gap-2">
+									<div
+										class="inline-block w-2 h-2 rounded-full"
+										:class="
+											payload.password.match(/[a-z]/) ? 'bg-success' : 'bg-danger'
+										"
+									></div>
+									Au moins une lettre minuscule
+								</li>
+								<li class="flex items-center gap-2">
+									<div
+										class="inline-block w-2 h-2 rounded-full"
+										:class="
+											payload.password.match(/[0-9]/) ? 'bg-success' : 'bg-danger'
+										"
+									></div>
+									Au moins un chiffre
+								</li>
+								<li class="flex items-center gap-2">
+									<div
+										class="inline-block w-2 h-2 rounded-full"
+										:class="
+											payload.password.match(/[^A-Za-z0-9]/) ? 'bg-success' : 'bg-danger'
+										"
+									></div>
+									Au moins un caractère spécial
+								</li>
 							</ul>
 						</template>
 						<template #error>
@@ -159,83 +192,57 @@ useHead({
 							Les mots de passe ne correspondent pas.
 						</template>
 					</Input>
-					<div class="flex justify-center items-center gap-2 w-full">
-						<Button
-							label="Suivant"
-							size="medium"
-							:handler="
-								() => {
-									if (valid.email && valid.password) step = 1;
-								}
-							"
-							:disabled="!valid.email || !valid.password"
-						/>
-					</div>
-				</form>
-				<form v-if="step === 1" class="flex flex-col gap-6">
 					<Input
-						v-model="payload.name"
-						label="Nom du profil"
-						type="name"
-						placeholder="JohnDoe627"
-						:validate="regex.name"
-						required
-					/>
-					<Input
-						v-model="payload.display_name"
-						label="Nom d'affichage"
+						v-model="payload.token"
+						label="Token de vérification (sudo)"
 						type="text"
-						placeholder="John Doe"
-					/>
-					<div class="flex justify-center items-center gap-4 w-full">
-						<Button
-							label="Précédent"
-							:icon=ChevronLeftIcon
-							size="medium"
-							variant="tertiary"
-							:handler="() => step = step - 1"
-						/>
-						<Button
-							label="S'inscrire"
-							size="medium"
-							:handler="handleSignup"
-						/>
-					</div>
-				</form>
-				<form v-if="step === 2" class="flex flex-col gap-6">
-					<Input
-						v-model="payload.email"
-						label="Adresse mail"
-						type="email"
-						placeholder="mail@example.com"
-						:validate="regex.email"
+						placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+						:validate="regex.sudo"
 						required
-					/>
+					>
+						<template #error>
+							Le token sudo est invalide.
+						</template>
+					</Input>
 					<Input
-						v-model="payload.password"
-						label="Mot de passe"
-						type="password"
-						placeholder="mdp#123"
-						:validate="regex.password"
+						v-model="payload.termsOfServiceConsent"
+						label="Accepter les conditions d'utilisation"
+						type="checkbox"
 						required
-					/>
+					>
+						<template #error>
+							Vous devez accepter les conditions d'utilisation.
+						</template>
+					</Input>
+					<Input
+						v-model="payload.privacyPolicyConsent"
+						label="Accepter la politique de confidentialité"
+						type="checkbox"
+						required
+					>
+						<template #error>
+							Vous devez accepter la politique de confidentialité.
+						</template>
+					</Input>
 					<div class="flex justify-center items-center gap-4 w-full">
 						<Button
 							label="S'inscrire"
 							size="medium"
 							:handler="handleSignup"
+							:disabled="
+								!(
+									valid.email &&
+									valid.password &&
+									valid.password_confirmation &&
+									valid.termsOfServiceConsent &&
+									valid.privacyPolicyConsent &&
+									valid.token
+								)
+							"
 						/>
 					</div>
 				</form>
 			</Box>
-			<div class="flex justify-center items-center gap-2">
-				<span class="text-muted max-sm:hidden">Déjà un compte ?</span>
-				<Button
-					label="Se connecter"
-					variant="link"
-					handler="/auth/login"
-				/>
-			</div>
 		</div>
 	</header>
 </template>

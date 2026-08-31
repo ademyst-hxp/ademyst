@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
-import { setCookie } from "h3";
+import type { H3Event } from "h3";
 
 import { createDb } from "#server/db";
+import { eq } from "drizzle-orm";
 import { accounts, sessions } from "#server/db/schema/accounts";
-import { profiles } from "#server/db/schema/profiles";
+import { profiles, profileLinks } from "#server/db/schema/profiles";
 import {
 	appearanceSettings,
 	privacySettings,
@@ -12,8 +12,9 @@ import {
 import { generateHexId } from "#server/utils/ids";
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
 import { hashPassword } from "#server/utils/password";
+import { verifyBeamProfile } from "#server/utils/beam";
 
-import { giveSignupBadges } from "#server/jobs/signup";
+import { giveBeamBadge, giveSignupBadges } from "#server/jobs/signup";
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -24,21 +25,10 @@ function normalizeEmail(value: unknown): string | null {
 	return email;
 }
 
-function normalizeName(value: unknown): string | null {
-	if (typeof value !== "string") return null;
-
-	const name = value.trim();
-	if (name.length < 3 || name.length > 16) return null;
-	if (!/^[a-zA-Z0-9_]+$/u.test(name)) return null;
-
-	return name;
-}
-
 function normalizePassword(value: unknown): string | null {
 	if (typeof value !== "string") return null;
 
 	if (value.length < 8) return null;
-
 	if (!/[A-Z]/u.test(value)) return null;
 	if (!/[a-z]/u.test(value)) return null;
 	if (!/[0-9]/u.test(value)) return null;
@@ -47,31 +37,51 @@ function normalizePassword(value: unknown): string | null {
 	return value;
 }
 
-function normalizeOptionalString(value: unknown): string | null {
-	if (typeof value !== "string") return null;
-
-	const trimmed = value.trim();
-
-	return trimmed.length ? trimmed : null;
-}
-
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (event: H3Event) => {
 	const { db, client } = createDb();
 
 	try {
 		const body = await readBody(event);
 
 		const email = normalizeEmail(body?.email);
-		const name = normalizeName(body?.name);
 		const password = normalizePassword(body?.password);
-		const displayName = normalizeOptionalString(body?.displayName);
 
-		if (!email || !name || !password) {
+		// The sudo token is mandatory and is used to retrieve the Beam profile.
+		const token =
+			typeof body?.token === "string" ? body.token.trim() : null;
+
+		const termsOfServiceConsent = body?.termsOfServiceConsent === true;
+
+		const privacyPolicyConsent = body?.privacyPolicyConsent === true;
+
+		if (!email || !password || !token) {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Invalid signup payload",
 			});
 		}
+
+		if (!termsOfServiceConsent || !privacyPolicyConsent) {
+			throw createError({
+				statusCode: 400,
+				statusMessage:
+					"Terms of service and privacy policy consent are required",
+			});
+		}
+
+		/*
+		 * No account/profile is created before this succeeds.
+		 *
+		 * This guarantees that a signup always has a valid Beam
+		 * verification associated with it.
+		 */
+		const beamProfile = await verifyBeamProfile(token);
+
+		/*
+		 * The local profile name is always taken from the verified
+		 * Beam profile.
+		 */
+		const name = beamProfile.name;
 
 		const [emailMatch] = await db
 			.select({ id: accounts.id })
@@ -101,30 +111,53 @@ export default defineEventHandler(async (event) => {
 
 		const passwordHash = await hashPassword(password);
 		const profileId = generateHexId();
+
 		const ipAddress = getRequestIP(event) ?? null;
 		const userAgent = getHeader(event, "user-agent") ?? null;
+
+		const displayName = beamProfile.display_name || null;
+
+		const birthday = beamProfile.birthday
+			? new Date(beamProfile.birthday).toISOString().split("T")[0]
+			: null;
 
 		const result = await db.transaction(async (tx) => {
 			const [account] = await tx
 				.insert(accounts)
-				.values({ email, passwordHash })
-				.returning({ id: accounts.id, email: accounts.email });
+				.values({
+					email,
+					passwordHash,
+				})
+				.returning({
+					id: accounts.id,
+					email: accounts.email,
+				});
+
+			if (!account) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to create account",
+				});
+			}
 
 			await tx.insert(appearanceSettings).values({
-				accountId: account!.id,
+				accountId: account.id,
 			});
 
 			await tx.insert(privacySettings).values({
-				accountId: account!.id,
+				accountId: account.id,
 			});
 
 			const [profile] = await tx
 				.insert(profiles)
 				.values({
 					id: profileId,
-					accountId: account!.id,
+					accountId: account.id,
 					name,
 					displayName,
+					bio: beamProfile.description || null,
+					pronouns: beamProfile.pronouns || null,
+					birthday,
 					level: 2,
 				})
 				.returning({
@@ -133,28 +166,52 @@ export default defineEventHandler(async (event) => {
 					displayName: profiles.displayName,
 				});
 
+			if (!profile) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to create profile",
+				});
+			}
+
+			await tx.insert(profileLinks).values({
+				profileId: profile.id,
+				name: beamProfile.display_name || beamProfile.name,
+				type: "beam",
+				url: `https://beam.ejnalo.me/${beamProfile.name}`,
+				resourceId: beamProfile.id,
+				resourceName: beamProfile.name,
+			});
+
 			const accessToken = await signAccessToken(
 				{
-					sub: account!.id,
-					email: account!.email,
-					profileId: profile!.id,
+					sub: account.id,
+					email: account.email,
+					profileId: profile.id,
 				},
-				{ subject: account!.id },
+				{ subject: account.id },
 			);
 
 			const refreshToken = await signRefreshToken(
-				{ sub: account!.id, profileId: profile!.id },
-				{ subject: account!.id },
+				{
+					sub: account.id,
+					profileId: profile.id,
+				},
+				{ subject: account.id },
 			);
 
 			await tx.insert(sessions).values({
-				accountId: account!.id,
+				accountId: account.id,
 				token: refreshToken,
 				ipAddress,
 				userAgent,
 			});
 
-			return { account, profile, accessToken, refreshToken };
+			return {
+				account,
+				profile,
+				accessToken,
+				refreshToken,
+			};
 		});
 
 		setCookie(event, "refreshToken", result.refreshToken, {
@@ -171,6 +228,16 @@ export default defineEventHandler(async (event) => {
 			path: "/",
 			maxAge: 60 * 15,
 		});
+
+		try {
+			await giveBeamBadge(
+				event,
+				result.profile!.id,
+				new Date(beamProfile.creation_date),
+			);
+		} catch (error) {
+			console.error("Error occurred while giving Beam badge:", error);
+		}
 
 		try {
 			await giveSignupBadges(event, result.profile!.id);

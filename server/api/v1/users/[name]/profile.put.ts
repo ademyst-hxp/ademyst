@@ -1,11 +1,10 @@
-import type { H3Event } from "h3";
-
 import { createDb } from "#server/db";
-import { eq } from "drizzle-orm/sql/expressions/conditions";
+import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { profiles } from "~~/server/db/schema/profiles";
+import { profiles, profileLinks } from "~~/server/db/schema/profiles";
 
 import { getIdentity } from "#server/utils/auth";
+import { verifyBeamProfile } from "#server/utils/beam";
 
 const validatePayload = (
 	payload: any,
@@ -16,6 +15,7 @@ const validatePayload = (
 	bio?: string;
 	location?: string;
 	corporation?: string;
+	token?: string;
 } => {
 	if (typeof payload !== "object" || payload === null) {
 		throw createError({
@@ -24,7 +24,8 @@ const validatePayload = (
 		});
 	}
 
-	const { name, displayName, pronouns, bio, location, corporation } = payload;
+	const { name, displayName, pronouns, bio, location, corporation, token } =
+		payload;
 
 	if (
 		(name !== undefined && typeof name !== "string") ||
@@ -32,7 +33,8 @@ const validatePayload = (
 		(pronouns !== undefined && typeof pronouns !== "string") ||
 		(bio !== undefined && typeof bio !== "string") ||
 		(location !== undefined && typeof location !== "string") ||
-		(corporation !== undefined && typeof corporation !== "string")
+		(corporation !== undefined && typeof corporation !== "string") ||
+		(token !== undefined && typeof token !== "string")
 	) {
 		throw createError({
 			statusCode: 400,
@@ -89,6 +91,7 @@ const validatePayload = (
 		bio: bio?.trim(),
 		location: location?.trim(),
 		corporation: corporation?.trim(),
+		token: token?.trim(),
 	};
 };
 
@@ -137,12 +140,128 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 
+		let beamProfile: Awaited<ReturnType<typeof verifyBeamProfile>> | null =
+			null;
+
+		/*
+		 * If "name" is present in the payload, Beam verification
+		 * is always required — even if the requested name is
+		 * identical to the current name.
+		 *
+		 * If "name" is absent, no request is made to Beam.
+		 */
+		if (payload.name !== undefined) {
+			if (!payload.token) {
+				throw createError({
+					statusCode: 401,
+					statusMessage:
+						"A valid Beam sudo token is required when updating the username",
+				});
+			}
+
+			beamProfile = await verifyBeamProfile(payload.token);
+
+			const [beamLink] = await db
+				.select()
+				.from(profileLinks)
+				.where(
+					and(
+						eq(profileLinks.profileId, profile.id),
+						eq(profileLinks.type, "beam"),
+					),
+				)
+				.limit(1);
+
+			if (!beamLink) {
+				throw createError({
+					statusCode: 403,
+					statusMessage:
+						"A linked Beam account is required to update the username",
+				});
+			}
+
+			/*
+			 * The verified Beam account must be the Beam account
+			 * already linked to this profile.
+			 */
+			if (beamLink.resourceId !== beamProfile.id) {
+				throw createError({
+					statusCode: 403,
+					statusMessage:
+						"The Beam token does not belong to your linked Beam account",
+				});
+			}
+
+			/*
+			 * The requested username must be exactly the username
+			 * returned by the verified Beam account.
+			 */
+			if (payload.name !== beamProfile.name) {
+				throw createError({
+					statusCode: 403,
+					statusMessage:
+						"The requested username does not match your Beam username",
+				});
+			}
+
+			/*
+			 * Prevent claiming an existing local username.
+			 */
+			const [nameMatch] = await db
+				.select({ id: profiles.id })
+				.from(profiles)
+				.where(eq(profiles.name, beamProfile.name))
+				.limit(1);
+
+			if (nameMatch && nameMatch.id !== profile.id) {
+				throw createError({
+					statusCode: 409,
+					statusMessage: "Profile name already in use",
+				});
+			}
+
+			/*
+			 * FUTURE PUBLIC-SIGNUP / USERNAME PROTECTION:
+			 *
+			 * If Beam exposes a dedicated endpoint to verify username
+			 * ownership/reservation, perform that check here too.
+			 *
+			 * A Beam username must never be claimed locally without
+			 * successful verification of the corresponding Beam account.
+			 */
+		}
+
+		/*
+		 * The token is only used for Beam verification and must
+		 * never be persisted in the profile.
+		 */
+		const { token: _token, ...profileUpdate } = payload;
+
 		await db
 			.update(profiles)
-			.set(payload)
+			.set(profileUpdate)
 			.where(eq(profiles.id, profile.id));
 
-		if (payload.name) {
+		/*
+		 * Keep the Beam link synchronized when "name" was supplied.
+		 *
+		 * This is intentionally based on beamProfile rather than
+		 * payload.name because Beam is the source of truth.
+		 */
+		if (beamProfile) {
+			await db
+				.update(profileLinks)
+				.set({
+					name: beamProfile.display_name || beamProfile.name,
+					url: `https://beam.ejnalo.me/${beamProfile.name}`,
+					resourceName: beamProfile.name,
+				})
+				.where(
+					and(
+						eq(profileLinks.profileId, profile.id),
+						eq(profileLinks.type, "beam"),
+					),
+				);
 		}
 
 		return {
