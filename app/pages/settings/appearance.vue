@@ -127,10 +127,6 @@ const saveSettings = async () => {
 				</h1>
 			</header>
 			<main class="flex flex-col gap-8 overflow-visible">
-				<p class="text-muted px-8">
-					Les badges vous permettent de personnaliser votre profil et
-					de montrer vos réalisations.
-				</p>
 				<section class="flex flex-col gap-4">
 					<h2 class="text-xl font-semibold px-8">Thème</h2>
 					<p class="text-muted px-8">
