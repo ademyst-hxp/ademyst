@@ -38,6 +38,7 @@ export const appearanceSettings = pgTable("appearance_settings", {
 	highContrast: boolean("high_contrast").notNull().default(false),
 	fontSize: integer("font_size").notNull().default(16),
 	uiDensity: ui_density_enum("ui_density").notNull().default("comfortable"),
+	alter: boolean("alter").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -166,6 +166,7 @@
    ========================================================= */
 
 .high-contrast {
+	--clr-page: #ffffff;
 	--clr-text: #000000;
 	--clr-muted: #202020;
 	--clr-muted-background: #eeeeee;
@@ -187,6 +188,7 @@
    ========================================================= */
 
 .scheme-dark.high-contrast {
+	--clr-page: #000000;
 	--clr-text: #ffffff;
 	--clr-muted: #eeeeee;
 	--clr-muted-background: #202020;

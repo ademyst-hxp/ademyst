@@ -13,6 +13,7 @@ interface UpdateAppearanceSettingsRequest {
 	highContrast?: boolean;
 	fontSize?: number;
 	uiDensity?: "compact" | "comfortable";
+	alter?: boolean;
 }
 
 function generateDefaultAppearanceSettings(): AppearanceSettings {
@@ -21,6 +22,7 @@ function generateDefaultAppearanceSettings(): AppearanceSettings {
 		highContrast: false,
 		fontSize: 16,
 		uiDensity: "comfortable",
+		alter: false,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 	};
@@ -29,7 +31,7 @@ function generateDefaultAppearanceSettings(): AppearanceSettings {
 function normalizeAppearanceSettings(
 	settings: UpdateAppearanceSettingsRequest,
 	defaultSettings: AppearanceSettings,
-): AppearanceSettings {
+): UpdateAppearanceSettingsRequest {
 	if (
 		settings.theme &&
 		!["light", "dark", "system"].includes(settings.theme)
@@ -70,10 +72,22 @@ function normalizeAppearanceSettings(
 		});
 	}
 
-	return {
-		...defaultSettings,
-		...settings,
+	if (settings.alter !== undefined && typeof settings.alter !== "boolean") {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Alter must be a boolean",
+		});
+	}
+
+	const normalizedSettings: UpdateAppearanceSettingsRequest = {
+		theme: settings.theme ?? defaultSettings.theme,
+		highContrast: settings.highContrast ?? defaultSettings.highContrast,
+		fontSize: settings.fontSize ?? defaultSettings.fontSize,
+		uiDensity: settings.uiDensity ?? defaultSettings.uiDensity,
+		alter: settings.alter ?? defaultSettings.alter,
 	};
+
+	return normalizedSettings;
 }
 
 export default defineEventHandler(async (event: H3Event) => {
@@ -102,13 +116,15 @@ export default defineEventHandler(async (event: H3Event) => {
 				.insert(appearanceSettings)
 				.values({
 					...defaultSettings,
+					id: undefined,
 					accountId: identity.accountId,
+					updatedAt: new Date(),
+					createdAt: new Date(),
 				})
 				.returning();
 		}
 
 		const body = await readBody<UpdateAppearanceSettingsRequest>(event);
-
 		const normalizedSettings = normalizeAppearanceSettings(body, settings!);
 
 		[settings] = await db
@@ -119,6 +135,53 @@ export default defineEventHandler(async (event: H3Event) => {
 			})
 			.where(eq(appearanceSettings.accountId, identity.accountId))
 			.returning();
+
+		if (!settings) {
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to update appearance settings",
+			});
+		}
+
+		setCookie(event, "theme", settings.theme, {
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "strict",
+		});
+
+		setCookie(
+			event,
+			"high-contrast",
+			settings.highContrast ? "true" : "false",
+			{
+				maxAge: 60 * 60 * 24 * 30, // 30 days
+				httpOnly: true,
+				secure: process.env.NODE_ENV === "production",
+				sameSite: "strict",
+			},
+		);
+
+		setCookie(event, "font-size", settings.fontSize.toString(), {
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "strict",
+		});
+
+		setCookie(event, "density", settings.uiDensity, {
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "strict",
+		});
+
+		setCookie(event, "alter", settings.alter ? "true" : "false", {
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "strict",
+		});
 
 		return {
 			status: "ok",

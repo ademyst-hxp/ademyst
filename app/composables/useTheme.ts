@@ -1,4 +1,6 @@
 export function useTheme() {
+	const { $api } = useNuxtApp();
+
 	const theme_value = useState<"light" | "dark" | "system">("theme");
 	const theme_cookie = useCookie<"light" | "dark" | "system">("theme");
 
@@ -15,62 +17,50 @@ export function useTheme() {
 	const highContrast_cookie = useCookie<boolean>("high-contrast");
 
 	function initTheme() {
-		if (window && window.matchMedia) {
-			window
-				.matchMedia("(prefers-color-scheme: dark)")
-				.addEventListener("change", (e) => {
-					if (theme_value.value === "system") {
-						const newTheme = e.matches ? "dark" : "light";
-						if (document && document.documentElement) {
-							document.documentElement.className = "scheme-" + newTheme;
-						}
-					}
-				});
+		if (typeof window === "undefined" || typeof document === "undefined") {
+			return;
 		}
+
+		const html = document.documentElement;
 
 		const _theme =
 			theme_value.value === "system"
-				? window?.matchMedia("(prefers-color-scheme: dark)")?.matches
+				? window.matchMedia("(prefers-color-scheme: dark)").matches
 					? "dark"
 					: "light"
 				: theme_value.value;
 
-		if (document && document.documentElement) {
-			document.documentElement.className = "scheme-" + _theme;
+		html.classList.toggle("scheme-light", _theme === "light");
+		html.classList.toggle("scheme-dark", _theme === "dark");
 
-			if (alter_value.value) {
-				document.documentElement.classList.add("alter");
-			}
+		html.classList.toggle("alter", alter_value.value === true);
 
-			if (density_value.value) {
-				document.documentElement.classList.add("density-" + density_value.value);
-			}
+		html.classList.toggle(
+			"density-compact",
+			density_value.value === "compact",
+		);
 
-			if (highContrast_value.value) {
-				document.documentElement.classList.add("high-contrast");
-			}
+		html.classList.toggle(
+			"density-comfortable",
+			density_value.value === "comfortable",
+		);
 
-			document.documentElement.style.setProperty(
-				"--txt-base",
-				fontSize_value.value + "px",
-			);
-		}
+		html.classList.toggle(
+			"high-contrast",
+			highContrast_value.value === true,
+		);
+
+		html.style.setProperty("--txt-base", `${fontSize_value.value}px`);
 	}
 
-	function setTheme(props: {
+	async function setTheme(props: {
 		scheme?: "light" | "dark" | "system";
 		alter?: boolean;
 		density?: "compact" | "comfortable";
 		fontSize?: number;
 		highContrast?: boolean;
 	}) {
-		const {
-			scheme,
-			alter,
-			density,
-			fontSize,
-			highContrast,
-		} = props;
+		const { scheme, alter, density, fontSize, highContrast } = props;
 
 		if (scheme !== undefined) {
 			theme_value.value = scheme;
@@ -97,14 +87,36 @@ export function useTheme() {
 			highContrast_cookie.value = highContrast;
 		}
 
+		try {
+			await $api(`/api/v1/settings/appearance`, {
+				method: "PUT",
+				body: {
+					theme: scheme,
+					alter: alter,
+					uiDensity: density,
+					fontSize: fontSize,
+					highContrast: highContrast,
+				},
+			});
+		} catch (error) {
+			console.error(
+				"Erreur lors de l'enregistrement des paramètres :",
+				error,
+			);
+			alert(
+				"Une erreur est survenue lors de l'enregistrement des paramètres.",
+			);
+		}
+
 		initTheme();
-
-
-		// éventuellement appeler ton API pour sauvegarder en BDD
 	}
 
 	return {
 		theme: theme_value,
+		alter: alter_value,
+		density: density_value,
+		fontSize: fontSize_value,
+		highContrast: highContrast_value,
 		initTheme,
 		setTheme,
 	};

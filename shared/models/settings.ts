@@ -12,6 +12,7 @@ export type AppearanceSettings = {
 	highContrast: boolean;
 	fontSize: number;
 	uiDensity: UiDensity;
+	alter: boolean;
 	createdAt: Date;
 	updatedAt: Date;
 };
@@ -23,4 +24,23 @@ export type PrivacySettings = {
 	privacyPolicyConsent: boolean;
 	createdAt: Date;
 	updatedAt: Date;
+};
+
+export const defaultAppearanceSettings: AppearanceSettings = {
+	theme: "system",
+	highContrast: false,
+	fontSize: 16,
+	uiDensity: "comfortable",
+	alter: false,
+	createdAt: new Date(),
+	updatedAt: new Date(),
+};
+
+export const defaultPrivacySettings: PrivacySettings = {
+	profileVisibility: "everyone",
+	birthdayVisibility: "everyone",
+	termsOfServiceConsent: false,
+	privacyPolicyConsent: false,
+	createdAt: new Date(),
+	updatedAt: new Date(),
 };

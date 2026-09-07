@@ -19,27 +19,10 @@ export default defineNuxtPlugin(() => {
 		default: () => false,
 	});
 
-	const currentTheme = useState("theme", () => theme.value);
-	const currentAlter = useState("alter", () => alter.value);
-
-	const currentDensity = useState("density", () => density.value);
-	const currentSpacing = useState("spacing", () =>
-		density.value === "compact" ? 3 : 4,
-	);
-
-	const currentFontSize = useState("font-size", () => fontSize.value);
-	const currentHighContrast = useState(
-		"high-contrast",
-		() => highContrast.value,
-	);
-
-	// Watch for changes in the cookies and update the state accordingly
-	watchEffect(() => {
-		currentTheme.value = theme.value;
-		currentAlter.value = alter.value;
-		currentDensity.value = density.value;
-		currentSpacing.value = density.value === "compact" ? 3 : 4;
-		currentFontSize.value = fontSize.value;
-		currentHighContrast.value = highContrast.value;
-	});
+	useState("theme", () => theme.value);
+	useState("alter", () => alter.value);
+	useState("density", () => density.value);
+	useState("spacing", () => (density.value === "compact" ? 3 : 4));
+	useState("font-size", () => fontSize.value);
+	useState("high-contrast", () => highContrast.value);
 });

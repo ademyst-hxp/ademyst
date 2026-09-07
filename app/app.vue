@@ -2,7 +2,8 @@
 import Navbar from "./components/layout/Navbar.vue";
 const { session } = useAuthSession();
 
-const { theme, initTheme } = useTheme();
+const { theme, setTheme, initTheme } = useTheme();
+const { $theme } = useNuxtApp();
 
 const route = useRoute();
 
@@ -15,12 +16,19 @@ const _theme =
 			: "light"
 		: theme.value;
 
-initTheme();
+onMounted(() => {
+	initTheme();
+});
 
-if (document) {
+/*if (document) {
 	document.documentElement.setAttribute("data-theme", _theme);
-	document.documentElement.classList.add(`theme-${_theme}`);
-}
+	document.documentElement.classList.add(`scheme-${_theme}`);
+
+	// document.documentElement.classList.add(`density-${density.value}`);
+
+	if (alter.value) document.documentElement.classList.add('alter');
+	if (highContrast.value) document.documentElement.classList.add('high-contrast');
+}*/
 </script>
 <template>
 	<Teleport to="#__nuxt">

@@ -14,6 +14,7 @@ function generateDefaultAppearanceSettings(): AppearanceSettings {
 		highContrast: false,
 		fontSize: 16,
 		uiDensity: "comfortable",
+		alter: false,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 	};
