@@ -18,8 +18,8 @@ export type AppearanceSettings = {
 };
 
 export type PrivacySettings = {
-	profileVisibility: Visibility;
-	birthdayVisibility: Visibility;
+	profileVisibility: Extract<Visibility, "everyone" | "followers">;
+	birthdayVisibility: Omit<Visibility, "outside">;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
 	createdAt: Date;

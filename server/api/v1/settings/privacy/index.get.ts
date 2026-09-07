@@ -4,7 +4,7 @@ import { createDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { privacySettings } from "#server/db/schema/settings";
-import type { PrivacySettings } from "#shared/models/settings";
+import type { PrivacySettings, Visibility } from "#shared/models/settings";
 
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
@@ -32,7 +32,11 @@ export default defineEventHandler(async (event: H3Event) => {
 			.limit(1);
 
 		if (!settings) {
-			const defaultSettings = generateDefaultPrivacySettings();
+			const defaultSettings =
+				generateDefaultPrivacySettings() as PrivacySettings & {
+					profileVisibility: Visibility;
+					birthdayVisibility: Visibility;
+				};
 
 			await db.insert(privacySettings).values({
 				...defaultSettings,

@@ -9,8 +9,8 @@ import type { PrivacySettings, Visibility } from "#shared/models/settings";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 interface UpdatePrivacySettingsRequest {
-	profileVisibility?: Visibility;
-	birthdayVisibility?: Visibility;
+	profileVisibility?: Extract<Visibility, "everyone" | "followers">;
+	birthdayVisibility?: Omit<Visibility, "outside">;
 	termsOfServiceConsent?: boolean;
 	privacyPolicyConsent?: boolean;
 }
@@ -32,7 +32,7 @@ function normalizePrivacySettings(
 ): PrivacySettings {
 	if (
 		settings.profileVisibility &&
-		!["everyone", "friends", "private"].includes(settings.profileVisibility)
+		!["everyone", "followers"].includes(settings.profileVisibility)
 	) {
 		throw createError({
 			statusCode: 400,
@@ -42,8 +42,8 @@ function normalizePrivacySettings(
 
 	if (
 		settings.birthdayVisibility &&
-		!["everyone", "friends", "private"].includes(
-			settings.birthdayVisibility,
+		!["everyone", "followers", "friends", "me"].includes(
+			settings.birthdayVisibility as string,
 		)
 	) {
 		throw createError({
@@ -96,7 +96,10 @@ export default defineEventHandler(async (event: H3Event) => {
 			[settings] = await db
 				.insert(privacySettings)
 				.values({
-					...defaultSettings,
+					...defaultSettings as PrivacySettings & {
+						profileVisibility: Visibility;
+						birthdayVisibility: Visibility;
+					},
 					accountId: identity.accountId,
 				})
 				.returning();
@@ -104,12 +107,15 @@ export default defineEventHandler(async (event: H3Event) => {
 
 		const body = await readBody<UpdatePrivacySettingsRequest>(event);
 
-		const normalizedSettings = normalizePrivacySettings(body, settings!);
+		const normalizedSettings = normalizePrivacySettings(body, settings! as PrivacySettings);
 
 		[settings] = await db
 			.update(privacySettings)
 			.set({
-				...normalizedSettings,
+				...normalizedSettings as PrivacySettings & {
+					profileVisibility: Visibility;
+					birthdayVisibility: Visibility;
+				},
 				updatedAt: new Date(),
 			})
 			.where(eq(privacySettings.accountId, identity.accountId))
