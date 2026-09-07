@@ -13,6 +13,8 @@ const props = withDefaults(
 		disabled?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		min?: number;
+		max?: number;
 	}>(),
 	{
 		modelValue: "",
@@ -22,6 +24,8 @@ const props = withDefaults(
 		disabled: false,
 		invalid: false,
 		required: false,
+		min: undefined,
+		max: undefined,
 	},
 );
 
@@ -35,6 +39,7 @@ const emit = defineEmits<{
 const focused = ref<boolean>(false);
 const valid = ref<boolean>(true);
 const missing = ref<boolean>(false);
+const outOfRange = ref<boolean>(false);
 
 const rootClass = computed(() => {
 	let value =
@@ -58,7 +63,7 @@ const rootClass = computed(() => {
 		value += " cursor-text";
 	}
 
-	if (!valid.value || missing.value) {
+	if (!valid.value || missing.value || outOfRange.value) {
 		value += " outline-danger";
 	} else if (focused.value) {
 		value += " outline-input-focus-ring";
@@ -76,6 +81,17 @@ const isValid = computed(() => {
 
 	if (props.validate) {
 		return props.validate.test(props.modelValue as string);
+	}
+
+	if (props.type === "number") {
+		const value = Number(props.modelValue);
+
+		outOfRange.value =
+			(props.min !== undefined && value < props.min) ||
+			(props.max !== undefined && value > props.max);
+		if (isNaN(value)) return false;
+		if (props.min !== undefined && value < props.min) return false;
+		if (props.max !== undefined && value > props.max) return false;
 	}
 
 	return !props.invalid;
@@ -112,6 +128,12 @@ function onBlur(event: FocusEvent) {
 
 function onEnter(event: KeyboardEvent) {
 	const target = event.target as HTMLInputElement;
+
+	if (!isValid.value) {
+		valid.value = false;
+		return;
+	}
+
 	emit("enter", target.value);
 
 	focused.value = false;
@@ -131,8 +153,10 @@ function onEnter(event: KeyboardEvent) {
 		class="flex items-center cursor-pointer gap-2"
 		@click="
 			() => {
-				if (!disabled)
+				if (!disabled) {
 					$emit('update:modelValue', !(modelValue as boolean));
+					$emit('enter', (!modelValue as boolean).toString());
+				}
 			}
 		"
 	>
@@ -222,6 +246,21 @@ function onEnter(event: KeyboardEvent) {
 			class="flex flex-col gap-1 text-sm text-danger px-4"
 		>
 			Ce champ est obligatoire.
+		</div>
+		<div
+			v-if="outOfRange"
+			class="flex flex-col gap-1 text-sm text-danger px-4"
+		>
+			Ce champ doit être
+			{{
+				min && max
+					? `compris entre ${min} et ${max}`
+					: min
+						? `supérieur à ${min}`
+						: max
+							? `inférieur à ${max}`
+							: ""
+			}}
 		</div>
 		<div
 			v-if="$slots.error && !valid"
