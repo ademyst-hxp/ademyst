@@ -13,6 +13,10 @@
 	--clr-whispers-text: #0a1921;
 
 	/* INFO */
+	--clr-info: #2884ff;
+	--clr-info-shaded: #b1d3ff;
+	--clr-info-darkened: #1479ff;
+
 	--clr-danger: #ff0044;
 	--clr-danger-shaded: #ffb3c7;
 	--clr-danger-darkened: #cc0036;
@@ -66,6 +70,7 @@
 }
 
 .scheme-dark {
+	--clr-info-shaded: #002a63;
 	--clr-danger-shaded: #62001a;
 	--clr-warning-shaded: #573600;
 	--clr-success-shaded: #095229;

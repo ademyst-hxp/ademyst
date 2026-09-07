@@ -13,14 +13,21 @@
 	--color-whispers: var(--clr-whispers);
 	--color-whispers-text: var(--clr-whispers-text);
 
+	--color-info: var(--clr-info);
+	--color-info-shaded: var(--clr-info-shaded);
+	--color-info-darkened: var(--clr-info-darkened);
+
 	--color-danger: var(--clr-danger);
 	--color-danger-shaded: var(--clr-danger-shaded);
+	--color-danger-darkened: var(--clr-danger-darkened);
 
 	--color-warning: var(--clr-warning);
 	--color-warning-shaded: var(--clr-warning-shaded);
+	--color-warning-darkened: var(--clr-warning-darkened);
 
 	--color-success: var(--clr-success);
 	--color-success-shaded: var(--clr-success-shaded);
+	--color-success-darkened: var(--clr-success-darkened);
 
 	--color-accent: var(--clr-accent);
 	--color-accent-shaded: var(--clr-accent-shaded);
