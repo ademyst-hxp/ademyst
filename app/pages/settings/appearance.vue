@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import Box from "~/components/base/Box.vue";
 
-import BadgeInfo from "~/components/profile/BadgeInfo.vue";
-
 import { UserIcon, ChevronRightIcon } from "@heroicons/vue/24/outline";
 
 import {
@@ -277,27 +275,6 @@ const saveSettings = async () => {
 								saveSettings();
 							}"
 						/>
-					</div>
-				</section>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">
-						Vous cherchiez peut-être...
-					</h2>
-					<div class="flex flex-col gap-2">
-						<Box
-							scale="sm"
-							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
-							@click="navigateTo('/settings/profile')"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<UserIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">Profil</p>
-								<ChevronRightIcon
-									class="text-surface-text-muted h-5 w-5"
-								/>
-							</div>
-						</Box>
 					</div>
 				</section>
 			</main>
