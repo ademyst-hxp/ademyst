@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-
-import { UserIcon, ChevronRightIcon } from "@heroicons/vue/24/outline";
-
 import {
 	type AppearanceSettings,
 	defaultAppearanceSettings,
 } from "~~/shared/models/settings";
+
+import {
+	ChevronLeftIcon,
+} from "@heroicons/vue/24/outline";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();
@@ -114,184 +114,171 @@ const saveSettings = async () => {
 };
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
-		>
-			<header class="flex flex-col gap-4">
-				<h1 class="text-2xl font-bold px-8">
-					Apparence & Accessibilité
-				</h1>
-			</header>
-			<main class="flex flex-col gap-8 overflow-visible">
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">Thème</h2>
-					<p class="text-muted px-8">
-						Choisissez le thème de l'application pour une expérience
-						visuelle optimale.
-					</p>
-					<div class="flex flex-col gap-4 px-8">
-						<div
-							class="flex border-2 border-black/10 rounded-xl w-24 h-12 overflow-hidden"
-						>
-							<div class="bg-(--clr-primary) grow"></div>
-							<div class="bg-(--clr-danger) grow"></div>
-							<div class="bg-(--clr-success) grow"></div>
-						</div>
-					</div>
-					<div class="flex gap-4 px-8">
-						<div
-							key="theme-light-selector"
-							class="flex items-center gap-2 cursor-pointer"
-							:class="
-								payload.scheme == 'light'
-									? 'text-primary underline'
-									: ''
-							"
-							@click="
-								() => {
-									payload.scheme = 'light';
-									saveSettings();
-								}
-							"
-						>
-							<div
-								class="bg-white border-2 border-black/10 rounded-full w-6 h-6"
-							></div>
-							<p class="font-medium">Clair</p>
-						</div>
-						<div
-							key="theme-dark-selector"
-							class="flex items-center gap-2 cursor-pointer"
-							:class="
-								payload.scheme == 'dark'
-									? 'text-primary underline'
-									: ''
-							"
-							@click="
-								() => {
-									payload.scheme = 'dark';
-									saveSettings();
-								}
-							"
-						>
-							<div
-								class="bg-gray-900 border-2 border-black/10 rounded-full w-6 h-6"
-							></div>
-							<p class="font-medium">Sombre</p>
-						</div>
-						<div
-							key="theme-system-selector"
-							class="flex items-center gap-2 cursor-pointer"
-							:class="
-								payload.scheme == 'system'
-									? 'text-primary underline'
-									: ''
-							"
-							@click="
-								() => {
-									payload.scheme = 'system';
-									saveSettings();
-								}
-							"
-						>
-							<div
-								class="bg-gray-900 border-6 border-white rounded-full w-6 h-6"
-							></div>
-							<p class="font-medium">Système</p>
-						</div>
-					</div>
-					<div class="flex flex-col gap-2 px-8">
-						<Input
-							type="checkbox"
-							label="Couleurs altérées"
-							v-model="payload.alter"
-							@click="saveSettings()"
-						/>
-						<Input
-							type="checkbox"
-							label="Contraste élevé"
-							v-model="payload.highContrast"
-							@click="saveSettings()"
-						/>
-					</div>
-				</section>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">Police et taille</h2>
-					<div class="flex items-center gap-2 px-8">
-						<p class="font-medium">Taille de la police :</p>
-						<Button
-							:variant="payload.fontSize == 14 ? 'primary' : 'secondary'"
-							size="small"
-							label="Petite"
-							:handler="() => {
-								payload.fontSize = 14;
-								saveSettings();
-							}"
-						/>
-						<Button
-							:variant="payload.fontSize == 16 ? 'primary' : 'secondary'"
-							size="small"
-							label="Moyenne"
-							:handler="() => {
-								payload.fontSize = 16;
-								saveSettings();
-							}"
-						/>
-						<Button
-							:variant="payload.fontSize == 18 ? 'primary' : 'secondary'"
-							size="small"
-							label="Grande"
-							:handler="() => {
-								payload.fontSize = 18;
-								saveSettings();
-							}"
-						/>
-					</div>
-					<div class="flex items-center gap-2 px-8">
-						<p class="font-medium">Densité de l'interface:</p>
-						<Button
-							:variant="payload.density == 'compact' ? 'primary' : 'secondary'"
-							size="small"
-							label="Compacte"
-							:handler="() => {
-								payload.density = 'compact';
-								saveSettings();
-							}"
-						/>
-						<Button
-							:variant="payload.density == 'comfortable' ? 'primary' : 'secondary'"
-							size="small"
-							label="Confortable"
-							:handler="() => {
-								payload.density = 'comfortable';
-								saveSettings();
-							}"
-						/>
-					</div>
-				</section>
-			</main>
-			<footer class="flex flex-col gap-4">
-				<p class="text-sm text-surface-text/50 px-8">
-					<RouterLink
-						to="/legal/terms"
-						class="font-semibold hover:text-primary hover:underline"
-						>CGU</RouterLink
-					>
-					|
-					<RouterLink
-						to="/legal/privacy"
-						class="font-semibold hover:text-primary hover:underline"
-						>Politique de confidentialité</RouterLink
-					>
-				</p>
-			</footer>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+	<Teleport to="#header">
+		<nav class="grid grid-cols-[auto_1fr_auto] items-center justify-center gap-4">
+			<Button
+				label="Retour"
+				variant="link"
+				:icon="ChevronLeftIcon"
+				:handler="() => navigateTo('/settings')"
+				class="justify-self-start"
+			/>
+			<h1 class="justify-self-center text-2xl font-bold">Apparence & Accessibilité</h1>
+		</nav>
+	</Teleport>
+
+	<section class="flex flex-col gap-4">
+		<h2 class="text-xl font-semibold">Thème</h2>
+		<p class="text-muted">
+			Choisissez le thème de l'application pour une expérience visuelle
+			optimale.
+		</p>
+		<div class="flex flex-col gap-4">
+			<div
+				class="flex border-2 border-black/10 rounded-xl w-24 h-12 overflow-hidden"
+			>
+				<div class="bg-(--clr-primary) grow"></div>
+				<div class="bg-(--clr-danger) grow"></div>
+				<div class="bg-(--clr-success) grow"></div>
+			</div>
+		</div>
+		<div class="flex gap-4">
+			<div
+				key="theme-light-selector"
+				class="flex items-center gap-2 cursor-pointer"
+				:class="
+					payload.scheme == 'light' ? 'text-primary underline' : ''
+				"
+				@click="
+					() => {
+						payload.scheme = 'light';
+						saveSettings();
+					}
+				"
+			>
+				<div
+					class="bg-white border-2 border-black/10 rounded-full w-6 h-6"
+				></div>
+				<p class="font-medium">Clair</p>
+			</div>
+			<div
+				key="theme-dark-selector"
+				class="flex items-center gap-2 cursor-pointer"
+				:class="
+					payload.scheme == 'dark' ? 'text-primary underline' : ''
+				"
+				@click="
+					() => {
+						payload.scheme = 'dark';
+						saveSettings();
+					}
+				"
+			>
+				<div
+					class="bg-gray-900 border-2 border-black/10 rounded-full w-6 h-6"
+				></div>
+				<p class="font-medium">Sombre</p>
+			</div>
+			<div
+				key="theme-system-selector"
+				class="flex items-center gap-2 cursor-pointer"
+				:class="
+					payload.scheme == 'system' ? 'text-primary underline' : ''
+				"
+				@click="
+					() => {
+						payload.scheme = 'system';
+						saveSettings();
+					}
+				"
+			>
+				<div
+					class="bg-gray-900 border-6 border-white rounded-full w-6 h-6"
+				></div>
+				<p class="font-medium">Système</p>
+			</div>
+		</div>
+		<div class="flex flex-col gap-2">
+			<Input
+				type="checkbox"
+				label="Couleurs altérées"
+				v-model="payload.alter"
+				@click="saveSettings()"
+			/>
+			<Input
+				type="checkbox"
+				label="Contraste élevé"
+				v-model="payload.highContrast"
+				@click="saveSettings()"
+			/>
+		</div>
+	</section>
+	<section class="flex flex-col gap-4">
+		<h2 class="text-xl font-semibold">Police et taille</h2>
+		<div class="flex items-center gap-2">
+			<p class="font-medium">Taille de la police :</p>
+			<Button
+				:variant="payload.fontSize == 14 ? 'primary' : 'secondary'"
+				size="small"
+				label="Petite"
+				:handler="
+					() => {
+						payload.fontSize = 14;
+						saveSettings();
+					}
+				"
+			/>
+			<Button
+				:variant="payload.fontSize == 16 ? 'primary' : 'secondary'"
+				size="small"
+				label="Moyenne"
+				:handler="
+					() => {
+						payload.fontSize = 16;
+						saveSettings();
+					}
+				"
+			/>
+			<Button
+				:variant="payload.fontSize == 18 ? 'primary' : 'secondary'"
+				size="small"
+				label="Grande"
+				:handler="
+					() => {
+						payload.fontSize = 18;
+						saveSettings();
+					}
+				"
+			/>
+		</div>
+		<div class="flex items-center gap-2">
+			<p class="font-medium">Densité de l'interface:</p>
+			<Button
+				:variant="
+					payload.density == 'compact' ? 'primary' : 'secondary'
+				"
+				size="small"
+				label="Compacte"
+				:handler="
+					() => {
+						payload.density = 'compact';
+						saveSettings();
+					}
+				"
+			/>
+			<Button
+				:variant="
+					payload.density == 'comfortable' ? 'primary' : 'secondary'
+				"
+				size="small"
+				label="Confortable"
+				:handler="
+					() => {
+						payload.density = 'comfortable';
+						saveSettings();
+					}
+				"
+			/>
+		</div>
+	</section>
 </template>

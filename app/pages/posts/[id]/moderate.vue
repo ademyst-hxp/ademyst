@@ -50,6 +50,9 @@ if (!session.value) {
 }
 
 definePageMeta({
+	title: "Modérer une publication | Ademyst",
+	description: "Modérez une publication sur Ademyst.",
+	layout: "default",
 	middleware: ["auth"],
 });
 
@@ -91,11 +94,10 @@ const { data: reports } = await useAsyncData(
 	},
 );
 
-const tab = ref<"overview" | "reports" | "flags">("overview");
+const tab = ref<"reports" | "flags">("reports");
 
 const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
-		{ name: "Aperçu", value: "overview" },
 		{ name: "Signalements", value: "reports" },
 		{ name: "Flags", value: "flags" },
 	];
@@ -138,152 +140,114 @@ const submitFlags = async () => {
 };
 </script>
 <template>
-	<div class="mx-auto max-w-7xl lg:flex">
-		<header
-			class="p-6 px-8 space-y-6 md:p-8 lg:w-1/2 xl:w-1/3 lg:sticky lg:top-24 lg:self-start"
+	<Teleport to="#header">
+		<div
+			v-if="post?.flags.reported"
+			class="flex items-center gap-2 bg-danger/15 text-danger border border-danger/40 rounded-xl p-4"
 		>
-			<PostBox v-if="post" :data="post" />
-		</header>
-		<main
-			class="flex flex-col gap-4 max-lg:p-4 lg:w-1/2 xl:w-2/3 md:p-8 min-w-0"
+			<p class="text-sm font-semibold">
+				Cette publication aété signalée de nombreuses fois.
+			</p>
+		</div>
+		<div
+			class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:max-lg:grid-cols-3 xl:grid-cols-3"
 		>
-			<div class="lg:flex lg:justify-end">
-				<TabBar v-model="tab" :tabs="tabs" />
-			</div>
-
-			<section v-if="tab === 'overview'" class="space-y-2">
-				<h2 class="px-8 text-2xl font-bold">Aperçu</h2>
-				<div
-					class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:max-lg:grid-cols-3 xl:grid-cols-3"
+			<Box
+				class="flex-0 -space-y-1 sm:max-md:col-span-2 lg:max-xl:col-span-2"
+				scale="sm"
+			>
+				<span class="text-2xl font-bold">{{ post?.stats.score }}</span>
+				<span
+					v-if="(post?.stats.score ?? 0) > 100"
+					class="text-primary font-semibold"
 				>
-					<Box
-						class="flex-0 -space-y-1 sm:max-md:col-span-2 lg:max-xl:col-span-2"
-						scale="sm"
-					>
-						<span class="text-2xl font-bold">{{
-							post?.stats.score
-						}}</span>
-						<span
-							v-if="(post?.stats.score ?? 0) > 100"
-							class="text-primary font-semibold"
-						>
-							Hit Beam !
-						</span>
-						<span v-else class="text-muted">Score</span>
-					</Box>
-					<Box
-						class="flex-0 -space-y-1"
-						:class="
-							(reports?.filter((r) => r.status == 'pending')
-								.length ?? 0 > 0)
-								? 'shadow-xl shadow-warning/20'
-								: ''
+					Hit Beam !
+				</span>
+				<span v-else class="text-muted">Score</span>
+			</Box>
+			<Box
+				class="flex-0 -space-y-1"
+				:class="
+					(reports?.filter((r) => r.status == 'pending').length ??
+					0 > 0)
+						? 'shadow-xl shadow-warning/20'
+						: ''
+				"
+				scale="sm"
+			>
+				<p class="text-2xl font-bold">
+					<template
+						v-if="
+							reports?.filter((r) => r.status == 'pending')
+								.length ?? 0 > 0
 						"
-						scale="sm"
 					>
-						<p class="text-2xl font-bold">
-							<template
-								v-if="
-									reports?.filter(
-										(r) => r.status == 'pending',
-									).length ?? 0 > 0
-								"
-							>
-								<span class="font-extrabold text-warning">{{
-									reports?.filter(
-										(r) => r.status == "pending",
-									).length ?? 0
-								}}</span>
-								/
-							</template>
-							{{ reports?.length ?? 0 }}
-						</p>
-						<span class="text-muted">Signalements</span>
-					</Box>
-					<Box class="flex-0 -space-y-1" scale="sm">
-						<span class="text-2xl font-bold">{{
-							Object.values(post?.flags || {}).some(
-								(v) => v === true,
-							)
-								? "Oui"
-								: "Aucun"
+						<span class="font-extrabold text-warning">{{
+							reports?.filter((r) => r.status == "pending")
+								.length ?? 0
 						}}</span>
-						<span class="text-muted">Flags</span>
-					</Box>
-				</div>
-			</section>
+						/
+					</template>
+					{{ reports?.length ?? 0 }}
+				</p>
+				<span class="text-muted">Signalements</span>
+			</Box>
+			<Box class="flex-0 -space-y-1" scale="sm">
+				<span class="text-2xl font-bold">{{
+					Object.values(post?.flags || {}).some((v) => v === true)
+						? "Oui"
+						: "Aucun"
+				}}</span>
+				<span class="text-muted">Flags</span>
+			</Box>
+		</div>
+	</Teleport>
 
-			<section v-if="tab === 'reports'" class="space-y-2">
-				<div class="flex flex-col -space-y-1 px-8">
-					<h2 class="text-2xl font-bold">Signalements</h2>
-					<div
-						v-if="!reports || reports.length === 0"
-						class="text-muted"
-					>
-						Aucun signalement pour cette publication.
-					</div>
-				</div>
-				<div class="flex flex-col gap-4">
-					<PostReportView
-						v-for="report in reports ?? []"
-						:key="report.id"
-						:data="report"
-						:editable="false"
-						:handlable="true"
-					/>
-				</div>
-			</section>
+	<PostBox v-if="post" :data="post" />
 
-			<section v-if="tab === 'flags'" class="space-y-2">
-				<div class="flex flex-col -space-y-1 px-8">
-					<h2 class="text-2xl font-bold">Flags</h2>
-				</div>
-				<div class="flex flex-col gap-2 px-8">
-					<div
-						v-if="post?.flags.reported"
-						class="flex items-center gap-2 bg-danger/20 text-danger border border-danger/40 rounded-xl p-4 -mx-8"
-					>
-						<p class="text-sm font-semibold">
-							Cette publication aété signalée de nombreuses fois.
-						</p>
-					</div>
-					<Input
-						v-model="flagsPayload.NFE"
-						label="Nudité, violence, contenu explicite ou choquant"
-						type="checkbox"
-					/>
-					<Input
-						v-model="flagsPayload.AI"
-						label="Contenu généré partiellement ou totalement par une intelligence artificielle"
-						type="checkbox"
-					/>
-					<Input
-						v-model="flagsPayload.spam"
-						label="Spam"
-						type="checkbox"
-					/>
-					<Input
-						v-model="flagsPayload.misinformation"
-						label="Désinformation"
-						type="checkbox"
-					/>
-					<Input
-						v-model="flagsPayload.joke"
-						label="Blague ou contenu humoristique"
-						type="checkbox"
-					/>
-					<Input
-						v-model="flagsPayload.suspicious"
-						label="Contenu suspect ou douteux"
-						type="checkbox"
-					/>
-					<Button
-						label="Mettre à jour les flags"
-						variant="primary"
-						:handler="submitFlags"
-					/>
-				</div>
-			</section>
-		</main>
-	</div>
+	<TabBar v-model="tab" :tabs="tabs" />
+
+	<section v-if="tab === 'reports'" class="flex flex-col gap-2">
+		<PostReportView
+			v-for="report in reports ?? []"
+			:key="report.id"
+			:data="report"
+			:editable="false"
+			:handlable="true"
+		/>
+	</section>
+
+	<section v-if="tab === 'flags'" class="flex flex-col gap-2 px-8">
+		<Input
+			v-model="flagsPayload.NFE"
+			label="Nudité, violence, contenu explicite ou choquant"
+			type="checkbox"
+		/>
+		<Input
+			v-model="flagsPayload.AI"
+			label="Contenu généré partiellement ou totalement par une intelligence artificielle"
+			type="checkbox"
+		/>
+		<Input v-model="flagsPayload.spam" label="Spam" type="checkbox" />
+		<Input
+			v-model="flagsPayload.misinformation"
+			label="Désinformation"
+			type="checkbox"
+		/>
+		<Input
+			v-model="flagsPayload.joke"
+			label="Blague ou contenu humoristique"
+			type="checkbox"
+		/>
+		<Input
+			v-model="flagsPayload.suspicious"
+			label="Contenu suspect ou douteux"
+			type="checkbox"
+		/>
+		<Button
+			label="Mettre à jour les flags"
+			variant="primary"
+			:handler="submitFlags"
+		/>
+	</section>
 </template>

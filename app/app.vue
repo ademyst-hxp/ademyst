@@ -31,9 +31,6 @@ onMounted(() => {
 }*/
 </script>
 <template>
-	<Teleport to="#__nuxt">
-		<Navbar v-if="session && !isAuthRoute" />
-	</Teleport>
 	<NuxtLayout>
 		<NuxtPage />
 	</NuxtLayout>

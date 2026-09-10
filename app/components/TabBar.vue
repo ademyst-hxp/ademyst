@@ -14,17 +14,17 @@ const emit = defineEmits<{
 </script>
 <template>
 	<nav
-		class="w-full px-0 overflow-x-auto"
+		class="w-full overflow-x-auto max-md:px-8 md:w-fit md:mx-auto"
 	>
-		<ul class="flex justify-start min-w-full w-max">
+		<ul class="flex justify-start gap-4 min-w-full w-max">
 			<li
-				class="cursor-pointer flex flex-col items-center group"
+				class="cursor-pointer flex flex-col items-center gap-1 group"
 				v-for="tab in tabs"
 				:key="`tab-${tab.value}`"
 				@click="$emit('update:modelValue', tab.value)"
 			>
 				<div
-					class="text-lg text-center font-medium px-4 py-2"
+					class="text-lg text-center font-medium"
 					:class="
 						modelValue == tab.value ? 'text-primary' : 'text-muted'
 					"

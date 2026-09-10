@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ArrowDownCircleIcon } from "@heroicons/vue/24/outline";
 import Logo from "~/assets/logo.svg";
 
 import Button from "~/components/Button.vue";
@@ -12,6 +11,13 @@ await refresh();
 if (session.value) {
 	router.push("/discover");
 }
+
+definePageMeta({
+	title: "Ademyst: Démarrez votre aventure",
+	description:
+		"Démarrez votre aventure avec Ademyst, la nouvelle version de Beam, offrant une expérience utilisateur inégalée.",
+	layout: "landing",
+});
 
 useHead({
 	title: "Ademyst: Démarrez votre aventure",

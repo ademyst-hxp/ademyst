@@ -45,6 +45,9 @@ if (!session.value) {
 }
 
 definePageMeta({
+	title: "Signaler une publication | Ademyst",
+	description: "Signalez une publication sur Ademyst.",
+	layout: "default",
 	middleware: ["auth"],
 });
 
@@ -161,39 +164,24 @@ const submitReport = async () => {
 };
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
-		>
-			<PostBox v-if="post" :data="post" />
-			<article v-else-if="!postPending" class="flex flex-col gap-2">
-				<h1 class="text-2xl font-bold">Publication introuvable</h1>
-				<p>La publication que vous recherchez n'existe pas.</p>
-			</article>
-			<header>
-				<div class="flex flex-col gap-4 overflow-visible">
-					<PostReportBox
-						:key="newReport.id"
-						:data="newReport"
-						:editable="true"
-					>
-						<template #edit-actions>
-							<Button
-								label="Signaler"
-								:icon="FlagIcon"
-								variant="danger"
-								:handler="submitReport"
-							/>
-						</template>
-					</PostReportBox>
-				</div>
-			</header>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+	<Teleport to="#header">
+		<PostBox v-if="post" :data="post" />
+		<template v-else-if="!postPending">
+			<h1 class="text-2xl font-bold">Publication introuvable</h1>
+			<p>La publication que vous recherchez n'existe pas.</p>
+		</template>
+	</Teleport>
+
+	<section>
+		<PostReportBox :key="newReport.id" :data="newReport" :editable="true">
+			<template #edit-actions>
+				<Button
+					label="Signaler"
+					:icon="FlagIcon"
+					variant="danger"
+					:handler="submitReport"
+				/>
+			</template>
+		</PostReportBox>
+	</section>
 </template>

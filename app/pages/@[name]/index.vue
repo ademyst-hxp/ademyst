@@ -127,6 +127,10 @@ const canFollow = computed(
 
 /********************/
 
+definePageMeta({
+	layout: "profile",
+});
+
 useHead({
 	title: profile.value
 		? `${profile.value.displayName || profile.value.name} | Ademyst`
@@ -372,130 +376,131 @@ const isProfileMenuOpen = ref(false);
 const focusedBadge = ref<Badge | null>(null);
 </script>
 <template>
-	<div class="mx-auto max-w-7xl lg:flex lg:gap-8">
-		<header
-			class="p-6 px-8 space-y-6 md:p-8 lg:w-1/2 xl:w-1/3 lg:sticky lg:top-24 lg:self-start"
-		>
-			<div class="flex gap-4 items-center">
-				<img
-					:src="`/api/v1/users/${profile?.name}/avatar.webp`"
-					class="w-24 h-24 rounded-full"
+	<Teleport to="#header">
+		<section class="flex gap-4 items-center">
+			<img
+				:src="`/api/v1/users/${profile?.name}/avatar.webp`"
+				class="w-24 h-24 rounded-full"
+			/>
+
+			<div class="-space-y-2">
+				<div
+					v-if="pending"
+					class="bg-muted rounded-full h-3 w-32 animate-pulse"
 				/>
 
-				<div class="-space-y-2">
-					<div
-						v-if="pending"
-						class="bg-muted rounded-full h-3 w-32 animate-pulse"
-					/>
-
-					<h1
-						v-else
-						class="flex items-center gap-2 text-3xl font-bold"
-					>
-						{{
-							profile?.displayName ??
-							(profile?.name ? `@${profile.name}` : "Ghost")
-						}}
-						<img
-							v-if="profile?.badge"
-							:src="`/api/v1/badges/${profile?.badge?.id}/icon.png`"
-							:alt="profile?.badge?.name"
-							class="h-6 w-6"
-						/>
-					</h1>
-
-					<div
-						v-if="pending"
-						class="bg-muted rounded-full h-3 w-24 animate-pulse"
-					/>
-
-					<span v-else class="text-muted text-lg font-semibold">
-						{{ `@${profile?.name ?? "ghost"}` }}
-					</span>
-				</div>
-			</div>
-
-			<div
-				v-if="profile?.badges && profile?.badges.length > 0"
-				class="flex items-center gap-1.5 px-4"
-			>
-				<template :key="badge.id" v-for="badge in profile?.badges">
+				<h1 v-else class="flex items-center gap-2 text-3xl font-bold">
+					{{
+						profile?.displayName ??
+						(profile?.name ? `@${profile.name}` : "Ghost")
+					}}
 					<img
-						:src="`/api/v1/badges/${badge.id}/icon.png`"
-						:alt="badge.name"
-						class="cursor-pointer h-5 w-5"
-						@click="focusedBadge = badge"
+						v-if="profile?.badge"
+						:src="`/api/v1/badges/${profile?.badge?.id}/icon.png`"
+						:alt="profile?.badge?.name"
+						class="h-6 w-6"
 					/>
-				</template>
+				</h1>
+
+				<div
+					v-if="pending"
+					class="bg-muted rounded-full h-3 w-24 animate-pulse"
+				/>
+
+				<span v-else class="text-muted text-lg font-semibold">
+					{{ `@${profile?.name ?? "ghost"}` }}
+				</span>
+			</div>
+		</section>
+
+		<section
+			v-if="profile?.badges && profile?.badges.length > 0"
+			class="flex items-center gap-1.5 px-4"
+		>
+			<template :key="badge.id" v-for="badge in profile?.badges">
+				<img
+					:src="`/api/v1/badges/${badge.id}/icon.png`"
+					:alt="badge.name"
+					class="cursor-pointer h-5 w-5"
+					@click="focusedBadge = badge"
+				/>
+			</template>
+		</section>
+
+		<section class="flex items-center gap-4 px-4">
+			<div class="flex flex-col w-1/3 -space-y-1">
+				<span class="text-2xl font-bold">{{
+					toLitteral(posts?.length ?? 0)
+				}}</span>
+				<span class="text-muted">Publications</span>
 			</div>
 
-			<div class="flex items-center gap-4 px-4">
-				<div class="flex flex-col w-1/3 -space-y-1">
-					<span class="text-2xl font-bold">{{
-						toLitteral(posts?.length ?? 0)
-					}}</span>
-					<span class="text-muted">Publications</span>
-				</div>
-
-				<div class="flex flex-col w-1/3 -space-y-1">
-					<span class="text-2xl font-bold">{{
-						toLitteral(stats.following)
-					}}</span>
-					<span class="text-muted">Suivis</span>
-				</div>
-
-				<div class="flex flex-col w-1/3 -space-y-1">
-					<span class="text-2xl font-bold">{{
-						toLitteral(stats.followers)
-					}}</span>
-					<span class="text-muted">Abonnés</span>
-				</div>
+			<div class="flex flex-col w-1/3 -space-y-1">
+				<span class="text-2xl font-bold">{{
+					toLitteral(stats.following)
+				}}</span>
+				<span class="text-muted">Suivis</span>
 			</div>
 
-			<div v-if="profile" class="flex flex-wrap gap-2 items-center">
-				<Button
-					v-if="isMe"
-					label="Modifier le profil"
-					size="medium"
-					handler="/settings/profile"
-				/>
-
-				<Button
-					v-if="canFollow"
-					label="Suivre"
-					size="medium"
-					:handler="
-						() =>
-							followUser(profile!.name, () => {
-								relationship.following = true;
-							})
-					"
-				/>
-
-				<Button
-					v-else-if="relationship.following"
-					label="Se désabonner"
-					variant="secondary"
-					size="medium"
-					:handler="
-						() =>
-							unfollowUser(profile!.name, () => {
-								relationship.following = false;
-							})
-					"
-				/>
-
-				<Button
-					:icon="EllipsisVerticalIcon"
-					size="medium"
-					variant="secondary"
-					:handler="() => (isProfileMenuOpen = !isProfileMenuOpen)"
-				/>
+			<div class="flex flex-col w-1/3 -space-y-1">
+				<span class="text-2xl font-bold">{{
+					toLitteral(stats.followers)
+				}}</span>
+				<span class="text-muted">Abonnés</span>
 			</div>
+		</section>
 
-			<p v-if="profile?.bio" class="text-muted px-4">
-				{{ profile.bio }}
-			</p>
+		<section v-if="profile" class="flex flex-wrap gap-2 items-center">
+			<Button
+				v-if="isMe"
+				label="Modifier le profil"
+				size="medium"
+				handler="/settings/profile"
+			/>
+
+			<Button
+				v-if="canFollow"
+				label="Suivre"
+				size="medium"
+				:handler="
+					() =>
+						followUser(profile!.name, () => {
+							relationship.following = true;
+						})
+				"
+			/>
+
+			<Button
+				v-else-if="relationship.following"
+				label="Se désabonner"
+				variant="secondary"
+				size="medium"
+				:handler="
+					() =>
+						unfollowUser(profile!.name, () => {
+							relationship.following = false;
+						})
+				"
+			/>
+
+			<Button
+				:icon="EllipsisVerticalIcon"
+				size="medium"
+				variant="secondary"
+				:handler="() => (isProfileMenuOpen = !isProfileMenuOpen)"
+			/>
+		</section>
+
+		<section
+			v-if="
+				profile?.bio ||
+				profile?.location ||
+				profile?.corporation ||
+				(profile?.links && profile?.links.length > 0)
+			"
+			class="flex flex-col gap-2 mt-4"
+		>
+			<p v-if="profile?.bio" class="text-muted px-4">{{ profile.bio }}</p>
 
 			<ul
 				v-if="profile?.location || profile?.corporation"
@@ -525,64 +530,62 @@ const focusedBadge = ref<Badge | null>(null);
 					</p>
 				</a>
 			</ul>
-		</header>
-		<main
-			class="flex flex-col gap-4 max-lg:p-4 lg:w-1/2 xl:w-2/3 md:p-8 min-w-0"
+		</section>
+	</Teleport>
+
+	<section>
+		<TabBar v-model="tab" :tabs="tabs" />
+	</section>
+
+	<section v-if="tab === 'posts'" class="space-y-2">
+		<PostView v-for="post in posts ?? []" :key="post.id" :data="post" />
+	</section>
+
+	<section v-if="tab === 'following'" class="space-y-2">
+		<div
+			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
 		>
-			<div class="lg:flex lg:justify-end">
-				<TabBar v-model="tab" :tabs="tabs" />
-			</div>
+			<ProfileBox
+				v-for="followed in following ?? []"
+				:key="followed.id"
+				:data="followed"
+				class="cursor-pointer"
+				@click="$router.push(`/@${followed.name}`)"
+			/>
+		</div>
+	</section>
 
-			<section v-if="tab === 'posts'" class="space-y-4">
-				<PostView
-					v-for="post in posts ?? []"
-					:key="post.id"
-					:data="post"
+	<section v-if="tab === 'followers'" class="space-y-2">
+		<div
+			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
+		>
+			<ProfileBox
+				v-for="follower in followers ?? []"
+				:key="follower.id"
+				:data="follower"
+				class="cursor-pointer"
+				@click="$router.push(`/@${follower.name}`)"
+			/>
+		</div>
+	</section>
+
+	<section v-if="tab === 'report'" class="space-y-2">
+		<ProfileReportBox
+			:key="newReport.id"
+			:data="newReport"
+			:editable="true"
+		>
+			<template #edit-actions>
+				<Button
+					label="Signaler"
+					:icon="FlagIcon"
+					variant="danger"
+					:handler="submitReport"
 				/>
-			</section>
+			</template>
+		</ProfileReportBox>
+	</section>
 
-			<section v-if="tab === 'following'" class="space-y-4">
-				<div class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3">
-					<ProfileBox
-						v-for="followed in following ?? []"
-						:key="followed.id"
-						:data="followed"
-						class="cursor-pointer"
-						@click="$router.push(`/@${followed.name}`)"
-					/>
-				</div>
-			</section>
-
-			<section v-if="tab === 'followers'" class="space-y-4">
-				<div class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3">
-					<ProfileBox
-						v-for="follower in followers ?? []"
-						:key="follower.id"
-						:data="follower"
-						class="cursor-pointer"
-						@click="$router.push(`/@${follower.name}`)"
-					/>
-				</div>
-			</section>
-
-			<section v-if="tab === 'report'" class="space-y-4">
-				<ProfileReportBox
-					:key="newReport.id"
-					:data="newReport"
-					:editable="true"
-				>
-					<template #edit-actions>
-						<Button
-							label="Signaler"
-							:icon="FlagIcon"
-							variant="danger"
-							:handler="submitReport"
-						/>
-					</template>
-				</ProfileReportBox>
-			</section>
-		</main>
-	</div>
 	<Menu
 		v-if="isProfileMenuOpen"
 		label="Plus d'options"

@@ -100,9 +100,13 @@ html {
 	font-size: var(--text-base);
 }
 
-#__nuxt > *:not(._no_container) {
-	@apply container mx-auto;
+.layout-grid > * {
+	@apply min-w-0 max-w-[100dvw-1rem];
 }
+
+/*#__nuxt > *:not(._no_container) {
+	@apply container mx-auto;
+}*/
 
 .post-content > * + * {
 	@apply mt-4;

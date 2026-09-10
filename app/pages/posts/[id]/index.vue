@@ -68,6 +68,9 @@ if (!session.value) {
 }
 
 definePageMeta({
+	title: "Publication | Ademyst",
+	description: "Découvrez la publication d'un utilisateur sur Ademyst.",
+	layout: "default",
 	middleware: ["auth"],
 });
 
@@ -163,69 +166,45 @@ const handlePublish = async () => {
 };
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
-		>
-			<PostBox v-if="post" :data="post" />
-			<article
-				v-else-if="!postPending"
-				class="flex flex-col gap-2"
-			>
-				<h1 class="text-2xl font-bold">Publication introuvable</h1>
-				<p>La publication que vous recherchez n'existe pas.</p>
-			</article>
-			<header>
-				<div class="flex flex-col gap-4">
-					<h1 class="text-2xl font-bold px-8">
-						Écrire une publication
-					</h1>
-					<div class="flex flex-col gap-2 px-8">
-						<Input
-							v-model="isPrev"
-							label="Prévisualiser la publication"
-							type="checkbox"
-						/>
-						<p>
-							Visibilité:
-							<b>{{
-								visibilityLabels[preparingPost.visibility]
-							}}</b>
-							(<u
-								class="cursor-pointer text-primary underline"
-								@click="isVisibilityMenuOpen = true"
-								>Changer</u
-							>)
-						</p>
-					</div>
-				</div>
-				<div class="flex flex-col gap-4 overflow-visible">
-					<PostBox :data="preparingPost" :editable="!isPrev" />
-					<section class="flex flex-col gap-2 px-8">
-						<Button
-							label="Publier"
-							variant="primary"
-							:disabled="!isGood"
-							:handler="handlePublish"
-						/>
-					</section>
-				</div>
-			</header>
-			<main class="flex flex-col gap-4">
-				<PostBox
-					v-for="answer in answers"
-					:key="answer.id"
-					:data="answer"
-				/>
-			</main>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+	<Teleport to="#header">
+		<PostBox v-if="post" :data="post" />
+		<template v-else-if="!postPending">
+			<h1 class="text-2xl font-bold">Publication introuvable</h1>
+			<p>La publication que vous recherchez n'existe pas.</p>
+		</template>
+	</Teleport>
+
+	<section id="compose" class="flex flex-col gap-4 overflow-visible">
+		<PostBox :data="preparingPost" :editable="!isPrev" />
+		<div class="flex flex-col gap-2 px-8">
+			<Input
+				v-model="isPrev"
+				label="Prévisualiser la publication"
+				type="checkbox"
+			/>
+			<p>
+				Visibilité:
+				<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
+				(<u
+					class="cursor-pointer text-primary underline"
+					@click="isVisibilityMenuOpen = true"
+					>Changer</u
+				>)
+			</p>
+		</div>
+		<div class="flex flex-col gap-2 px-8">
+			<Button
+				label="Publier"
+				variant="primary"
+				:disabled="!isGood"
+				:handler="handlePublish"
+			/>
+		</div>
+	</section>
+	<section class="flex flex-col gap-4">
+		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" />
+	</section>
+
 	<Menu
 		v-if="isVisibilityMenuOpen"
 		@close="isVisibilityMenuOpen = false"

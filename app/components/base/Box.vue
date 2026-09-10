@@ -1,19 +1,22 @@
 <script setup lang="ts">
-const props = withDefaults(defineProps<{
-	scale?: "sm" | "md";
-	layout?: "horizontal" | "vertical";
-	customColor?: string;
-}>(), {
-	scale: "md",
-	layout: "vertical",
-});
+const props = withDefaults(
+	defineProps<{
+		scale?: "sm" | "md";
+		layout?:
+			"horizontal" | "vertical" | "horizontal-divide" | "vertical-divide";
+		customColor?: string;
+	}>(),
+	{
+		scale: "md",
+		layout: "vertical",
+	},
+);
 
 const root = computed<{
 	rootClass: string;
 	rootStyle: Record<string, any>;
 }>(() => {
-	let rootClass =
-		"flex backdrop-blur-lg text-surface-text border";
+	let rootClass = "flex backdrop-blur-lg text-surface-text border";
 
 	switch (props.layout) {
 		case "horizontal":
@@ -22,15 +25,28 @@ const root = computed<{
 		case "vertical":
 		default:
 			rootClass += " flex-col";
+			break;
+		case "horizontal-divide":
+			rootClass += " flex-row divide-x divide-surface-border";
+			break;
+		case "vertical-divide":
+			rootClass += " flex-col divide-y divide-surface-border";
+			break;
 	}
 
 	switch (props.scale) {
 		case "sm":
-			rootClass += " rounded-3xl gap-1 p-4 sm:p-6 sm:gap-1";
+			rootClass += " rounded-3xl";
+			if (!props.layout.includes("divide")) {
+				rootClass += " gap-1 p-4 sm:p-6 sm:gap-1";
+			}
 			break;
 		case "md":
 		default:
-			rootClass += " rounded-4xl gap-2 p-6 sm:p-8 sm:gap-4";
+			rootClass += " rounded-4xl";
+			if (!props.layout.includes("divide")) {
+				rootClass += " gap-2 p-6 sm:p-8 sm:gap-4";
+			}
 	}
 
 	return props.customColor

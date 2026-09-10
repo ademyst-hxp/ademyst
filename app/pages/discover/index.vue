@@ -12,7 +12,8 @@ import {
 	NoSymbolIcon,
 	ChatBubbleBottomCenterTextIcon,
 	ArrowPathIcon,
-} from "@heroicons/vue/24/solid";
+	ClockIcon,
+} from "@heroicons/vue/24/outline";
 
 import {
 	GlobeAltIcon,
@@ -22,8 +23,6 @@ import {
 	EyeSlashIcon,
 } from "@heroicons/vue/24/outline";
 
-import WhisperIcon from "~/assets/whispers.svg";
-import WhisperGoldIcon from "~/assets/whispers-gold.svg";
 import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 
 import type { Whisper } from "~~/shared/models/interactions";
@@ -66,7 +65,7 @@ useHead({
 	],
 });
 
-const tab = ref<"suggest" | "following" | "hits">("suggest");
+const tab = ref<"following" | "suggest" | "hits">("following");
 const focusedWhisper = ref<Whisper | null>(null);
 
 const isVisibilityMenuOpen = ref(false);
@@ -164,103 +163,128 @@ watch(
 );
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
-		>
-			<header class="flex flex-col gap-2">
-				<h2 class="px-8">
-					<WhisperGoldIcon class="text-whispers-text w-auto h-6" />
-				</h2>
-				<div
-					class="flex justify-start items-stretch gap-2 rounded-3xl overflow-x-auto scrollbar-none w-full h-24 sm:gap-4"
-				>
-					<div
-						class="shrink-0 flex items-center justify-center bg-surface text-surface-text-muted border border-dashed border-surface-border rounded-3xl w-36 p-4 md:w-48 md:p-8 cursor-pointer transition-all duration-150 hover:scale-98"
-						@click="editingWhisper = true"
-					>
-						<PlusCircleIcon class="w-8 h-8" />
-					</div>
+	<Teleport to="#header">
+		<h1 class="text-3xl font-bold text-center">Discover</h1>
+		<TabBar
+			v-model="tab"
+			:tabs="[
+				{ name: 'Abonnements', value: 'following' },
+				{ name: 'Suggestions', value: 'suggest' },
+				{ name: 'Hits', value: 'hits' },
+			]"
+		/>
+	</Teleport>
 
-					<WhisperBox
-						v-for="whisper in whispers"
-						:key="'whisper-' + whisper.id"
-						:data="whisper"
-						minified
-						class="h-full"
-						@click="
+	<section class="flex flex-col gap-2">
+		<div
+			class="flex justify-start items-stretch gap-2 rounded-3xl overflow-x-auto scrollbar-none w-full h-24"
+		>
+			<div
+				class="shrink-0 flex items-center justify-center bg-surface text-surface-text-muted border border-dashed border-surface-border rounded-3xl w-36 p-4 md:w-48 md:p-8 cursor-pointer transition-all duration-150 hover:scale-98"
+				@click="editingWhisper = true"
+			>
+				<PlusCircleIcon class="w-8 h-8" />
+			</div>
+
+			<WhisperBox
+				v-for="whisper in whispers"
+				:key="'whisper-' + whisper.id"
+				:data="whisper"
+				minified
+				class="h-full"
+				@click="
+					() => {
+						focusedWhisper = whisper;
+					}
+				"
+			/>
+		</div>
+	</section>
+	<section
+		class="flex flex-col gap-2 overflow-visible"
+		v-if="tab === 'following'"
+	>
+		<template
+			v-for="(post, index) in following"
+			:key="'following-' + post.id"
+		>
+			<PostBox :data="post" />
+
+			<div v-if="(index + 1) % 25 === 0" class="flex flex-col items-center gap-2 text-center py-8">
+				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
+				<h2 class="text-2xl font-bold px-8">Une petite pause ?</h2>
+				<p class="text-muted px-8">
+					Vous avez parcouru {{ index + 1 }} publications depuis
+					l'ouverture de cette page.
+				</p>
+			</div>
+			<div
+				v-else-if="(index + 1) % 13 === 0"
+				class="flex flex-col gap-2 py-4"
+			>
+				<h2 class="text-2xl font-bold px-8">Profils à suivre</h2>
+				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
+					<ProfileBox
+						v-for="user in users"
+						:key="'hits-suggestion-' + user.id"
+						:data="user"
+						class="cursor-pointer shrink-0"
+						@click.self="
 							() => {
-								focusedWhisper = whisper;
+								focusedWhisper = null;
+								navigateTo('/@' + user.name);
 							}
 						"
 					/>
 				</div>
-				<TabBar
-					v-model="tab"
-					:tabs="[
-						{ name: 'Suggestions', value: 'suggest' },
-						{ name: 'Abonné', value: 'following' },
-						{ name: 'Hit Beams', value: 'hits' },
-					]"
-					class="md:w-fit md:mx-auto"
-				/>
-			</header>
-			<main
-				class="flex flex-col gap-4 overflow-visible"
-				v-if="tab === 'suggest'"
-			>
-				<div class="flex flex-col -space-y-1 px-8">
-					<h2 class="text-2xl font-bold">Feed</h2>
-					<p class="text-muted">
-						Publications tendances en ce moment
-					</p>
-				</div>
-				<PostBox v-for="post in suggestions" :data="post" />
-			</main>
-			<main
-				class="flex flex-col gap-4 overflow-visible"
-				v-if="tab === 'following'"
-			>
-				<div class="flex flex-col -space-y-1 px-8">
-					<h2 class="text-2xl font-bold">Abonnés</h2>
-					<p class="text-muted">
-						Publications des personnes que vous suivez
-					</p>
-				</div>
-				<PostBox v-for="post in following" :data="post" />
-			</main>
-			<main
-				class="flex flex-col gap-4 overflow-visible"
-				v-if="tab === 'hits'"
-			>
-				<div class="flex flex-col -space-y-1 px-8">
-					<h2 class="text-2xl font-bold">Hit Beams</h2>
-					<p class="text-muted">
-						Publications qui ont crevé les stats
-					</p>
-				</div>
-				<PostBox v-for="post in hits" :data="post" />
-			</main>
-		</section>
-		<aside
-			id="suggestions"
-			class="basis-1/3 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8"
-		>
-			<!-- Profils -->
-			<h2 class="text-2xl font-bold px-8">Suggestions</h2>
-			<div class="flex flex-col gap-2">
-				<ProfileBox
-					v-for="user in users"
-					:key="'user-' + user.id"
-					:data="user"
-					minified
-				/>
 			</div>
-		</aside>
-	</div>
+		</template>
+	</section>
+
+	<section
+		class="flex flex-col gap-2 overflow-visible"
+		v-if="tab === 'suggest'"
+	>
+		<template
+			v-for="(post, index) in suggestions"
+			:key="'suggest-' + post.id"
+		>
+			<PostBox :data="post" />
+
+			<div v-if="(index + 1) % 25 === 0" class="flex flex-col items-center gap-2 text-center py-8">
+				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
+				<h2 class="text-2xl font-bold px-8">Une petite pause ?</h2>
+				<p class="text-muted px-8">
+					Vous avez parcouru {{ index + 1 }} publications depuis
+					l'ouverture de cette page.
+				</p>
+			</div>
+			<div
+				v-else-if="(index + 1) % 9 === 0"
+				class="flex flex-col gap-2 py-4"
+			>
+				<h2 class="text-2xl font-bold px-8">Profils à suivre</h2>
+				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
+					<ProfileBox
+						v-for="user in users"
+						:key="'hits-suggestion-' + user.id"
+						:data="user"
+						class="cursor-pointer shrink-0"
+						@click.self="
+							() => {
+								focusedWhisper = null;
+								navigateTo('/@' + user.name);
+							}
+						"
+					/>
+				</div>
+			</div>
+		</template>
+	</section>
+
+	<section class="flex flex-col gap-2 overflow-visible" v-if="tab === 'hits'">
+		<PostBox v-for="post in hits" :key="'hits-' + post.id" :data="post" />
+	</section>
 
 	<!-- Focused Whisper -->
 	<Menu
@@ -307,7 +331,6 @@ watch(
 	<Popup
 		v-if="editingWhisper"
 		@close="editingWhisper = false"
-		title="Publier une pensée"
 	>
 		<h2 class="text-xl font-bold">Exprimer une pensée</h2>
 		<WhisperBox

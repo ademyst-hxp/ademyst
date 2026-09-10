@@ -157,11 +157,13 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<textarea
+		<Input
 			v-if="editable"
 			v-model="post.content"
-			class="bg-black/10 rounded-xl p-2 -mx-2"
-		></textarea>
+			class="-mx-2"
+			placeholder="Éditez votre publication..."
+			type="textarea"
+		/>
 		<div
 			v-else
 			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"

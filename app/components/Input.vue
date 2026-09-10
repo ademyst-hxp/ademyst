@@ -177,7 +177,7 @@ function onEnter(event: KeyboardEvent) {
 		</span>
 		<div class="flex items-center gap-1 text-base" :class="rootClass">
 			<textarea
-				class="grow outline-none h-full resize-none"
+				class="grow outline-none h-36 resize-none"
 				:value="modelValue as string"
 				:placeholder="placeholder"
 				:disabled="disabled"

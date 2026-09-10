@@ -172,48 +172,35 @@ const handlePublish = async () => {
 };
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
-		>
-			<header class="flex flex-col gap-4">
-				<h1 class="text-2xl font-bold px-8">Écrire une publication</h1>
-				<div class="flex flex-col gap-2 px-8">
-					<Input
-						v-model="isPrev"
-						label="Prévisualiser la publication"
-						type="checkbox"
-					/>
-					<p>
-						Visibilité:
-						<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
-						(<u
-							class="cursor-pointer text-primary underline"
-							@click="isVisibilityMenuOpen = true"
-							>Changer</u
-						>)
-					</p>
-				</div>
-			</header>
-			<main class="flex flex-col gap-4 overflow-visible">
-				<PostBox :data="preparingPost" :editable="!isPrev" />
-				<section class="flex flex-col gap-2 px-8">
-					<Button
-						label="Publier"
-						variant="primary"
-						:disabled="!isGood"
-						:handler="handlePublish"
-					/>
-				</section>
-			</main>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+	<Teleport to="#header">
+		<h1 class="text-2xl font-bold text-center">Écrire une publication</h1>
+		<div class="flex flex-col gap-2">
+			<Input
+				v-model="isPrev"
+				label="Prévisualiser la publication"
+				type="checkbox"
+			/>
+			<p>
+				Visibilité:
+				<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
+				(<u
+					class="cursor-pointer text-primary underline"
+					@click="isVisibilityMenuOpen = true"
+					>Changer</u
+				>)
+			</p>
+		</div>
+	</Teleport>
+
+	<PostBox :data="preparingPost" :editable="!isPrev" />
+	<section class="flex flex-col gap-2">
+		<Button
+			label="Publier"
+			variant="primary"
+			:disabled="!isGood"
+			:handler="handlePublish"
+		/>
+	</section>
 	<Menu
 		v-if="isVisibilityMenuOpen"
 		@close="isVisibilityMenuOpen = false"

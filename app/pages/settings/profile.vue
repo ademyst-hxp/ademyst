@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Box from "~/components/base/Box.vue";
+import Actions from "~/components/base/Actions.vue";
 
 import Avatar from "~/components/profile/Avatar.vue";
 import SocialIcon from "~/components/profile/SocialIcon.vue";
@@ -7,6 +8,7 @@ import SocialIcon from "~/components/profile/SocialIcon.vue";
 import {
 	XMarkIcon,
 	ChevronRightIcon,
+	ChevronLeftIcon,
 	KeyIcon,
 	ShieldCheckIcon,
 	CheckBadgeIcon,
@@ -147,208 +149,139 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 };
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
+	<Teleport to="#header">
+		<nav
+			class="grid grid-cols-[auto_1fr_auto] items-center justify-center gap-4"
 		>
-			<header class="flex flex-col gap-4">
-				<h1 class="text-2xl font-bold px-8">Modifier votre profil</h1>
-			</header>
-			<main class="flex flex-col gap-8 overflow-visible">
-				<section class="flex flex-col gap-4">
-					<div class="flex gap-8 max-md:flex-col">
-						<div class="w-full sm:w-fit">
-							<Avatar
-								:size="192"
-								:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
-							/>
-						</div>
-						<div class="flex flex-col gap-4 w-full">
-							<Input
-								v-model="payload.name"
-								label="Nom d'utilisateur"
-								placeholder="Nom d'utilisateur"
-								@enter="updateProfile"
-							/>
-							<Input
-								v-model="payload.displayName"
-								label="Nom d'affichage"
-								placeholder="Nom d'affichage"
-								@enter="updateProfile"
-							/>
-							<Input
-								v-model="payload.pronouns"
-								label="Pronoms"
-								placeholder="Pronoms"
-								@enter="updateProfile"
-							/>
-						</div>
-					</div>
-					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						<Input
-							v-model="payload.location"
-							label="Localisation"
-							placeholder="Localisation"
-							@enter="updateProfile"
-						/>
-						<Input
-							v-model="payload.corporation"
-							label="Entreprise / Organisation"
-							placeholder="Ademyst Co."
-							@enter="updateProfile"
-						/>
-						<Input
-							class="col-span-1 md:col-span-2"
-							type="textarea"
-							v-model="payload.bio"
-							label="Bio"
-							placeholder="Bio"
-							@enter="updateProfile"
-						/>
-					</div>
-				</section>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">Liens</h2>
-					<div class="flex flex-col gap-2">
-						<Box
-							v-for="link in session?.profile.links"
-							scale="sm"
-							layout="horizontal"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<SocialIcon :icon="link.type" class="w-6 h-6" />
-								<p class="grow text-lg font-medium">
-									{{
-										link.resourceName ||
-										link.name ||
-										link.url
-									}}
-								</p>
-								<XMarkIcon
-									class="cursor-pointer text-surface-text-muted h-5 w-5"
-									@click="removeLink(link.id)"
-								/>
-							</div>
-						</Box>
-						<p
-							v-if="
-								!session?.profile.links ||
-								session?.profile.links.length === 0
-							"
-							class="text-surface-text-muted px-8"
-						>
-							Aucun lien ajouté.
-						</p>
-						<div class="flex items-center gap-2">
-							<Box scale="sm" class="w-full">
-								<div
-									class="flex gap-2 max-sm:flex-col sm:items-end"
-								>
-									<Input
-										v-model="linkPayload"
-										label="URL du lien"
-										placeholder="URL du lien"
-										class="max-sm:w-full sm:grow"
-									/>
-									<Button
-										label="Ajouter"
-										:handler="addLink"
-										class="w-80 h-fit"
-									/>
-								</div>
-							</Box>
-						</div>
-					</div>
-				</section>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">
-						Vous cherchiez peut-être...
-					</h2>
-					<div class="flex flex-col gap-2">
-						<Box
-							v-if="(session?.profile.level ?? 0) >= 4"
-							scale="sm"
-							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
-							:customColor="session?.profile.badge?.color"
-							:class="
-								session?.profile.badge?.color
-									? 'text-white'
-									: ''
-							"
-							@click="navigateTo('/settings/badges')"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<CheckBadgeIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">
-									Certifications et badges
-								</p>
-								<ChevronRightIcon
-									class="h-5 w-5"
-									:class="
-										session?.profile.badge?.color
-											? 'text-white'
-											: 'text-surface-text-muted'
-									"
-								/>
-							</div>
-						</Box>
-						<Box
-							scale="sm"
-							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
-							@click="navigateTo('/settings/account')"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<KeyIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">
-									Compte et accès
-								</p>
-								<ChevronRightIcon
-									class="text-surface-text-muted h-5 w-5"
-								/>
-							</div>
-						</Box>
-						<Box
-							scale="sm"
-							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
-							@click="navigateTo('/settings/privacy')"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<ShieldCheckIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">
-									Confidentialité
-								</p>
-								<ChevronRightIcon
-									class="text-surface-text-muted h-5 w-5"
-								/>
-							</div>
-						</Box>
-					</div>
-				</section>
-			</main>
-			<footer class="flex flex-col gap-4">
-				<p class="text-sm text-surface-text/50 px-8">
-					<RouterLink
-						to="/legal/terms"
-						class="font-semibold hover:text-primary hover:underline"
-						>CGU</RouterLink
-					>
-					|
-					<RouterLink
-						to="/legal/privacy"
-						class="font-semibold hover:text-primary hover:underline"
-						>Politique de confidentialité</RouterLink
-					>
+			<Button
+				label="Retour"
+				variant="link"
+				:icon="ChevronLeftIcon"
+				:handler="() => navigateTo('/settings')"
+				class="justify-self-start"
+			/>
+			<h1 class="justify-self-center text-2xl font-bold">
+				Modifier votre profil
+			</h1>
+		</nav>
+	</Teleport>
+
+	<section class="flex flex-col gap-4">
+		<div class="flex gap-8 max-md:flex-col">
+			<div class="w-full sm:w-fit">
+				<Avatar
+					:size="192"
+					:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
+				/>
+			</div>
+			<div class="flex flex-col gap-4 w-full">
+				<Input
+					v-model="payload.name"
+					label="Nom d'utilisateur"
+					placeholder="Nom d'utilisateur"
+					@enter="updateProfile"
+				/>
+				<Input
+					v-model="payload.displayName"
+					label="Nom d'affichage"
+					placeholder="Nom d'affichage"
+					@enter="updateProfile"
+				/>
+				<Input
+					v-model="payload.pronouns"
+					label="Pronoms"
+					placeholder="Pronoms"
+					@enter="updateProfile"
+				/>
+			</div>
+		</div>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<Input
+				v-model="payload.location"
+				label="Localisation"
+				placeholder="Localisation"
+				@enter="updateProfile"
+			/>
+			<Input
+				v-model="payload.corporation"
+				label="Entreprise / Organisation"
+				placeholder="Ademyst Co."
+				@enter="updateProfile"
+			/>
+			<Input
+				class="col-span-1 md:col-span-2"
+				type="textarea"
+				v-model="payload.bio"
+				label="Bio"
+				placeholder="Bio"
+				@enter="updateProfile"
+			/>
+		</div>
+	</section>
+	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold px-8">Liens</h2>
+		<div class="flex flex-col gap-2">
+			<Box scale="sm" layout="vertical-divide">
+				<div
+					v-for="link in session?.profile.links"
+					class="flex items-center gap-2 p-4 sm:p-6 hover:bg-surface-hover transition-colors duration-200"
+					:key="`link-${link.id}`"
+				>
+					<SocialIcon :icon="link.type" class="w-6 h-6" />
+					<p class="grow text-lg font-medium">
+						{{ link.resourceName || link.name || link.url }}
+					</p>
+					<XMarkIcon
+						class="cursor-pointer text-surface-text-muted h-5 w-5"
+						@click="removeLink(link.id)"
+					/>
+				</div>
+				<p
+					v-if="
+						!session?.profile.links ||
+						session?.profile.links.length === 0
+					"
+					class="text-surface-text-muted px-8"
+				>
+					Aucun lien ajouté.
 				</p>
-			</footer>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+				<div class="flex gap-2 p-4 max-sm:flex-col sm:items-end sm:p-6">
+					<Input
+						v-model="linkPayload"
+						label="URL du lien"
+						placeholder="URL du lien"
+						class="max-sm:w-full sm:grow"
+					/>
+					<Button
+						label="Ajouter"
+						:handler="addLink"
+						class="w-80 h-fit"
+					/>
+				</div>
+			</Box>
+		</div>
+	</section>
+	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold px-8">Vous cherchiez peut-être...</h2>
+		<Actions
+			scale="sm"
+			:actions="[
+				{
+					label: 'Badges et certifications',
+					icon: CheckBadgeIcon,
+					handler: '/settings/badges',
+				},
+				{
+					label: 'Compte et accès',
+					icon: KeyIcon,
+					handler: '/settings/account',
+				},
+				{
+					label: 'Confidentialité',
+					icon: ShieldCheckIcon,
+					handler: '/settings/privacy',
+				},
+			]"
+		/>
+	</section>
 </template>

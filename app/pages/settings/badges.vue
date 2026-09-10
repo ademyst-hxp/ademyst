@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import Box from "~/components/base/Box.vue";
+import Actions from "~/components/base/Actions.vue";
 
 import BadgeInfo from "~/components/profile/BadgeInfo.vue";
 
 import {
 	UserIcon,
 	ChevronRightIcon,
+	ChevronLeftIcon,
+	InformationCircleIcon,
+	XMarkIcon,
+	SparklesIcon,
 } from "@heroicons/vue/24/outline";
 
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
@@ -127,248 +132,196 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 };
 
 const focusedBadge = ref<Badge | null>(null);
+const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 </script>
 <template>
-	<div class="md:flex">
-		<aside class="basis-1/4 max-xl:hidden">
-			<!-- Vide -->
-		</aside>
-		<section
-			class="basis-2/3 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 xl:basis-2/4"
+	<Teleport to="#header">
+		<nav
+			class="grid grid-cols-[auto_1fr_auto] items-center justify-center gap-4"
 		>
-			<header class="flex flex-col gap-4">
-				<h1 class="text-2xl font-bold px-8">Gérer vos badges</h1>
-				<Box
-					:customColor="session?.profile.badge?.color"
-					@click="navigateTo('/settings/badges')"
-					class="items-start justify-center"
-					:class="session?.profile.badge?.color ? 'text-white' : ''"
-				>
-					<div>
-						<p>Mon niveau:</p>
-						<h2 class="text-xl font-semibold">
-							<template v-if="session?.profile.level === 0"
-								>Banni</template
-							>
-							<template v-else-if="session?.profile.level === 1"
-								>En sourdine</template
-							>
-							<template v-else-if="session?.profile.level === 2"
-								>Restreint</template
-							>
-							<template v-else-if="session?.profile.level === 3"
-								>Membre</template
-							>
-							<template v-else-if="session?.profile.level === 4"
-								>Premium</template
-							>
-							<template v-else-if="session?.profile.level === 5"
-								>Certifié</template
-							>
-							<template v-else-if="session?.profile.level === 6"
-								>Aide à la modération</template
-							>
-							<template v-else-if="session?.profile.level === 7"
-								>Modérateur</template
-							>
-							<template v-else-if="session?.profile.level === 8"
-								>Équipe Ademyst</template
-							>
-							<template v-else-if="session?.profile.level === 9"
-								>Fondateur</template
-							>
-						</h2>
-					</div>
-				</Box>
-			</header>
-			<main class="flex flex-col gap-8 overflow-visible">
-				<p class="text-muted px-8">
-					Les badges vous permettent de personnaliser votre profil et
-					de montrer vos réalisations.
-				</p>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">Mes badges</h2>
-					<p
-						v-if="!entitlements || entitlements.length === 0"
-						class="text-muted px-8"
+			<Button
+				label="Retour"
+				variant="link"
+				:icon="ChevronLeftIcon"
+				:handler="() => navigateTo('/settings')"
+				class="justify-self-start"
+			/>
+			<h1 class="justify-self-center text-2xl font-bold">
+				<template class="max-sm:hidden">Gérer vos badges</template>
+				<template class="sm:hidden">Badges</template>
+			</h1>
+		</nav>
+	</Teleport>
+
+	<section class="flex flex-col gap-2">
+		<Box
+			:customColor="session?.profile.badge?.color"
+			@click="navigateTo('/settings/badges')"
+			class="items-start justify-center"
+			:class="session?.profile.badge?.color ? 'text-white' : ''"
+		>
+			<div>
+				<p>Mon niveau:</p>
+				<h2 class="text-xl font-semibold">
+					<template v-if="session?.profile.level === 0"
+						>Banni</template
 					>
-						Vous n'avez pas encore de badges. Obtenez-en en
-						accomplissant des actions sur la plateforme !
-					</p>
-					<div
-						class="flex flex-col gap-2"
-						v-if="levelBadges && levelBadges.length > 0"
+					<template v-else-if="session?.profile.level === 1"
+						>En sourdine</template
 					>
-						<h3 class="text-lg font-semibold px-8">
-							Badges de grade
-						</h3>
-						<Box
-							v-for="entitlement in levelBadges"
-							:key="entitlement.id"
-							scale="sm"
-							layout="horizontal"
-						>
-							<div class="flex items-center gap-2 grow">
-								<img
-									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
-									:alt="entitlement.badge.name"
-									class="cursor-pointer h-8 w-8"
-									@click="focusedBadge = entitlement.badge"
-								/>
-								<p class="font-medium">
-									{{ entitlement.badge.name }}
-								</p>
-							</div>
-							<Button
-								v-if="!entitlement.enabled"
-								label="Porter"
-								size="small"
-								variant="success"
-								:handler="() => enableEntitlement(entitlement)"
-							/>
-							<Button
-								v-else
-								label="Masquer"
-								size="small"
-								variant="secondary"
-								:handler="() => disableEntitlement(entitlement)"
-							/>
-						</Box>
-					</div>
-					<div
-						class="flex flex-col gap-2"
-						v-if="
-							certificationBadges &&
-							certificationBadges.length > 0
-						"
+					<template v-else-if="session?.profile.level === 2"
+						>Restreint</template
 					>
-						<h3 class="text-lg font-semibold px-8">
-							Certifications
-						</h3>
-						<Box
-							v-for="entitlement in certificationBadges"
-							:key="entitlement.id"
-							scale="sm"
-							layout="horizontal"
-						>
-							<div class="flex items-center gap-2 grow">
-								<img
-									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
-									:alt="entitlement.badge.name"
-									class="cursor-pointer h-8 w-8"
-									@click="focusedBadge = entitlement.badge"
-								/>
-								<p class="font-medium">
-									{{ entitlement.badge.name }}
-								</p>
-							</div>
-							<Button
-								v-if="!entitlement.enabled"
-								label="Porter"
-								size="small"
-								variant="success"
-								:handler="() => enableEntitlement(entitlement)"
-							/>
-							<Button
-								v-else
-								label="Masquer"
-								size="small"
-								variant="secondary"
-								:handler="() => disableEntitlement(entitlement)"
-							/>
-						</Box>
-					</div>
-					<div
-						class="flex flex-col gap-2"
-						v-if="otherBadges && otherBadges.length > 0"
+					<template v-else-if="session?.profile.level === 3"
+						>Membre</template
 					>
-						<h3
-							class="text-lg font-semibold px-8"
-							v-if="
-								(levelBadges && levelBadges.length > 0) ||
-								(certificationBadges &&
-									certificationBadges.length > 0)
-							"
-						>
-							Autres badges
-						</h3>
-						<Box
-							v-for="entitlement in otherBadges"
-							:key="entitlement.id"
-							scale="sm"
-							layout="horizontal"
-						>
-							<div class="flex items-center gap-2 grow">
-								<img
-									:src="`/api/v1/badges/${entitlement.badge.id}/icon.png`"
-									:alt="entitlement.badge.name"
-									class="cursor-pointer h-8 w-8"
-									@click="focusedBadge = entitlement.badge"
-								/>
-								<p class="font-medium">
-									{{ entitlement.badge.name }}
-								</p>
-							</div>
-							<Button
-								v-if="!entitlement.enabled"
-								label="Porter"
-								size="small"
-								variant="success"
-								:handler="() => enableEntitlement(entitlement)"
-							/>
-							<Button
-								v-else
-								label="Masquer"
-								size="small"
-								variant="secondary"
-								:handler="() => disableEntitlement(entitlement)"
-							/>
-						</Box>
-					</div>
-				</section>
-				<section class="flex flex-col gap-4">
-					<h2 class="text-xl font-semibold px-8">
-						Vous cherchiez peut-être...
-					</h2>
-					<div class="flex flex-col gap-2">
-						<Box
-							scale="sm"
-							layout="horizontal"
-							class="items-center w-full cursor-pointer hover:scale-101 duration-200 transition-transform"
-							@click="navigateTo('/settings/profile')"
-						>
-							<div class="flex items-center gap-2 w-full">
-								<UserIcon class="h-8 w-8" />
-								<p class="grow text-lg font-medium">Profil</p>
-								<ChevronRightIcon class="text-surface-text-muted h-5 w-5" />
-							</div>
-						</Box>
-					</div>
-				</section>
-			</main>
-			<footer class="flex flex-col gap-4">
-				<p class="text-sm text-surface-text/50 px-8">
-					<RouterLink
-						to="/legal/terms"
-						class="font-semibold hover:text-primary hover:underline"
-						>CGU</RouterLink
+					<template v-else-if="session?.profile.level === 4"
+						>Premium</template
 					>
-					|
-					<RouterLink
-						to="/legal/privacy"
-						class="font-semibold hover:text-primary hover:underline"
-						>Politique de confidentialité</RouterLink
+					<template v-else-if="session?.profile.level === 5"
+						>Certifié</template
 					>
-				</p>
-			</footer>
-		</section>
-		<aside
-			class="basis-1/4 sticky top-24 flex flex-col gap-4 overflow-y-auto p-4 max-md:order-0 md:p-8 max-xl:hidden"
-		></aside>
-	</div>
+					<template v-else-if="session?.profile.level === 6"
+						>Aide à la modération</template
+					>
+					<template v-else-if="session?.profile.level === 7"
+						>Modérateur</template
+					>
+					<template v-else-if="session?.profile.level === 8"
+						>Équipe Ademyst</template
+					>
+					<template v-else-if="session?.profile.level === 9"
+						>Fondateur</template
+					>
+				</h2>
+			</div>
+		</Box>
+	</section>
+	<p class="text-muted px-8">
+		Les badges vous permettent de personnaliser votre profil et de montrer
+		vos réalisations.
+	</p>
+	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold px-8">Mes badges</h2>
+		<p
+			v-if="!entitlements || entitlements.length === 0"
+			class="text-muted px-8"
+		>
+			Vous n'avez pas encore de badges. Obtenez-en en accomplissant des
+			actions sur la plateforme !
+		</p>
+		<div
+			class="flex flex-col gap-2"
+			v-if="levelBadges && levelBadges.length > 0"
+		>
+			<h3 class="text-lg font-semibold px-8">Badges de grade</h3>
+			<Actions
+				scale="sm"
+				:actions="
+					levelBadges.map((entitlement) => ({
+						label: entitlement.badge.name,
+						icon: `/api/v1/badges/${entitlement.badge.id}/icon.png`,
+						indicator: entitlement.enabled ? 'Porté' : 'Masqué',
+						handler: () => {
+							focusedEntitlement = entitlement;
+						},
+					}))
+				"
+			/>
+		</div>
+		<div
+			class="flex flex-col gap-2"
+			v-if="certificationBadges && certificationBadges.length > 0"
+		>
+			<h3 class="text-lg font-semibold px-8">Certifications</h3>
+			<Actions
+				scale="sm"
+				:actions="
+					certificationBadges.map((entitlement) => ({
+						label: entitlement.badge.name,
+						icon: `/api/v1/badges/${entitlement.badge.id}/icon.png`,
+						indicator: entitlement.enabled ? 'Porté' : 'Masqué',
+						handler: () => {
+							focusedEntitlement = entitlement;
+						},
+					}))
+				"
+			/>
+		</div>
+		<div
+			class="flex flex-col gap-2"
+			v-if="otherBadges && otherBadges.length > 0"
+		>
+			<h3
+				class="text-lg font-semibold px-8"
+				v-if="
+					(levelBadges && levelBadges.length > 0) ||
+					(certificationBadges && certificationBadges.length > 0)
+				"
+			>
+				Autres badges
+			</h3>
+			<Actions
+				scale="sm"
+				:actions="
+					otherBadges.map((entitlement) => ({
+						label: entitlement.badge.name,
+						icon: `/api/v1/badges/${entitlement.badge.id}/icon.png`,
+						indicator: entitlement.enabled ? 'Porté' : 'Masqué',
+						handler: () => {
+							focusedEntitlement = entitlement;
+						},
+					}))
+				"
+			/>
+		</div>
+	</section>
+	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold px-8">Vous cherchiez peut-être...</h2>
+		<Actions
+			scale="sm"
+			layout="horizontal"
+			:actions="[
+				{
+					label: 'Profil',
+					icon: UserIcon,
+					handler: '/settings/profile',
+				},
+			]"
+		/>
+	</section>
+
 	<BadgeInfo
 		v-if="focusedBadge"
 		:badge="focusedBadge"
 		@close="focusedBadge = null"
+	/>
+
+	<Menu
+		v-if="focusedEntitlement"
+		:title="focusedEntitlement.badge.name"
+		:actions="[
+			{
+				label: 'Voir les détails',
+				icon: InformationCircleIcon,
+				handler: () => {
+					focusedBadge = focusedEntitlement!.badge;
+					focusedEntitlement = null;
+				},
+			},
+			{
+				label: focusedEntitlement.enabled ? 'Masquer' : 'Porter',
+				icon: focusedEntitlement.enabled ? XMarkIcon : SparklesIcon,
+				handler: () => {
+					if (focusedEntitlement!.enabled) {
+						disableEntitlement(focusedEntitlement!);
+					} else {
+						enableEntitlement(focusedEntitlement!);
+					}
+					focusedEntitlement = null;
+				},
+			},
+		]"
+		@close="focusedEntitlement = null"
 	/>
 </template>
