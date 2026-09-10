@@ -33,9 +33,9 @@ const rendered = computed(() => {
 			class="break-after-all wrap-break-word post-content -mx-2 max-h-72 overflow-x-visible overflow-y-auto"
 			v-html="rendered"
 		/>
-		<div class="flex flex-col gap-2" v-if="data.flags.length > 0">
+		<div class="flex flex-col gap-2" v-if="data.flags.NFE || data.flags.AI">
 			<div
-				v-if="data.flags.some((flag: PostFlag) => flag.flag === 'AI')"
+				v-if="data.flags.AI"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">
@@ -44,7 +44,7 @@ const rendered = computed(() => {
 				</p>
 			</div>
 			<div
-				v-if="data.flags.some((flag: PostFlag) => flag.flag === 'NFE')"
+				v-if="data.flags.NFE"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
 			>
 				<p class="text-sm font-semibold">
