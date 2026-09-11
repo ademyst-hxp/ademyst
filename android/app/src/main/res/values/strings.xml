@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Ademyst</string>
+    <string name="title_activity_main">Ademyst</string>
+    <string name="package_name">me.ejnalo.ademyst</string>
+    <string name="custom_url_scheme">me.ejnalo.ademyst</string>
+</resources>

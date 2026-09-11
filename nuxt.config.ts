@@ -9,12 +9,18 @@ export default defineNuxtConfig({
 
 	runtimeConfig: {
 		public: {
-			appUrl: process.env.APP_URL || "http://localhost:3000",
-			beamVerificationDeadline: process.env.BEAM_VERIFICATION_DEADLINE || new Date().toISOString(),
+			appUrl: "https://ademyst.ejnalo.me",
+			beamVerificationDeadline:
+				process.env.BEAM_VERIFICATION_DEADLINE ||
+				new Date().toISOString(),
 		},
 		private: {
-			databaseUrl: process.env.DATABASE_URL || "postgresql://revoldev:devpwd.16052026@localhost:5863/revolved",
-			directUrl: process.env.DIRECT_URL || "postgresql://revoldev:devpwd.16052026@localhost:5863/revolved",
+			databaseUrl:
+				process.env.DATABASE_URL ||
+				"postgresql://revoldev:devpwd.16052026@localhost:5863/revolved",
+			directUrl:
+				process.env.DIRECT_URL ||
+				"postgresql://revoldev:devpwd.16052026@localhost:5863/revolved",
 
 			resendApiKey: process.env.RESEND_API_KEY || "",
 
@@ -28,7 +34,7 @@ export default defineNuxtConfig({
 			jwtAudience: process.env.JWT_AUDIENCE || "http://localhost:5000",
 			jwtAccessTtl: process.env.JWT_ACCESS_TTL || "15m",
 			jwtRefreshTtl: process.env.JWT_REFRESH_TTL || "30d",
-		}
+		},
 	},
 
 	vite: {
@@ -38,4 +44,9 @@ export default defineNuxtConfig({
 	devtools: {
 		enabled: false,
 	},
+
+	nitro: {
+		preset: "static",
+	},
+	ssr: false,
 });

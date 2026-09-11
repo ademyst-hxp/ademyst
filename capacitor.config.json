@@ -1,5 +1,12 @@
 {
   "appId": "me.ejnalo.ademyst",
   "appName": "Ademyst",
-  "webDir": "www"
+	"bundledWebRuntime": false,
+	"npmClient": "npm",
+	"webDir": ".output/public",
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0
+		}
+	}
 }
