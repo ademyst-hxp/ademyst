@@ -35,86 +35,90 @@ const path = computed(() => useRoute().path);
 		class="_no_container fixed bottom-4 left-0 right-0 z-5000 max-md:px-4 md:sticky md:top-4"
 	>
 		<div
+			v-if="isSm"
 			class="flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
 		>
 			<!-- Mobile -->
-			<template v-if="isSm.value">
-				<RouterLink
-					to="/discover"
-					class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
-					:class="path === '/discover' ? 'bg-primary/15 text-primary' : ''"
-				>
-					<FireIcon class="w-7 h-7" />
-				</RouterLink>
+			<RouterLink
+				to="/discover"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="
+					path === '/discover' ? 'bg-primary/15 text-primary' : ''
+				"
+			>
+				<FireIcon class="w-7 h-7" />
+			</RouterLink>
 
-				<RouterLink
-					to="/write"
-					class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
-					:class="path === '/write' ? 'bg-primary/15 text-primary' : ''"
-				>
-					<PaperAirplaneIcon class="w-7 h-7" />
-				</RouterLink>
+			<RouterLink
+				to="/write"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="path === '/write' ? 'bg-primary/15 text-primary' : ''"
+			>
+				<PaperAirplaneIcon class="w-7 h-7" />
+			</RouterLink>
 
-				<RouterLink
-					to="/settings"
-					class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
-					:class="path === '/settings' ? 'bg-primary/15 text-primary' : ''"
-				>
-					<Cog6ToothSolidIcon class="w-7 h-7" />
-				</RouterLink>
+			<RouterLink
+				to="/settings"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="
+					path === '/settings' ? 'bg-primary/15 text-primary' : ''
+				"
+			>
+				<Cog6ToothSolidIcon class="w-7 h-7" />
+			</RouterLink>
 
-				<RouterLink
-					v-if="session"
-					:to="`/@${session.profile.name}`"
-					class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
-				>
-					<Avatar
-						:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
-						:color="
-							path === `/@${session.profile.name}`
-								? undefined
-								: null
-						"
-					/>
-				</RouterLink>
-			</template>
+			<RouterLink
+				v-if="session"
+				:to="`/@${session.profile.name}`"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+			>
+				<Avatar
+					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+					:color="
+						path === `/@${session.profile.name}` ? undefined : null
+					"
+				/>
+			</RouterLink>
+		</div>
 
-			<!-- Desktop -->
-			<template v-else>
-				<RouterLink to="/">
-					<Logo
-						class="w-auto h-5 transition-colors duration-200 hover:text-primary"
-					/>
-				</RouterLink>
+		<!-- Desktop -->
+		<div
+			v-else
+			class="flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
+		>
+			<RouterLink to="/">
+				<Logo
+					class="w-auto h-5 transition-colors duration-200 hover:text-primary"
+				/>
+			</RouterLink>
 
-				<RouterLink
-					to="/discover"
-					class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
-				>
-					<FireIcon class="w-7 h-7" />
-					Discover
-				</RouterLink>
+			<RouterLink
+				to="/discover"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+			>
+				<FireIcon class="w-7 h-7" />
+				Discover
+			</RouterLink>
 
-				<RouterLink
-					to="/write"
-					class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
-				>
-					Écrire
-				</RouterLink>
+			<RouterLink
+				to="/write"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+			>
+				Écrire
+			</RouterLink>
 
-				<div class="grow" />
+			<div class="grow" />
 
-				<div
-					v-if="session"
-					class="cursor-pointer flex items-center gap-2 transition-colors duration-200 hover:text-primary"
-					@click="isMenuOpen = !isMenuOpen"
-				>
-					<Avatar
-						:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
-					/>
-					{{ session.profile.displayName || session.profile.name }}
-				</div>
-			</template>
+			<div
+				v-if="session"
+				class="cursor-pointer flex items-center gap-2 transition-colors duration-200 hover:text-primary"
+				@click="isMenuOpen = !isMenuOpen"
+			>
+				<Avatar
+					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+				/>
+				{{ session.profile.displayName || session.profile.name }}
+			</div>
 		</div>
 	</nav>
 
