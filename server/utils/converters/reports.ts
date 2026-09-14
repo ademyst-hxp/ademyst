@@ -47,11 +47,7 @@ export async function retrieveCleanProfileReport(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
@@ -60,7 +56,7 @@ export async function retrieveCleanProfileReport(
 			});
 		}
 
-		if (issuer.level < 6 && report.reporterId !== identity.accountId) {
+		if ((issuer.level < 6) && (report.reporterId !== identity.accountId)) {
 			throw createError({
 				statusCode: 403,
 				statusMessage: "Insufficient permissions",
@@ -126,11 +122,7 @@ export async function retrieveSeveralCleanProfileReports(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
@@ -246,11 +238,7 @@ export async function retrieveCleanPostReport(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
@@ -325,11 +313,7 @@ export async function retrieveSeveralCleanPostReports(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
@@ -445,11 +429,7 @@ export async function retrieveCleanWhisperReport(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
@@ -524,11 +504,7 @@ export async function retrieveSeveralCleanWhisperReports(
 			});
 		}
 
-		const [issuer] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.id, identity?.profileId))
-			.limit(1);
+		const issuer = (await getUser(event, identity))?.profile;
 
 		if (!issuer) {
 			throw createError({
