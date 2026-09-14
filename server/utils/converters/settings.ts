@@ -13,6 +13,7 @@ export function convertAppearanceSettings(
 	return {
 		theme: setting.theme,
 		highContrast: setting.highContrast,
+		alter: setting.alter,
 		fontSize: setting.fontSize,
 		uiDensity: setting.uiDensity,
 		createdAt: setting.createdAt,
@@ -24,8 +25,14 @@ export function convertPrivacySettings(
 	setting: DbPrivacySettings,
 ): PrivacySettings {
 	return {
-		profileVisibility: setting.profileVisibility,
-		birthdayVisibility: setting.birthdayVisibility,
+		profileVisibility: setting.profileVisibility as Extract<
+			PrivacySettings["profileVisibility"],
+			"everyone" | "followers"
+		>,
+		birthdayVisibility: setting.birthdayVisibility as Omit<
+			PrivacySettings["birthdayVisibility"],
+			"outside"
+		>,
 		termsOfServiceConsent: setting.termsOfServiceConsent,
 		privacyPolicyConsent: setting.privacyPolicyConsent,
 		createdAt: setting.createdAt,
