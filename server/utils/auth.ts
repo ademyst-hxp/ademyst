@@ -1,10 +1,14 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { createDb } from "../db";
 import type { H3Event } from "h3";
 
 import { profiles, Profile } from "../db/schema/profiles";
 import { accounts, Account, sessions } from "../db/schema/accounts";
+import {
+	levelsEntitlements,
+	type LevelEntitlement,
+} from "../db/schema/entitlements";
 
 export interface Identity {
 	profileId: string;
@@ -80,13 +84,50 @@ export const getUser = async (
 			return null;
 		}
 
+		const profileLevels = await db
+			.select()
+			.from(levelsEntitlements)
+			.where(
+				and(
+					eq(levelsEntitlements.profileId, profile.id),
+					eq(levelsEntitlements.enabled, true),
+				),
+			);
+
+		const level = getLevelFromEntitlements(profileLevels);
+
 		return {
 			profileId: identity.profileId,
 			accountId: identity.accountId,
-			profile,
+			profile: { ...profile, level },
 			account,
 		};
 	} finally {
 		await client.end();
 	}
+};
+
+export const getLevelFromEntitlements = (
+	entitlements: LevelEntitlement[],
+): number => {
+	const filteredEntitlements = entitlements.filter(
+		(entitlement) =>
+			!entitlement.revoked &&
+			entitlement.enabled &&
+			(entitlement.expiresAt === null ||
+				entitlement.expiresAt > new Date()),
+	);
+
+	const level =
+		filteredEntitlements.sort((a, b) =>
+			a.levelId < 3 && b.levelId >= 3
+				? -1
+				: a.levelId >= 3 && b.levelId < 3
+					? 1
+					: a.levelId < 3
+						? a.levelId - b.levelId
+						: b.levelId - a.levelId,
+		)[0]?.levelId ?? 3;
+
+	return level;
 };

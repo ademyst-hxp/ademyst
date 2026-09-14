@@ -7,7 +7,10 @@ import type { Profile as PartialProfile } from "~~/server/db/schema/profiles";
 import { profileLinks } from "#server/db/schema/profiles";
 import { follows } from "#server/db/schema/relations";
 import { badges } from "~~/server/db/schema/shop";
-import { badgesEntitlements } from "~~/server/db/schema/entitlements";
+import {
+	badgesEntitlements,
+	levelsEntitlements,
+} from "~~/server/db/schema/entitlements";
 
 import type { Profile } from "~~/shared/models/profiles";
 
@@ -21,6 +24,7 @@ import {
 	getSeveralPrivacySettings,
 	canAccess,
 } from "~~/server/utils/helpers/privacy";
+import { getLevelFromEntitlements } from "../auth";
 
 export async function retrieveCleanProfile(
 	event: H3Event,
@@ -40,6 +44,18 @@ export async function retrieveCleanProfile(
 
 		const { blocked, friended, ...r } = relationships;
 
+		const profileLevels = await db
+			.select()
+			.from(levelsEntitlements)
+			.where(
+				and(
+					eq(levelsEntitlements.profileId, profile.id),
+					eq(levelsEntitlements.enabled, true),
+				),
+			);
+
+		const level = getLevelFromEntitlements(profileLevels);
+
 		if (!access.profile) {
 			return {
 				id: profile.id,
@@ -53,7 +69,7 @@ export async function retrieveCleanProfile(
 				createdAt: profile.createdAt,
 				badge: null,
 				badges: [],
-				level: profile.level,
+				level: level,
 				links: [],
 				relationships: r,
 				stats: {
@@ -125,7 +141,7 @@ export async function retrieveCleanProfile(
 					.map((b) => b.badges)
 					.filter((b): b is NonNullable<typeof b> => b !== null),
 			),
-			level: profile.level,
+			level: level,
 			links: links.map((link) => ({
 				id: link.id,
 				name: link.name,

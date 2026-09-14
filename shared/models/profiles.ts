@@ -20,7 +20,7 @@ export type Profile = {
 	createdAt: Date;
 	badge: Badge | null;
 	badges: Badge[];
-	level: number | null;
+	level: number;
 	links: ProfileLink[];
 	relationships: Relationship;
 	stats: {
