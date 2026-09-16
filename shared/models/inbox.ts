@@ -1,6 +1,8 @@
 import type { Post, Whisper } from "./interactions";
+import type { Follow, Request } from "./relations";
 import type { Profile } from "./profiles";
 import type { Sanction } from "./sanctions";
+import type { ProfileReport, PostReport, WhisperReport } from "./reports";
 
 // 5 types de notifications : interactions, relations, sanctions, signalements, autres
 export type InteractionNotificationType =
@@ -50,6 +52,8 @@ export type FollowNotification = {
 	profile: Profile;
 	issuer: Profile;
 
+	relationship: Follow | Request;
+
 	type: RelationNotificationType;
 	read: boolean;
 
@@ -75,7 +79,7 @@ export type PostSanctionNotification = {
 	id: string;
 
 	post: Post;
-	issuer?: Profile;
+	sanction: Sanction;
 
 	type: PostSanctionNotificationType;
 	read: boolean;
@@ -88,9 +92,9 @@ export type PostSanctionNotification = {
 export type ReportNotification = {
 	id: string;
 
-	reportedProfile?: Profile;
-	reportedPost?: Post;
-	reportedWhisper?: Whisper;
+	profileReport: ProfileReport | null;
+	postReport: PostReport | null;
+	whisperReport: WhisperReport | null;
 
 	type: ReportNotificationType;
 	read: boolean;

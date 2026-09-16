@@ -51,7 +51,7 @@ export const postNotifications = pgTable("notification_post", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type PostNotification = typeof postNotifications.$inferSelect;
@@ -82,7 +82,7 @@ export const whisperNotifications = pgTable("notification_whisper", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type WhisperNotification = typeof whisperNotifications.$inferSelect;
@@ -105,18 +105,17 @@ export const followNotifications = pgTable("notification_follow", {
 		.notNull()
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
-	issuerId: varchar("issuer_id", { length: 10 }).references(
-		() => profiles.id,
-		{
+	issuerId: varchar("issuer_id", { length: 10 })
+		.notNull()
+		.references(() => profiles.id, {
 			onDelete: "cascade",
-		},
-	),
+		}),
 
 	type: relNotificationType("type").notNull(),
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type FollowNotification = typeof followNotifications.$inferSelect;
@@ -172,7 +171,7 @@ export const accountSanctionNotifications = pgTable("notification_sanction", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type SanctionNotification =
@@ -210,7 +209,7 @@ export const postSanctionNotifications = pgTable("notification_post_sanction", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type PostSanctionNotification =
@@ -258,7 +257,7 @@ export const reportNotifications = pgTable("notification_report", {
 	read: boolean("read").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(), // Juste à des fins de modération
-	updatedAt: timestamp("updated_at").defaultNow().notNull(), // Date réellement effective côté client
+	updatedAt: timestamp("updated_at").defaultNow(), // Date réellement effective côté client
 }).enableRLS();
 
 export type ReportNotification = typeof reportNotifications.$inferSelect;

@@ -89,9 +89,9 @@ export const notificationSettings = pgTable("notification_settings", {
 		.notNull()
 		.default(true),
 	broadcastsEmail: boolean("broadcasts_email").notNull().default(true),
-	socialEmails: boolean("social_email").notNull().default(true),
-	interactionsEmails: boolean("interactions_email").notNull().default(true),
-	campaignEmails: boolean("campaign_email").notNull().default(true),
+	socialEmail: boolean("social_email").notNull().default(true),
+	interactionsEmail: boolean("interactions_email").notNull().default(true),
+	campaignEmail: boolean("campaign_email").notNull().default(true),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),

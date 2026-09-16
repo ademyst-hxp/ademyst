@@ -1,7 +1,8 @@
-import { createDb } from "~~/server/db";
+import { and, count, eq, inArray, or } from "drizzle-orm";
+
 import type { H3Event } from "h3";
 
-import { eq, and, or, inArray, count } from "drizzle-orm";
+import { createDb } from "#server/db";
 
 import {
 	type Post as DbPost,
@@ -11,13 +12,15 @@ import {
 	type WhisperReaction as DbWhisperReaction,
 	postReactions,
 	postsFlags,
+	posts,
+	whispers,
 } from "~~/server/db/schema/interactions";
 
 import { postReports } from "~~/server/db/schema/reports";
 
 import { profiles } from "~~/server/db/schema/profiles";
+
 import { attachments } from "~~/server/db/schema/drive";
-import { posts } from "~~/server/db/schema/interactions";
 
 import type {
 	Post,
@@ -28,10 +31,39 @@ import type {
 	WhisperReaction,
 } from "~~/shared/models/interactions";
 
-import { Profile } from "~~/shared/models/profiles";
+import type { Profile } from "~~/shared/models/profiles";
 
-import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
+import {
+	retrieveCleanProfile,
+	retrieveSeveralCleanProfiles,
+} from "~~/server/utils/converters/profiles";
+
+import {
+	getRelationshipStatus,
+	getPrivacySettings,
+	getSeveralRelationshipStatus,
+	getSeveralPrivacySettings,
+	canAccessEntity,
+} from "~~/server/utils/helpers/privacy";
+
 import { calculateRatingScore } from "~~/shared/utils/interactions";
+
+function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
+	const map = new Map<K, T[]>();
+
+	for (const item of items) {
+		const k = key(item);
+		const arr = map.get(k);
+
+		if (arr) {
+			arr.push(item);
+		} else {
+			map.set(k, [item]);
+		}
+	}
+
+	return map;
+}
 
 export async function retrieveCleanPost(
 	event: H3Event,
@@ -56,46 +88,39 @@ export async function retrieveCleanPost(
 			identity,
 			author,
 		);
+
 		const privacy = await getPrivacySettings(event, author);
+
 		const access = await canAccessEntity(
 			privacy,
 			relationships,
 			post.visibility,
 		);
 
-		const files = access
-			? await db
-					.select()
-					.from(attachments)
-					.where(eq(attachments.postId, post.id))
-			: [];
+		const [files, reactions, flags, answers, reports] = await Promise.all([
+			access
+				? db
+						.select()
+						.from(attachments)
+						.where(eq(attachments.postId, post.id))
+				: Promise.resolve([]),
 
-		const reactions = await db
-			.select()
-			.from(postReactions)
-			.where(eq(postReactions.postId, post.id));
-		const flags = await db
-			.select()
-			.from(postsFlags)
-			.where(eq(postsFlags.postId, post.id));
-		const [answers] = await db
-			.select({ count: count() })
-			.from(posts)
-			.where(eq(posts.parentId, post.id));
+			db
+				.select()
+				.from(postReactions)
+				.where(eq(postReactions.postId, post.id)),
 
-		const shouldTruncate = !access;
+			db.select().from(postsFlags).where(eq(postsFlags.postId, post.id)),
 
-		const computedReactions: Record<PostReactionType, number> =
-			reactions.reduce(
-				(acc, reaction) => {
-					acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
-					return acc;
-				},
-				{} as Record<PostReactionType, number>,
-			);
+			db
+				.select({
+					count: count(),
+				})
+				.from(posts)
+				.where(eq(posts.parentId, post.id))
+				.then(([row]) => row?.count ?? 0),
 
-		const reports =
-			(await db
+			db
 				.select()
 				.from(postReports)
 				.where(
@@ -108,24 +133,38 @@ export async function retrieveCleanPost(
 							eq(postReports.status, "pending"),
 						),
 					),
-				)) || [];
+				),
+		]);
+
+		const shouldTruncate = !access;
+
+		const computedReactions = reactions.reduce(
+			(acc, reaction) => {
+				acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
+
+				return acc;
+			},
+			{} as Record<PostReactionType, number>,
+		);
 
 		const pendingReports = reports.filter(
 			(report) => report.status === "pending",
 		);
+
 		const myReports = reports.filter(
 			(report) => report.reporterId === identity?.accountId,
 		);
 
 		return {
 			id: post.id,
-			profile: profile,
+			profile,
 			parentId: post.parentId ?? null,
 			content: shouldTruncate ? "" : post.content,
 			visibility: post.visibility,
 			createdAt: post.createdAt,
 			updatedAt: post.updatedAt,
 			attachments: shouldTruncate ? [] : files,
+
 			flags: {
 				...flags.reduce(
 					(acc, flag) => {
@@ -134,28 +173,33 @@ export async function retrieveCleanPost(
 					},
 					{} as Record<PostFlag["type"], boolean>,
 				),
-				reported: pendingReports.length > 3, // 3 pour l'instant, augmenter au fur et à mesure que la communauté grandit
+
+				reported: pendingReports.length > 3,
 			},
+
 			stats: {
 				reactions: computedReactions,
-				answers: answers?.count || 0,
+				answers,
 				score: calculateRatingScore(
 					post.createdAt,
 					shouldTruncate ? "" : post.content,
 					profile.level ?? 0,
 					{
 						reactions: computedReactions,
-						answers: answers?.count || 0,
+						answers,
 					},
 				),
 			},
+
 			interaction: {
 				liked: reactions.some(
 					(reaction) =>
 						reaction.profileId === identity?.profileId &&
 						reaction.reaction === "like",
 				),
+
 				reported: myReports.length > 0,
+
 				saved: false,
 			},
 		};
@@ -176,101 +220,64 @@ export async function retrieveSeveralCleanPosts(
 			return [];
 		}
 
-		const authorIds = [...new Set(dbPosts.map((p) => p.profileId))];
+		const postIds = [...new Set(dbPosts.map((post) => post.id))];
 
-		// Auteurs
-		const _dbauthors = await db
+		const authorIds = [...new Set(dbPosts.map((post) => post.profileId))];
+
+		/*
+		 * Tout ce qui concerne les auteurs est batché.
+		 */
+		const dbAuthors = await db
 			.select()
 			.from(profiles)
 			.where(inArray(profiles.id, authorIds));
 
-		const authors_list = await retrieveSeveralCleanProfiles(
-			event,
-			identity,
-			_dbauthors,
-		);
-		const authors: Record<string, Profile> = {};
+		const [
+			authorsList,
+			allRelationships,
+			allPrivacy,
+			allAttachments,
+			allReactions,
+			allFlags,
+			answerCounts,
+			allReports,
+		] = await Promise.all([
+			retrieveSeveralCleanProfiles(event, identity, dbAuthors),
 
-		for (const author of authors_list) {
-			authors[author.id] = author;
-		}
+			getSeveralRelationshipStatus(event, identity, dbAuthors),
 
-		// Relations & accès
-		const all_relationships = await getSeveralRelationshipStatus(
-			event,
-			identity,
-			_dbauthors,
-		);
-		const all_privacy = await getSeveralPrivacySettings(event, _dbauthors);
+			getSeveralPrivacySettings(event, dbAuthors),
 
-		// Pièces jointes
-		const allAttachments = await db
-			.select()
-			.from(attachments)
-			.where(
-				inArray(
-					attachments.postId,
-					dbPosts.map((p) => p.id),
-				),
-			);
+			db
+				.select()
+				.from(attachments)
+				.where(inArray(attachments.postId, postIds)),
 
-		const attachmentsMap = groupBy(allAttachments, (a) => a.postId);
+			db
+				.select()
+				.from(postReactions)
+				.where(inArray(postReactions.postId, postIds)),
 
-		// Réactions
-		const allReactions = await db
-			.select()
-			.from(postReactions)
-			.where(
-				inArray(
-					postReactions.postId,
-					dbPosts.map((p) => p.id),
-				),
-			);
+			db
+				.select()
+				.from(postsFlags)
+				.where(inArray(postsFlags.postId, postIds)),
 
-		const reactionsMap = groupBy(allReactions, (r) => r.postId);
+			db
+				.select({
+					parentId: posts.parentId,
+					count: count(),
+				})
+				.from(posts)
+				.where(inArray(posts.parentId, postIds))
+				.groupBy(posts.parentId),
 
-		// Flags
-		const allFlags = await db
-			.select()
-			.from(postsFlags)
-			.where(
-				inArray(
-					postsFlags.postId,
-					dbPosts.map((p) => p.id),
-				),
-			);
-
-		const flagsMap = groupBy(allFlags, (f) => f.postId);
-
-		// Nombre de réponses
-		const answerCounts = await db
-			.select({
-				parentId: posts.parentId,
-				count: count(),
-			})
-			.from(posts)
-			.where(
-				inArray(
-					posts.parentId,
-					dbPosts.map((p) => p.id),
-				),
-			)
-			.groupBy(posts.parentId);
-
-		const answersMap = new Map(
-			answerCounts.map((a) => [a.parentId!, a.count]),
-		);
-
-		const allReports =
-			(await db
+			db
 				.select()
 				.from(postReports)
 				.where(
 					and(
-						inArray(
-							postReports.reportedPostId,
-							dbPosts.map((p) => p.id),
-						),
+						inArray(postReports.reportedPostId, postIds),
 						or(
 							identity
 								? eq(postReports.reporterId, identity.accountId)
@@ -278,19 +285,44 @@ export async function retrieveSeveralCleanPosts(
 							eq(postReports.status, "pending"),
 						),
 					),
-				)) || [];
+				),
+		]);
 
-		const reportsMap = groupBy(allReports, (r) => r.reportedPostId);
+		const authors = new Map<string, Profile>(
+			authorsList.map((author) => [author.id, author]),
+		);
+
+		const attachmentsMap = groupBy(
+			allAttachments,
+			(attachment) => attachment.postId,
+		);
+
+		const reactionsMap = groupBy(
+			allReactions,
+			(reaction) => reaction.postId,
+		);
+
+		const flagsMap = groupBy(allFlags, (flag) => flag.postId);
+
+		const reportsMap = groupBy(
+			allReports,
+			(report) => report.reportedPostId,
+		);
+
+		const answersMap = new Map(
+			answerCounts.map((row) => [row.parentId!, row.count]),
+		);
 
 		return dbPosts.map((post) => {
-			const author = authors[post.profileId];
+			const author = authors.get(post.profileId);
 
 			if (!author) {
 				throw new Error("Author not found");
 			}
 
-			const relationship = all_relationships[author.id]!;
-			const privacy = all_privacy[author.id]!;
+			const relationship = allRelationships[author.id]!;
+
+			const privacy = allPrivacy[author.id]!;
 
 			const access = canAccessEntity(
 				privacy,
@@ -299,26 +331,31 @@ export async function retrieveSeveralCleanPosts(
 			);
 
 			const reactions = reactionsMap.get(post.id) ?? [];
+
 			const flags = flagsMap.get(post.id) ?? [];
+
 			const files = access ? (attachmentsMap.get(post.id) ?? []) : [];
 
-			const computedReactions: Record<PostReactionType, number> =
-				reactions.reduce(
-					(acc, reaction) => {
-						acc[reaction.reaction] =
-							(acc[reaction.reaction] || 0) + 1;
-						return acc;
-					},
-					{} as Record<PostReactionType, number>,
-				);
+			const computedReactions = reactions.reduce(
+				(acc, reaction) => {
+					acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
 
-			const computedReports = reportsMap.get(post.id) ?? [];
-			const pendingReports = computedReports.filter(
+					return acc;
+				},
+				{} as Record<PostReactionType, number>,
+			);
+
+			const reports = reportsMap.get(post.id) ?? [];
+
+			const pendingReports = reports.filter(
 				(report) => report.status === "pending",
 			);
-			const myReports = computedReports.filter(
+
+			const myReports = reports.filter(
 				(report) => report.reporterId === identity?.accountId,
 			);
+
+			const answers = answersMap.get(post.id) ?? 0;
 
 			return {
 				id: post.id,
@@ -328,37 +365,45 @@ export async function retrieveSeveralCleanPosts(
 				visibility: post.visibility,
 				createdAt: post.createdAt,
 				updatedAt: post.updatedAt,
+
 				attachments: files,
+
 				flags: {
 					...flags.reduce(
 						(acc, flag) => {
 							acc[flag.type] = true;
+
 							return acc;
 						},
 						{} as Record<PostFlag["type"], boolean>,
 					),
-					reported: pendingReports.length > 3, // 3 pour l'instant, augmenter au fur et à mesure que la communauté grandit
+
+					reported: pendingReports.length > 3,
 				},
+
 				stats: {
 					reactions: computedReactions,
-					answers: answersMap.get(post.id) ?? 0,
+					answers,
 					score: calculateRatingScore(
 						post.createdAt,
 						access ? post.content : "",
 						author.level ?? 0,
 						{
 							reactions: computedReactions,
-							answers: answersMap.get(post.id) ?? 0,
+							answers,
 						},
 					),
 				},
+
 				interaction: {
 					liked: reactions.some(
 						(reaction) =>
 							reaction.profileId === identity?.profileId &&
 							reaction.reaction === "like",
 					),
+
 					reported: myReports.length > 0,
+
 					saved: false,
 				},
 			};
@@ -366,23 +411,6 @@ export async function retrieveSeveralCleanPosts(
 	} finally {
 		await client.end();
 	}
-}
-
-function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
-	const map = new Map<K, T[]>();
-
-	for (const item of items) {
-		const k = key(item);
-		const arr = map.get(k);
-
-		if (arr) {
-			arr.push(item);
-		} else {
-			map.set(k, [item]);
-		}
-	}
-
-	return map;
 }
 
 export function convertPostReaction(reaction: DbPostReaction): PostReaction {
@@ -416,14 +444,14 @@ export async function retrieveCleanWhisper(
 			identity,
 			author,
 		);
+
 		const privacy = await getPrivacySettings(event, author);
+
 		const access = await canAccessEntity(
 			privacy,
 			relationships,
 			whisper.visibility,
 		);
-
-		const shouldTruncate = !access;
 
 		const image = whisper.image
 			? (
@@ -434,13 +462,19 @@ export async function retrieveCleanWhisper(
 				)[0]
 			: null;
 
+		const shouldTruncate = !access;
+
 		return {
 			id: whisper.id,
 			profile,
 			content: shouldTruncate ? "" : whisper.content,
+
 			image: image
-				? convertAttachment(image, { truncate: shouldTruncate })
+				? convertAttachment(image, {
+						truncate: shouldTruncate,
+					})
 				: null,
+
 			color: whisper.color,
 			textColor: whisper.textColor,
 			visibility: whisper.visibility,
@@ -463,36 +497,10 @@ export async function retrieveSeveralCleanWhispers(
 			return [];
 		}
 
-		const authorIds = [...new Set(dbWhispers.map((s) => s.profileId))];
+		const authorIds = [
+			...new Set(dbWhispers.map((whisper) => whisper.profileId)),
+		];
 
-		// Auteurs
-		const dbAuthors = await db
-			.select()
-			.from(profiles)
-			.where(inArray(profiles.id, authorIds));
-
-		const authorsList = await retrieveSeveralCleanProfiles(
-			event,
-			identity,
-			dbAuthors,
-		);
-
-		const authors: Record<string, Profile> = {};
-
-		for (const author of authorsList) {
-			authors[author.id] = author;
-		}
-
-		// Relations & confidentialité
-		const allRelationships = await getSeveralRelationshipStatus(
-			event,
-			identity,
-			dbAuthors,
-		);
-
-		const allPrivacy = await getSeveralPrivacySettings(event, dbAuthors);
-
-		// Images
 		const imageIds = [
 			...new Set(
 				dbWhispers
@@ -501,24 +509,42 @@ export async function retrieveSeveralCleanWhispers(
 			),
 		];
 
-		const dbImages =
-			imageIds.length > 0
-				? await db
-						.select()
-						.from(attachments)
-						.where(inArray(attachments.id, imageIds))
-				: [];
+		const dbAuthors = await db
+			.select()
+			.from(profiles)
+			.where(inArray(profiles.id, authorIds));
+
+		const [authorsList, allRelationships, allPrivacy, dbImages] =
+			await Promise.all([
+				retrieveSeveralCleanProfiles(event, identity, dbAuthors),
+
+				getSeveralRelationshipStatus(event, identity, dbAuthors),
+
+				getSeveralPrivacySettings(event, dbAuthors),
+
+				imageIds.length > 0
+					? db
+							.select()
+							.from(attachments)
+							.where(inArray(attachments.id, imageIds))
+					: Promise.resolve([]),
+			]);
+
+		const authors = new Map(
+			authorsList.map((author) => [author.id, author]),
+		);
 
 		const images = new Map(dbImages.map((image) => [image.id, image]));
 
 		return dbWhispers.map((whisper) => {
-			const author = authors[whisper.profileId];
+			const author = authors.get(whisper.profileId);
 
 			if (!author) {
 				throw new Error("Author not found");
 			}
 
 			const relationship = allRelationships[author.id]!;
+
 			const privacy = allPrivacy[author.id]!;
 
 			const access = canAccessEntity(
@@ -536,12 +562,15 @@ export async function retrieveSeveralCleanWhispers(
 			return {
 				id: whisper.id,
 				profile: author,
+
 				content: shouldTruncate ? "" : whisper.content,
+
 				image: image
 					? convertAttachment(image, {
 							truncate: shouldTruncate,
 						})
 					: null,
+
 				color: whisper.color,
 				textColor: whisper.textColor,
 				visibility: whisper.visibility,

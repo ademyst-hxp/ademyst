@@ -26,6 +26,21 @@ export type PrivacySettings = {
 	updatedAt: Date;
 };
 
+export type NotificationSettings = {
+	// Email notification settings
+	securityAlertsEmail: boolean;
+	moderationAlertsEmail: boolean;
+	broadcastsEmail: boolean;
+	socialEmail: boolean;
+	interactionsEmail: boolean;
+	campaignEmail: boolean;
+
+	// SMS's are on the way, I swear
+
+	createdAt: Date;
+	updatedAt: Date;
+};
+
 export const defaultAppearanceSettings: AppearanceSettings = {
 	theme: "system",
 	highContrast: false,
@@ -41,6 +56,17 @@ export const defaultPrivacySettings: PrivacySettings = {
 	birthdayVisibility: "everyone",
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
+	createdAt: new Date(),
+	updatedAt: new Date(),
+};
+
+export const defaultNotificationSettings: NotificationSettings = {
+	securityAlertsEmail: true,
+	moderationAlertsEmail: true,
+	broadcastsEmail: false,
+	socialEmail: false,
+	interactionsEmail: false,
+	campaignEmail: false,
 	createdAt: new Date(),
 	updatedAt: new Date(),
 };
