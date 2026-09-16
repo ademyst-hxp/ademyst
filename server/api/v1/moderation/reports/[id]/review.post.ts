@@ -8,6 +8,8 @@ import {
 	whisperReports,
 } from "~~/server/db/schema/reports";
 
+import { reportNotifications } from "~~/server/db/schema/inbox";
+
 import type {
 	ProfileReport,
 	PostReport,
@@ -116,6 +118,37 @@ export default defineEventHandler(async (event) => {
 				),
 			)
 			.execute();
+
+		const [existingNotification] = await db
+			.select()
+			.from(reportNotifications)
+			.where(
+				eq(
+					_type === "profile"
+						? reportNotifications.profileReportId
+						: _type === "post"
+							? reportNotifications.postReportId
+							: reportNotifications.whisperReportId,
+					_report.id,
+				),
+			)
+			.limit(1);
+
+		if (existingNotification) {
+			await db
+				.update(reportNotifications)
+				.set({ type: "update", read: false })
+				.where(eq(reportNotifications.id, existingNotification.id));
+		} else {
+			await db.insert(reportNotifications).values({
+				profileId: _report.reporter.id,
+				profileReportId: _type === "profile" ? _report.id : null,
+				postReportId: _type === "post" ? _report.id : null,
+				whisperReportId: _type === "whisper" ? _report.id : null,
+				type: "read",
+				read: false,
+			});
+		}
 
 		return {
 			status: "ok",
