@@ -60,7 +60,7 @@ import Navbar from "~/components/layout/Navbar.vue";
 						</li>
 						<li>
 							<RouterLink
-								to="/terms/privacy"
+								to="/legal/privacy"
 								class="font-semibold hover:text-primary hover:underline"
 							>
 								Confidentialité
@@ -115,7 +115,7 @@ import Navbar from "~/components/layout/Navbar.vue";
 					</li>
 					<li>
 						<RouterLink
-							to="/terms/privacy"
+							to="/legal/privacy"
 							class="font-semibold hover:text-primary hover:underline"
 						>
 							Confidentialité
