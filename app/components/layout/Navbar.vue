@@ -35,8 +35,7 @@ const path = computed(() => useRoute().path);
 		class="_no_container fixed bottom-4 left-0 right-0 z-5000 max-md:px-4 md:sticky md:top-4"
 	>
 		<div
-			v-if="isSm"
-			class="flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
+			class="md:hidden flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
 		>
 			<!-- Mobile -->
 			<RouterLink
@@ -83,8 +82,7 @@ const path = computed(() => useRoute().path);
 
 		<!-- Desktop -->
 		<div
-			v-else
-			class="flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
+			class="max-md:hidden flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
 		>
 			<RouterLink to="/">
 				<Logo
