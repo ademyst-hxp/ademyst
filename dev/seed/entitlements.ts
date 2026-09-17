@@ -5,9 +5,9 @@ import type {
 	Badge as DbBadge,
 	BadgeFamily as DbBadgeFamily,
 	Level as DbLevel,
-} from "../server/db/schema/shop";
+} from "../../server/db/schema/shop";
 
-import { levels, badges, badges_families } from "../server/db/schema/shop";
+import { levels, badges, badges_families } from "../../server/db/schema/shop";
 
 const databaseUrl = process.env.DATABASE_URL;
 console.log("Seeding database with URL:", databaseUrl);
