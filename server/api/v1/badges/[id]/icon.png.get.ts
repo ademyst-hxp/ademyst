@@ -1,4 +1,4 @@
-import { ObjectStorage, useS3 } from "~~/server/utils/drive";
+import { useStorage } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const badgeId = event.context.params?.id;
@@ -10,8 +10,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const s3 = useS3(event);
-	const storage = new ObjectStorage(s3, 'badges');
+	const storage = useStorage(event, 'badges');
 
 	const badgeKey = `${badgeId}.png`;
 

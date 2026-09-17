@@ -1,144 +1,84 @@
 import type { H3Event } from "h3";
+import { S3mini } from "s3mini";
 
-import {
-	S3Client,
-	GetObjectCommand,
-	PutObjectCommand,
-	DeleteObjectCommand,
-	HeadObjectCommand,
-	ListObjectsV2Command,
-} from "@aws-sdk/client-s3";
+type StorageBody = string | Uint8Array | ArrayBuffer | ReadableStream;
 
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+type StoragePutOptions = {
+	contentType?: string;
+};
 
-export function useS3(event: H3Event) {
-	if (event.context.s3) {
-		return event.context.s3;
-	}
-
-	const env = event.context.cloudflare.env;
-
-	const client = new S3Client({
-		region: "auto",
-		endpoint: env.S3_ENDPOINT,
-		credentials: {
-			accessKeyId: env.S3_ACCESS_KEY_ID,
-			secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-		},
-	});
-
-	event.context.s3 = client;
-
-	return client;
-}
+type SignedUrlOptions = {
+	expiresIn?: number;
+};
 
 export class ObjectStorage {
-	constructor(
-		private readonly s3: S3Client,
-		private readonly bucket: string,
-	) {}
+	constructor(private readonly s3: S3mini) {}
 
 	async exists(key: string): Promise<boolean> {
-		try {
-			await this.s3.send(
-				new HeadObjectCommand({
-					Bucket: this.bucket,
-					Key: key,
-				}),
-			);
-
-			return true;
-		} catch (error: any) {
-			if (error?.$metadata?.httpStatusCode === 404) {
-				return false;
-			}
-
-			throw error;
-		}
+		return await this.s3.objectExists(key) || false;
 	}
 
 	async get(key: string) {
-		return this.s3.send(
-			new GetObjectCommand({
-				Bucket: this.bucket,
-				Key: key,
-			}),
-		);
+		return this.s3.getObject(key);
 	}
 
-	async put(
-		key: string,
-		body: PutObjectCommand["input"]["Body"],
-		options: Omit<
-			PutObjectCommand["input"],
-			"Bucket" | "Key" | "Body"
-		> = {},
-	) {
-		return this.s3.send(
-			new PutObjectCommand({
-				Bucket: this.bucket,
-				Key: key,
-				Body: body,
-				...options,
-			}),
-		);
+	async getResponse(key: string) {
+		return this.s3.getObjectResponse(key);
+	}
+
+	async put(key: string, body: StorageBody, options: StoragePutOptions = {}) {
+		return this.s3.putObject(key, body, options.contentType);
 	}
 
 	async delete(key: string) {
-		return this.s3.send(
-			new DeleteObjectCommand({
-				Bucket: this.bucket,
-				Key: key,
-			}),
-		);
+		return this.s3.deleteObject(key);
 	}
 
 	async list(prefix?: string) {
-		return this.s3.send(
-			new ListObjectsV2Command({
-				Bucket: this.bucket,
-				Prefix: prefix,
-			}),
-		);
+		return this.s3.listObjects("/", prefix);
 	}
 
-	async signedUrl(
-		key: string,
-		options: {
-			expiresIn?: number;
-		} = {},
-	) {
-		return getSignedUrl(
-			this.s3,
-			new GetObjectCommand({
-				Bucket: this.bucket,
-				Key: key,
-			}),
-			{
-				expiresIn: options.expiresIn ?? 3600,
-			},
-		);
+	async signedUrl(key: string, options: SignedUrlOptions = {}) {
+		return this.s3.getPresignedUrl("GET", key, options.expiresIn ?? 3600);
 	}
 
 	async signedUploadUrl(
 		key: string,
-		options: {
-			expiresIn?: number;
+		options: SignedUrlOptions & {
 			contentType?: string;
 		} = {},
 	) {
-		return getSignedUrl(
-			this.s3,
-			new PutObjectCommand({
-				Bucket: this.bucket,
-				Key: key,
-				...(options.contentType
-					? { ContentType: options.contentType }
-					: {}),
-			}),
-			{
-				expiresIn: options.expiresIn ?? 900,
-			},
+		return this.s3.getPresignedUrl(
+			"PUT",
+			key,
+			options.expiresIn ?? 900,
+			{},
+			options.contentType
+				? {
+						"Content-Type": options.contentType,
+					}
+				: undefined,
 		);
 	}
+}
+
+export function useStorage(event: H3Event, bucket: string): ObjectStorage {
+	if (event.context.storage) {
+		return event.context.storage;
+	}
+
+	const env = event.context.cloudflare.env;
+
+	const s3 = new S3mini({
+		accessKeyId: env.S3_ACCESS_KEY_ID,
+		secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+		endpoint: env.S3_ENDPOINT + `/${bucket}`,
+		region: "auto",
+	});
+
+	const storage = new ObjectStorage(s3);
+
+	event.context.storage = storage;
+
+	return storage;
 }
