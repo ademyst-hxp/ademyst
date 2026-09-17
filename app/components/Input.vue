@@ -5,7 +5,7 @@ const props = withDefaults(
 	defineProps<{
 		label?: string;
 		icon?: Component;
-		modelValue?: string | number | boolean | Date | null;
+		modelValue?: string | number | boolean | Date | File | null;
 		type?: string;
 		size?: "small" | "medium" | "large";
 		placeholder?: string;

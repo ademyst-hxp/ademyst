@@ -7,7 +7,6 @@ import SocialIcon from "~/components/profile/SocialIcon.vue";
 
 import {
 	XMarkIcon,
-	ChevronRightIcon,
 	ChevronLeftIcon,
 	KeyIcon,
 	ShieldCheckIcon,
@@ -49,14 +48,17 @@ useHead({
 	],
 });
 
+const name = ref(session?.value?.profile.name || "");
+
 const payload = ref({
-	name: session?.value?.profile.name || "",
 	displayName: session?.value?.profile.displayName || "",
 	pronouns: session?.value?.profile.pronouns || "",
 	bio: session?.value?.profile.bio || "",
 	location: session?.value?.profile.location || "",
 	corporation: session?.value?.profile.corporation || "",
 });
+
+const avatarFile = ref<File | null>(null);
 
 const updateProfile = async () => {
 	if (!session.value) return;
@@ -77,6 +79,62 @@ const updateProfile = async () => {
 	} catch (error) {
 		console.error("Erreur lors de la mise à jour du profil :", error);
 		alert("Une erreur est survenue lors de la mise à jour du profil.");
+	}
+};
+
+const updateName = async () => {
+	if (!session.value) return;
+
+	try {
+		const response = await $fetch(
+			`/api/v1/users/${session.value?.profile.name}/profile`,
+			{
+				method: "PUT",
+				body: { name: name.value },
+			},
+		);
+
+		if (response) {
+			await refresh();
+			alert("Nom d'utilisateur mis à jour avec succès !");
+		}
+	} catch (error) {
+		console.error(
+			"Erreur lors de la mise à jour du nom d'utilisateur :",
+			error,
+		);
+		alert(
+			"Une erreur est survenue lors de la mise à jour du nom d'utilisateur.",
+		);
+	}
+};
+
+const uploadAvatar = async () => {
+	if (!session.value) return;
+	if (!avatarFile.value) {
+		alert("Veuillez sélectionner un fichier avant de télécharger.");
+		return;
+	}
+
+	const formData = new FormData();
+	formData.append("avatar", avatarFile.value);
+
+	try {
+		const response = await $fetch(
+			`/api/v1/users/${session.value?.profile.name}/avatar`,
+			{
+				method: "POST",
+				body: formData,
+			},
+		);
+
+		if (response) {
+			await refresh();
+			alert("Avatar mis à jour avec succès !");
+		}
+	} catch (error) {
+		console.error("Erreur lors de la mise à jour de l'avatar :", error);
+		alert("Une erreur est survenue lors de la mise à jour de l'avatar.");
 	}
 };
 
@@ -147,6 +205,8 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 		alert("Une erreur est survenue lors de la mise à jour du lien.");
 	}
 };
+
+const isNameDialogOpen = ref(false);
 </script>
 <template>
 	<Teleport to="#header">
@@ -167,56 +227,75 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 	</Teleport>
 
 	<section class="flex flex-col gap-4">
-		<div class="flex gap-8 max-md:flex-col">
-			<div class="w-full sm:w-fit">
-				<Avatar
-					:size="192"
-					:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
-				/>
-			</div>
-			<div class="flex flex-col gap-4 w-full">
-				<Input
-					v-model="payload.name"
-					label="Nom d'utilisateur"
-					placeholder="Nom d'utilisateur"
-					@enter="updateProfile"
-				/>
-				<Input
-					v-model="payload.displayName"
-					label="Nom d'affichage"
-					placeholder="Nom d'affichage"
-					@enter="updateProfile"
-				/>
-				<Input
-					v-model="payload.pronouns"
-					label="Pronoms"
-					placeholder="Pronoms"
-					@enter="updateProfile"
-				/>
-			</div>
-		</div>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<Input
-				v-model="payload.location"
-				label="Localisation"
-				placeholder="Localisation"
-				@enter="updateProfile"
-			/>
-			<Input
-				v-model="payload.corporation"
-				label="Entreprise / Organisation"
-				placeholder="Ademyst Co."
-				@enter="updateProfile"
-			/>
-			<Input
-				class="col-span-1 md:col-span-2"
-				type="textarea"
-				v-model="payload.bio"
-				label="Bio"
-				placeholder="Bio"
-				@enter="updateProfile"
-			/>
-		</div>
+		<Avatar
+			:size="192"
+			:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
+			class="mx-auto"
+		/>
+		<Input
+			v-model="avatarFile"
+			type="file"
+			label="Changer d'avatar"
+			accept="image/*"
+			@change="uploadAvatar"
+			class="mx-auto"
+		/>
+	</section>
+	<section class="grid grid-cols-1 gap-4 md:grid-cols-2">
+		<Input
+			v-model="name"
+			label="Nom d'utilisateur"
+			placeholder="Nom d'utilisateur"
+			@enter="isNameDialogOpen = true"
+			class="md:col-span-2"
+		/>
+		<p class="text-sm text-muted md:col-span-2">
+			Le nom d'utilisateur est unique et sera utilisé pour accéder à votre
+			profil. Une fois modifié, il est possible que votre ancien nom
+			d'utilisateur soit pris par un autre utilisateur. Aucune redirection
+			ne sera faite vers votre nouveau profil. Les mentions existantes
+			pointeront vers un profil inexistant, ou vers le profil qui portera
+			ce nom à son tour s'il en existe un.
+		</p>
+		<Input
+			v-model="payload.displayName"
+			label="Nom d'affichage"
+			placeholder="Nom d'affichage"
+			@enter="updateProfile"
+		/>
+		<Input
+			v-model="payload.pronouns"
+			label="Pronoms"
+			placeholder="Pronoms"
+			@enter="updateProfile"
+		/>
+		<Input
+			v-model="payload.location"
+			label="Localisation"
+			placeholder="Localisation"
+			@enter="updateProfile"
+		/>
+		<Input
+			v-model="payload.corporation"
+			label="Entreprise / Organisation"
+			placeholder="Ademyst Co."
+			@enter="updateProfile"
+		/>
+		<Input
+			class="md:col-span-2"
+			type="textarea"
+			v-model="payload.bio"
+			label="Bio"
+			placeholder="Bio"
+			@enter="updateProfile"
+		/>
+	</section>
+	<section class="flex justify-center gap-2">
+		<Button
+			label="Sauvegarder"
+			variant="primary"
+			:handler="updateProfile"
+		/>
 	</section>
 	<section class="flex flex-col gap-2">
 		<h2 class="text-xl font-semibold px-8">Liens</h2>
@@ -284,4 +363,25 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 			]"
 		/>
 	</section>
+
+	<Dialog
+		v-if="isNameDialogOpen"
+		@close="isNameDialogOpen = false"
+		title="Modifier le nom de profil"
+		description="Le lien permettant d'accéder à votre profil sera modifié. Attention: votre ancien nom sera libre aussitôt qu'il sera modifié. L'ancien lien vers votre profil et les mentions existantes pointeront vers un profil inexistant, ou vers le profil qui portera ce nom à son tour."
+		:actions="[
+			{
+				label: 'Annuler',
+				variant: 'link',
+				handler: () => {
+					isNameDialogOpen = false;
+				},
+			},
+			{
+				label: 'Mettre à jour',
+				variant: 'primary',
+				handler: updateName,
+			},
+		]"
+	/>
 </template>
