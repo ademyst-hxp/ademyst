@@ -17,6 +17,7 @@ import {
 	PencilIcon,
 	HeartIcon,
 	ChatBubbleOvalLeftEllipsisIcon,
+	ChatBubbleLeftRightIcon,
 	PaperAirplaneIcon,
 	ClipboardDocumentIcon,
 	ScaleIcon,
@@ -38,6 +39,14 @@ const { $md } = useNuxtApp();
 const { session } = useAuthSession();
 
 const post = ref<Post>(props.data);
+
+const { data: parentPost } = useAsyncData("post-" + post.value.parentId, async () => {
+	if (post.value.parentId) {
+		const response = await $fetch<Post>("/api/v1/posts/" + post.value.parentId);
+		return response;
+	}
+	return null;
+});
 
 watch(
 	() => props.data,
@@ -156,6 +165,21 @@ const rendered = computed(() => {
 				@click="isMenuOpen = !isMenuOpen"
 				class="h-5 w-5 cursor-pointer"
 			/>
+		</div>
+		<div
+			v-if="post.parentId"
+			class="flex items-center gap-2"
+		>
+			<ChatBubbleLeftRightIcon class="h-6 w-6" />
+			<p class="text-lg">
+				En réponse à
+				<RouterLink
+					:to="`/posts/${post.parentId}`"
+					class="text-primary font-semibold hover:underline"
+				>
+					{{ parentPost?.profile?.displayName || `@${parentPost?.profile?.name}` || '@ghost' }}
+				</RouterLink>
+			</p>
 		</div>
 		<Input
 			v-if="editable"
