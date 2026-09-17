@@ -51,13 +51,19 @@ const path = computed(() => useRoute().path);
 		>
 			<!-- Mobile -->
 			<RouterLink
-				to="/discover"
+				to="/settings"
 				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
-				:class="
-					path === '/discover' ? 'bg-primary/15 text-primary' : ''
-				"
+				:class="path === '/inbox' ? 'bg-primary/15 text-primary' : ''"
 			>
-				<FireIcon class="w-7 h-7" />
+				<BellIcon class="w-7 h-7" />
+				<div
+					v-if="notifications?.critical"
+					class="bg-danger rounded-full w-2 h-2 animate-pulse"
+				/>
+				<div
+					v-else-if="notifications?.total"
+					class="bg-warning rounded-full w-2 h-2"
+				/>
 			</RouterLink>
 
 			<RouterLink
@@ -69,6 +75,16 @@ const path = computed(() => useRoute().path);
 			</RouterLink>
 
 			<RouterLink
+				to="/discover"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="
+					path === '/discover' ? 'bg-primary/15 text-primary' : ''
+				"
+			>
+				<FireIcon class="w-7 h-7" />
+			</RouterLink>
+
+			<RouterLink
 				to="/settings"
 				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
 				:class="
@@ -76,24 +92,6 @@ const path = computed(() => useRoute().path);
 				"
 			>
 				<Cog6ToothSolidIcon class="w-7 h-7" />
-			</RouterLink>
-
-			<RouterLink
-				to="/settings"
-				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
-				:class="
-					path === '/inbox' ? 'bg-primary/15 text-primary' : ''
-				"
-			>
-				<BellIcon class="w-7 h-7" />
-				<div
-					v-if="notifications?.critical"
-					class="bg-danger rounded-full w-2 h-2 animate-pulse"
-				/>
-				<div
-					v-else-if="notifications?.total"
-					class="bg-warning rounded-full w-2 h-2"
-				/>
 			</RouterLink>
 
 			<RouterLink
