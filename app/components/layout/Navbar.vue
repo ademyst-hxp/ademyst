@@ -22,7 +22,19 @@ import SwitchAccountMenu from "./SwitchAccountMenu.vue";
 const { refresh, session } = useAuthSession();
 refresh();
 
-const { isSm } = useTWBreakpoints();
+const { data: notifications, refresh: refreshNotifications } = useAsyncData(
+	"notifications-count",
+	async () => {
+		const response = await $fetch<{
+			critical: number;
+			total: number;
+			endpoints: {
+				[key: string]: string;
+			};
+		}>("/api/v1/inbox/count");
+		return response;
+	},
+);
 
 const isMenuOpen = ref(false);
 const isSwitchAccountMenuOpen = ref(false);
@@ -67,6 +79,24 @@ const path = computed(() => useRoute().path);
 			</RouterLink>
 
 			<RouterLink
+				to="/settings"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="
+					path === '/inbox' ? 'bg-primary/15 text-primary' : ''
+				"
+			>
+				<BellIcon class="w-7 h-7" />
+				<div
+					v-if="notifications?.critical"
+					class="bg-danger rounded-full w-2 h-2 animate-pulse"
+				/>
+				<div
+					v-else-if="notifications?.total"
+					class="bg-warning rounded-full w-2 h-2"
+				/>
+			</RouterLink>
+
+			<RouterLink
 				v-if="session"
 				:to="`/@${session.profile.name}`"
 				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
@@ -106,6 +136,28 @@ const path = computed(() => useRoute().path);
 			</RouterLink>
 
 			<div class="grow" />
+
+			<RouterLink
+				to="/inbox"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+				:class="
+					notifications?.critical
+						? 'bg-danger/15 text-danger'
+						: notifications?.total
+							? 'bg-warning/15 text-warning'
+							: ''
+				"
+			>
+				<BellIcon class="w-7 h-7" />
+				<div
+					v-if="notifications?.critical"
+					class="bg-danger rounded-full w-2 h-2 animate-pulse"
+				/>
+				<div
+					v-else-if="notifications?.total"
+					class="bg-warning rounded-full w-2 h-2"
+				/>
+			</RouterLink>
 
 			<div
 				v-if="session"
