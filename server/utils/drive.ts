@@ -138,15 +138,13 @@ function createDrive() {
 // so the storage client is created once per request.
 const storageByEvent = new WeakMap<H3Event, Storage>();
 
+let storage: Storage | undefined;
+
 export function useDrive(event: H3Event): Storage {
-	const cached = storageByEvent.get(event);
-
-	if (cached) {
-		return cached;
+	if (!storage) {
+		storage = createDrive();
 	}
-
-	const storage = createDrive();
-	storageByEvent.set(event, storage);
 
 	return storage;
 }
+
