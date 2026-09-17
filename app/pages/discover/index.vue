@@ -34,8 +34,15 @@ const { session, refresh: refreshSession } = useAuthSession();
 const { whispers, suggestions, hits, following, users, refresh } = useFeed();
 const { blockUser } = useRelations();
 
-await refresh();
 await refreshSession();
+
+const profile = session.value?.profile;
+
+if (!profile) {
+	await navigateTo("/auth/login");
+}
+
+await refresh();
 
 definePageMeta({
 	title: "Ademyst: Discover",
@@ -113,7 +120,7 @@ const newWhisper = ref<Whisper>({
 	color: null,
 	textColor: null,
 	image: null,
-	profile: session.value!.profile,
+	profile: profile!,
 	visibility: "everyone",
 	createdAt: new Date(),
 });
@@ -210,7 +217,10 @@ watch(
 		>
 			<PostBox :data="post" />
 
-			<div v-if="(index + 1) % 25 === 0" class="flex flex-col items-center gap-2 text-center py-8">
+			<div
+				v-if="(index + 1) % 25 === 0"
+				class="flex flex-col items-center gap-2 text-center py-8"
+			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
 				<h2 class="text-2xl font-bold px-8">Une petite pause ?</h2>
 				<p class="text-muted px-8">
@@ -251,7 +261,10 @@ watch(
 		>
 			<PostBox :data="post" />
 
-			<div v-if="(index + 1) % 25 === 0" class="flex flex-col items-center gap-2 text-center py-8">
+			<div
+				v-if="(index + 1) % 25 === 0"
+				class="flex flex-col items-center gap-2 text-center py-8"
+			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
 				<h2 class="text-2xl font-bold px-8">Une petite pause ?</h2>
 				<p class="text-muted px-8">
@@ -328,10 +341,7 @@ watch(
 	</Menu>
 
 	<!-- New Whisper -->
-	<Popup
-		v-if="editingWhisper"
-		@close="editingWhisper = false"
-	>
+	<Popup v-if="editingWhisper" @close="editingWhisper = false">
 		<h2 class="text-xl font-bold">Exprimer une pensée</h2>
 		<WhisperBox
 			:key="'whisper-' + newWhisper.id + '-edit'"
