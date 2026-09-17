@@ -1,150 +1,144 @@
 import type { H3Event } from "h3";
 
 import {
-	DeleteObjectCommand,
+	S3Client,
 	GetObjectCommand,
+	PutObjectCommand,
+	DeleteObjectCommand,
 	HeadObjectCommand,
 	ListObjectsV2Command,
-	PutObjectCommand,
-	S3Client,
 } from "@aws-sdk/client-s3";
+
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-type Storage = ReturnType<typeof createDrive>;
-
-function createDrive() {
-	const config = useRuntimeConfig().private;
-
-	const endpoint = config.s3Endpoint;
-	const accessKeyId = config.s3AccessKeyId;
-	const secretAccessKey = config.s3SecretAccessKey;
-	const region = config.s3Region ?? "auto";
-
-	if (!endpoint) {
-		throw new Error("No S3 endpoint found (S3_ENDPOINT)");
+export function useS3(event: H3Event) {
+	if (event.context.s3) {
+		return event.context.s3;
 	}
 
-	if (!accessKeyId) {
-		throw new Error("No S3 access key found (S3_ACCESS_KEY_ID)");
-	}
-
-	if (!secretAccessKey) {
-		throw new Error("No S3 secret key found (S3_SECRET_ACCESS_KEY)");
-	}
+	const env = event.context.cloudflare.env;
 
 	const client = new S3Client({
-		forcePathStyle: true,
-		region,
-		endpoint,
+		region: "auto",
+		endpoint: env.S3_ENDPOINT,
 		credentials: {
-			accessKeyId,
-			secretAccessKey,
+			accessKeyId: env.S3_ACCESS_KEY_ID,
+			secretAccessKey: env.S3_SECRET_ACCESS_KEY,
 		},
 	});
 
-	return {
-		client,
+	event.context.s3 = client;
 
-		async put(
-			bucket: string,
-			key: string,
-			body: PutObjectCommand["input"]["Body"],
-			options?: {
-				contentType?: string;
-				cacheControl?: string;
-				contentDisposition?: string;
-				metadata?: Record<string, string>;
-			},
-		) {
-			return client.send(
-				new PutObjectCommand({
-					Bucket: bucket,
-					Key: key,
-					Body: body,
-					ContentType: options?.contentType,
-					CacheControl: options?.cacheControl,
-					ContentDisposition: options?.contentDisposition,
-					Metadata: options?.metadata,
-				}),
-			);
-		},
+	return client;
+}
 
-		async get(bucket: string, key: string) {
-			return client.send(
-				new GetObjectCommand({
-					Bucket: bucket,
+export class ObjectStorage {
+	constructor(
+		private readonly s3: S3Client,
+		private readonly bucket: string,
+	) {}
+
+	async exists(key: string): Promise<boolean> {
+		try {
+			await this.s3.send(
+				new HeadObjectCommand({
+					Bucket: this.bucket,
 					Key: key,
 				}),
 			);
-		},
 
-		async delete(bucket: string, key: string) {
-			await client.send(
-				new DeleteObjectCommand({
-					Bucket: bucket,
-					Key: key,
-				}),
-			);
-		},
-
-		async exists(bucket: string, key: string) {
-			try {
-				await client.send(
-					new HeadObjectCommand({
-						Bucket: bucket,
-						Key: key,
-					}),
-				);
-
-				return true;
-			} catch {
+			return true;
+		} catch (error: any) {
+			if (error?.$metadata?.httpStatusCode === 404) {
 				return false;
 			}
-		},
 
-		async list(bucket: string, prefix?: string) {
-			const response = await client.send(
-				new ListObjectsV2Command({
-					Bucket: bucket,
-					Prefix: prefix,
-				}),
-			);
-
-			return response.Contents ?? [];
-		},
-
-		async signedUrl(
-			bucket: string,
-			key: string,
-			options?: {
-				expiresIn?: number;
-			},
-		) {
-			return getSignedUrl(
-				client,
-				new GetObjectCommand({
-					Bucket: bucket,
-					Key: key,
-				}),
-				{
-					expiresIn: options?.expiresIn ?? 3600,
-				},
-			);
-		},
-	};
-}
-
-// Cloudflare Workers can't reuse I/O objects across requests,
-// so the storage client is created once per request.
-const storageByEvent = new WeakMap<H3Event, Storage>();
-
-let storage: Storage | undefined;
-
-export function useDrive(event: H3Event): Storage {
-	if (!storage) {
-		storage = createDrive();
+			throw error;
+		}
 	}
 
-	return storage;
-}
+	async get(key: string) {
+		return this.s3.send(
+			new GetObjectCommand({
+				Bucket: this.bucket,
+				Key: key,
+			}),
+		);
+	}
 
+	async put(
+		key: string,
+		body: PutObjectCommand["input"]["Body"],
+		options: Omit<
+			PutObjectCommand["input"],
+			"Bucket" | "Key" | "Body"
+		> = {},
+	) {
+		return this.s3.send(
+			new PutObjectCommand({
+				Bucket: this.bucket,
+				Key: key,
+				Body: body,
+				...options,
+			}),
+		);
+	}
+
+	async delete(key: string) {
+		return this.s3.send(
+			new DeleteObjectCommand({
+				Bucket: this.bucket,
+				Key: key,
+			}),
+		);
+	}
+
+	async list(prefix?: string) {
+		return this.s3.send(
+			new ListObjectsV2Command({
+				Bucket: this.bucket,
+				Prefix: prefix,
+			}),
+		);
+	}
+
+	async signedUrl(
+		key: string,
+		options: {
+			expiresIn?: number;
+		} = {},
+	) {
+		return getSignedUrl(
+			this.s3,
+			new GetObjectCommand({
+				Bucket: this.bucket,
+				Key: key,
+			}),
+			{
+				expiresIn: options.expiresIn ?? 3600,
+			},
+		);
+	}
+
+	async signedUploadUrl(
+		key: string,
+		options: {
+			expiresIn?: number;
+			contentType?: string;
+		} = {},
+	) {
+		return getSignedUrl(
+			this.s3,
+			new PutObjectCommand({
+				Bucket: this.bucket,
+				Key: key,
+				...(options.contentType
+					? { ContentType: options.contentType }
+					: {}),
+			}),
+			{
+				expiresIn: options.expiresIn ?? 900,
+			},
+		);
+	}
+}

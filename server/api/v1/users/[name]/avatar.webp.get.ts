@@ -4,7 +4,8 @@ import { createDb } from "#server/db";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
-import { useDrive } from "~~/server/utils/drive";
+
+import { ObjectStorage, useS3 } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const { db, client } = createDb();
@@ -34,15 +35,16 @@ export default defineEventHandler(async (event: H3Event) => {
 			});
 		}
 
-		const drive = useDrive(event);
+		const s3 = useS3(event);
+		const storage = new ObjectStorage(s3, 'avatars');
 
 		const avatarKey = `${profile.id}.webp`;
 
-		if (!(await drive.exists("avatars", avatarKey))) {
+		if (!(await storage.exists(avatarKey))) {
 			return sendRedirect(event, "/images/default_avatar.png", 302);
 		}
 
-		const url = await drive.signedUrl("avatars", avatarKey, {
+		const url = await storage.signedUrl(avatarKey, {
 			expiresIn: 60 * 60,
 		});
 
