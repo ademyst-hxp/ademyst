@@ -1,10 +1,15 @@
 <script lang="ts" setup>
 import { HomeIcon } from "@heroicons/vue/24/solid";
-import { ChevronLeftIcon } from "@heroicons/vue/24/outline";
 
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
 import Input from "~/components/Input.vue";
+
+import Avatar from "~/components/profile/Avatar.vue";
+
+const { error, login, refresh, session } = useAuthSession();
+
+await refresh();
 
 const step = ref<number>(0);
 
@@ -51,6 +56,11 @@ const handleSignup = async () => {
 			body: payload.value,
 		});
 		// Rediriger ou afficher un message de succès
+		await login(payload.value.email, payload.value.password);
+
+		if (session.value) {
+			await navigateTo("/discover");
+		}
 	} catch (error) {
 		// Gérer les erreurs de connexion
 		console.error("Signup failed:", error);
@@ -99,6 +109,16 @@ useHead({
 	</div>
 	<Box class="w-full md:max-w-lg">
 		<h1 class="text-2xl text-center font-bold">Créer un compte</h1>
+		<p v-if="session" class="text-center text-success">
+			Connecté en tant que
+			<span class="flex items-center gap-1">
+				<Avatar
+					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+					size="sm"
+				/>
+				{{ session.profile.name }}
+			</span>.
+		</p>
 		<form v-if="step === 0" class="flex flex-col gap-6">
 			<Input
 				v-model="payload.email"

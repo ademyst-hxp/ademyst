@@ -5,6 +5,8 @@ import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
 import Input from "~/components/Input.vue";
 
+import Avatar from "~/components/profile/Avatar.vue";
+
 const { error, login, refresh, session } = useAuthSession();
 
 const email = ref("");
@@ -60,6 +62,16 @@ useHead({
 	</div>
 	<Box class="w-full md:max-w-lg">
 		<h1 class="text-2xl text-center font-bold">Heureux de vous revoir !</h1>
+		<p v-if="session" class="text-center text-success">
+			Connecté en tant que
+			<span class="flex items-center gap-1">
+				<Avatar
+					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+					size="sm"
+				/>
+				{{ session.profile.name }}
+			</span>.
+		</p>
 		<form class="flex flex-col gap-6">
 			<Input
 				v-model="email"
