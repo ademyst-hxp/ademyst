@@ -1,4 +1,4 @@
-import { useDrive } from "~~/server/utils/drive";
+import { ObjectStorage, useS3 } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const badgeId = event.context.params?.id;
@@ -10,18 +10,19 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const drive = useDrive(event);
+	const s3 = useS3(event);
+	const storage = new ObjectStorage(s3, 'badges');
 
 	const badgeKey = `${badgeId}.png`;
 
-	if (!(await drive.exists("badges", badgeKey))) {
+	if (!(await storage.exists(badgeKey))) {
 		throw createError({
 			statusCode: 500,
 			statusMessage: "Badge icon not found",
 		});
 	}
 
-	const url = await drive.signedUrl("badges", badgeKey, {
+	const url = await storage.signedUrl(badgeKey, {
 		expiresIn: 60 * 60 * 24,
 	});
 

@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
 import { processBadgeIcon } from "~~/server/utils/helpers/files";
-import { useDrive } from "~~/server/utils/drive";
+import { ObjectStorage, useS3 } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	await requireAuth(event, {
@@ -32,16 +32,17 @@ export default defineEventHandler(async (event) => {
 
 	const avatar = await processBadgeIcon(file.data, contentType);
 
-	const drive = useDrive(event);
+	const s3 = useS3(event);
+	const drive = new ObjectStorage(s3, 'badges');
 
 	const key = `${badgeId}.png`;
 
-	await drive.put("badges", key, avatar.buffer, {
-		contentType: avatar.contentType,
-		cacheControl: "public, max-age=31536000, immutable",
+	await drive.put(key, avatar.buffer, {
+		ContentType: avatar.contentType,
+		CacheControl: "public, max-age=31536000, immutable",
 	});
 
-	const url = await drive.signedUrl("badges", key, {
+	const url = await drive.signedUrl(key, {
 		expiresIn: 60 * 60 * 24, // 1 day
 	});
 
