@@ -13,15 +13,35 @@ export default defineNuxtPlugin(() => {
 	const getActiveSession = () =>
 		sessions.value.find((entry) => entry.id === activeSessionId.value) ??
 		null;
-	const getAuthorizationToken = () =>
-		accessToken.value ?? getActiveSession()?.accessToken ?? null;
+	const getAuthorizationToken = async () => {
+		const activeSession = getActiveSession();
 
+		if (!activeSession) {
+			return null;
+		}
+
+		if (activeSession.expiresAt && Date.now() > activeSession.expiresAt) {
+			const refreshed = await refreshSession();
+
+			if (!refreshed) {
+				return null;
+			}
+
+			return await getAuthorizationToken();
+		}
+
+		if (activeSession.accessToken) {
+			return activeSession.accessToken;
+		}
+
+		return accessToken.value ?? null;
+	};
 	const rawApi = $fetch.create({
 		baseURL: "/api/v1",
 		credentials: "include",
 
-		onRequest({ options }) {
-			const token = getAuthorizationToken();
+		async onRequest({ options }) {
+			const token = await getAuthorizationToken();
 
 			if (!token) return;
 
@@ -34,7 +54,7 @@ export default defineNuxtPlugin(() => {
 	// Dedupe concurrent refreshes: every 401 hitting at the same time shares one call.
 	let refreshPromise: Promise<boolean> | null = null;
 
-	const refreshSession = () => {
+	const refreshSession = async () => {
 		refreshPromise ??= (async () => {
 			const currentSession = getActiveSession();
 
