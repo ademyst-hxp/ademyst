@@ -22,7 +22,7 @@ const handlePasswordReset = async () => {
 		body: { newPassword: password.value, token },
 	});
 
-	// await navigateTo("/auth/login");
+	await navigateTo("/auth/login");
 };
 
 definePageMeta({

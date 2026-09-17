@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
 
 		const ipAddress = getRequestIP(event) ?? null;
 		const userAgent = getHeader(event, "user-agent") ?? null;
-		const token = generateToken();
+		let token: string | undefined = generateToken();
 
 		switch (action) {
 			case "change-password":
@@ -120,6 +120,9 @@ export default defineEventHandler(async (event) => {
 					ipAddress,
 					userAgent,
 				});
+
+				// On l'expose pas, direct envoyé ds le mail
+				token = undefined
 
 				break;
 			case "delete-account":
