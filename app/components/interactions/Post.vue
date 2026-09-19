@@ -46,7 +46,7 @@ const { data: parentPost } = useAsyncData(
 	"post-" + post.value.parentId,
 	async () => {
 		if (post.value.parentId) {
-			const response = await $api<{ data: Post }>("/api/v1/posts/" + post.value.parentId);
+			const response = await $api<{ data: Post }>("/posts/" + post.value.parentId);
 			return response.data;
 		}
 		return null;
