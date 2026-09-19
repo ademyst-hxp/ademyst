@@ -35,18 +35,23 @@ const props = withDefaults(
 	},
 );
 
+const { $api } = useNuxtApp();
+
 const { $md } = useNuxtApp();
 const { session } = useAuthSession();
 
 const post = ref<Post>(props.data);
 
-const { data: parentPost } = useAsyncData("post-" + post.value.parentId, async () => {
-	if (post.value.parentId) {
-		const response = await $fetch<Post>("/api/v1/posts/" + post.value.parentId);
-		return response;
-	}
-	return null;
-});
+const { data: parentPost } = useAsyncData(
+	"post-" + post.value.parentId,
+	async () => {
+		if (post.value.parentId) {
+			const response = await $api<{ data: Post }>("/api/v1/posts/" + post.value.parentId);
+			return response.data;
+		}
+		return null;
+	},
+);
 
 watch(
 	() => props.data,
@@ -166,10 +171,7 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div
-			v-if="post.parentId"
-			class="flex items-center gap-2"
-		>
+		<div v-if="post.parentId" class="flex items-center gap-2">
 			<ChatBubbleLeftRightIcon class="h-6 w-6" />
 			<p class="text-lg">
 				En réponse à
@@ -177,7 +179,11 @@ const rendered = computed(() => {
 					:to="`/posts/${post.parentId}`"
 					class="text-primary font-semibold hover:underline"
 				>
-					{{ parentPost?.profile?.displayName || `@${parentPost?.profile?.name}` || '@ghost' }}
+					{{
+						parentPost?.profile?.displayName ||
+						`@${parentPost?.profile?.name}` ||
+						"@ghost"
+					}}
 				</RouterLink>
 			</p>
 		</div>
@@ -262,7 +268,9 @@ const rendered = computed(() => {
 				<ChatBubbleOvalLeftEllipsisIcon
 					class="h-6 w-6 cursor-pointer"
 				/>
-				<span class="text-lg">{{ toLitteral(post.stats.answers || 0) }}</span>
+				<span class="text-lg">{{
+					toLitteral(post.stats.answers || 0)
+				}}</span>
 			</div>
 			<div class="grow" />
 			<div class="flex items-center gap-1" @click="copyLinkToClipboard">
