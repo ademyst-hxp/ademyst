@@ -6,8 +6,15 @@
 
 	--clr-primary: #ff7050;
 	--clr-primary-dark: #cc5a40;
-	--clr-secondary: #793cce;
-	--clr-tertiary: #ffffff;
+
+	--clr-secondary: #da49a9;
+	--clr-secondary-dark: #b03a85;
+
+	--clr-tertiary: #7818ff;
+	--clr-tertiary-dark: #5c13cc;
+
+	--clr-quaternary: #18ff9f;
+	--clr-quaternary-dark: #12cc7d;
 
 	--clr-whispers: #c19342;
 	--clr-whispers-text: #0a1921;
@@ -110,7 +117,15 @@
 
 	--clr-primary: #0072b2;
 	--clr-primary-dark: #005a8c;
+
 	--clr-secondary: #7b2cbf;
+	--clr-secondary-dark: #5c1e8a;
+
+	--clr-tertiary: #ff7f0e;
+	--clr-tertiary-dark: #cc660b;
+
+	--clr-quaternary: #2ca02c;
+	--clr-quaternary-dark: #1f7a1f;
 
 	--clr-danger: #d55e00;
 	--clr-danger-shaded: #ffe0cc;
@@ -141,7 +156,15 @@
 .scheme-dark.alter {
 	--clr-primary: #56b4e9;
 	--clr-primary-dark: #7bc7f0;
+
 	--clr-secondary: #c77cff;
+	--clr-secondary-dark: #d3a8ff;
+
+	--clr-tertiary: #ff9f00;
+	--clr-tertiary-dark: #ffbd35;
+
+	--clr-quaternary: #18ff9f;
+	--clr-quaternary-dark: #12cc7d;
 
 	--clr-danger: #e69f00;
 	--clr-danger-shaded: #4a3200;
@@ -217,7 +240,15 @@
 	/* Palette ALTER */
 	--clr-primary: #005a8c;
 	--clr-primary-dark: #003f63;
+
 	--clr-secondary: #5420a8;
+	--clr-secondary-dark: #32104f;
+
+	--clr-tertiary: #8a5700;
+	--clr-tertiary-dark: #5f3c00;
+
+	--clr-quaternary: #006b4f;
+	--clr-quaternary-dark: #004c38;
 
 	--clr-danger: #a84300;
 	--clr-danger-shaded: #fff0e8;
@@ -261,7 +292,15 @@
 	/* Palette ALTER */
 	--clr-primary: #7bc7f0;
 	--clr-primary-dark: #a5ddf8;
+
 	--clr-secondary: #d3a8ff;
+	--clr-secondary-dark: #b080ff;
+
+	--clr-tertiary: #ff9f00;
+	--clr-tertiary-dark: #ffbd35;
+
+	--clr-quaternary: #18ff9f;
+	--clr-quaternary-dark: #12cc7d;
 
 	--clr-danger: #ffbd35;
 	--clr-danger-shaded: #4a3200;
