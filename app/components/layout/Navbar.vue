@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Logo from "~/assets/logo.svg";
+import Icon from "~/assets/icon.svg";
 
 import {
 	FireIcon,
@@ -113,7 +113,7 @@ const path = computed(() => useRoute().path);
 			class="max-md:hidden flex items-center justify-between bg-surface backdrop-blur-xl text-surface-text text-lg font-medium border border-surface-border rounded-full h-16 px-3 md:px-8 md:gap-6 md:rounded-3xl md:h-20"
 		>
 			<RouterLink to="/">
-				<Logo
+				<Icon
 					class="w-auto h-5 transition-colors duration-200 hover:text-primary"
 				/>
 			</RouterLink>
