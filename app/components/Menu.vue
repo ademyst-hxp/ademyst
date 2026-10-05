@@ -50,6 +50,7 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 						action.danger ? 'text-danger' : '',
 					]"
 					@click="handleSelect(action.handler)"
+					tabindex="0"
 				>
 					<component
 						:is="action.icon"

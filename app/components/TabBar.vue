@@ -22,6 +22,7 @@ const emit = defineEmits<{
 				v-for="tab in tabs"
 				:key="`tab-${tab.value}`"
 				@click="$emit('update:modelValue', tab.value)"
+				tabindex="0"
 			>
 				<div
 					class="text-lg text-center font-medium"

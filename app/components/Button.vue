@@ -155,6 +155,7 @@ async function callback() {
 		@click="callback"
 		:disabled="props.disabled"
 		:type="props.submit ? 'submit' : 'button'"
+		tabindex="0"
 	>
 		<template v-if="isLoading">
 			<EllipsisHorizontalIcon :class="_iconclass + ' animate-pulse'" />

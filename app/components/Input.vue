@@ -151,6 +151,7 @@ function onEnter(event: KeyboardEvent) {
 	<div
 		v-if="type == 'checkbox'"
 		class="flex items-center cursor-pointer gap-2"
+		tabindex="0"
 		@click="
 			() => {
 				if (!disabled) {
