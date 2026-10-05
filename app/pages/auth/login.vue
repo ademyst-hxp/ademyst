@@ -62,7 +62,7 @@ useHead({
 	</div>
 	<Box class="w-full md:max-w-lg">
 		<h1 class="text-2xl text-center font-bold">Heureux de vous revoir !</h1>
-		<p v-if="session" class="text-center text-success">
+		<p v-if="session" class="flex justify-center items-center gap-2 text-center text-success">
 			Connecté en tant que
 			<span class="flex items-center gap-1">
 				<Avatar
@@ -72,7 +72,7 @@ useHead({
 				{{ session.profile.name }}
 			</span>.
 		</p>
-		<form class="flex flex-col gap-6">
+		<form class="flex flex-col gap-6" @submit.prevent="handleLogin">
 			<Input
 				v-model="email"
 				:icon="AtSymbolIcon"
@@ -116,7 +116,7 @@ useHead({
 				<Button
 					label="Se connecter"
 					size="medium"
-					:handler="handleLogin"
+					submit
 				/>
 			</div>
 		</form>

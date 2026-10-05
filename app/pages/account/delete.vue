@@ -16,10 +16,10 @@ const passwordRegex =
 
 await refresh();
 
-const handlePasswordReset = async () => {
-	await $api("/account/change-password", {
+const handleAccountDeletion = async () => {
+	await $api("/account/delete", {
 		method: "POST",
-		body: { newPassword: password.value, token },
+		body: { token },
 	});
 
 	// await navigateTo("/auth/login");
@@ -73,13 +73,23 @@ useHead({
 			label="Exporter mes données"
 			variant="primary"
 			size="medium"
-			handler="/settings/privacy#export-data"
+			handler="/settings/privacy#export-data?intent=delete-account"
 		/>
 	</section-->
 	<section
-		class="bg-surface text-surface-text border border-surface-border rounded-3xl px-6 py-4"
+		class="flex flex-col gap-2 bg-surface text-surface-text border border-surface-border rounded-3xl px-6 py-4"
 	>
 		<h2 class="text-lg font-semibold mb-2">Procéder à la suppression</h2>
+		<p v-if="session" class="flex justify-start items-center gap-2 text-danger">
+			Connecté en tant que
+			<span class="flex items-center gap-1">
+				<Avatar
+					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+					size="sm"
+				/>
+				{{ session.profile.name }}
+			</span>.
+		</p>
 		<p class="text-surface-text-muted text-sm">
 			<b>Cette action est irréversible.</b> Toutes vos données seront
 			supprimées de nos serveurs et vous ne pourrez plus accéder à votre
@@ -87,11 +97,10 @@ useHead({
 			ci-dessous pour procéder à la suppression de votre compte.
 		</p>
 		<Button
-			:icon="AtSymbolIcon"
 			label="Supprimer mon compte"
 			variant="primary"
 			size="medium"
-			handler="/settings/privacy#export-data"
+			:handler="handleAccountDeletion"
 		/>
 	</section>
 </template>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { EllipsisHorizontalIcon } from "@heroicons/vue/24/outline";
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 	label?: string;
 	icon?: Component;
-	handler: string | (() => void) | (() => Promise<void>);
+	handler?: string | (() => void) | (() => Promise<void>);
 	variant?:
 		| "primary"
 		| "secondary"
@@ -15,7 +15,14 @@ const props = defineProps<{
 		| "link";
 	size?: "small" | "medium" | "large";
 	disabled?: boolean;
-}>();
+	submit?: boolean;
+}>(), {
+	variant: "primary",
+	size: "medium",
+	disabled: false,
+	submit: false,
+	handler: () => {},
+});
 
 let _class = "flex items-center text-medium font-medium transition-colors duration-200";
 let _iconclass = "";
@@ -147,7 +154,7 @@ async function callback() {
 		:class="[_class, _stateclass]"
 		@click="callback"
 		:disabled="props.disabled"
-		type="button"
+		:type="props.submit ? 'submit' : 'button'"
 	>
 		<template v-if="isLoading">
 			<EllipsisHorizontalIcon :class="_iconclass + ' animate-pulse'" />

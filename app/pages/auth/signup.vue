@@ -109,7 +109,7 @@ useHead({
 	</div>
 	<Box class="w-full md:max-w-lg">
 		<h1 class="text-2xl text-center font-bold">Créer un compte</h1>
-		<p v-if="session" class="text-center text-success">
+		<p v-if="session" class="flex justify-center items-center gap-2 text-center text-success">
 			Connecté en tant que
 			<span class="flex items-center gap-1">
 				<Avatar
@@ -119,7 +119,7 @@ useHead({
 				{{ session.profile.name }}
 			</span>.
 		</p>
-		<form v-if="step === 0" class="flex flex-col gap-6">
+		<form v-if="step === 0" class="flex flex-col gap-6" @submit.prevent="handleSignup">
 			<Input
 				v-model="payload.email"
 				label="Adresse mail liée au compte"
@@ -250,7 +250,7 @@ useHead({
 				<Button
 					label="S'inscrire"
 					size="medium"
-					:handler="handleSignup"
+					submit
 					:disabled="
 						!(
 							valid.email &&

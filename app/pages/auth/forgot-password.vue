@@ -65,7 +65,7 @@ useHead({
 			Entrez votre adresse e-mail et nous vous enverrons un lien pour
 			réinitialiser votre mot de passe.
 		</p>
-		<form class="flex flex-col gap-6">
+		<form class="flex flex-col gap-6" @submit.prevent="handleEmailSend">
 			<Input
 				v-model="email"
 				:icon="AtSymbolIcon"
@@ -95,13 +95,13 @@ useHead({
 					label="Retour"
 					:icon="ChevronLeftIcon"
 					size="medium"
-					variant="tertiary"
+					variant="link"
 					:handler="$router.back"
 				/>
 				<Button
 					label="Envoyer l'email"
 					size="medium"
-					:handler="handleEmailSend"
+					submit
 				/>
 			</div>
 		</form>

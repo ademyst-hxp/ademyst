@@ -72,7 +72,7 @@ useHead({
 			Cela mettra fin à toutes les sessions actives et vous devrez vous
 			reconnecter avec votre nouveau mot de passe.
 		</p>
-		<form class="flex flex-col gap-6">
+		<form class="flex flex-col gap-6" @submit.prevent="handlePasswordReset">
 			<Input
 				v-model="password"
 				:icon="KeyIcon"
@@ -108,7 +108,7 @@ useHead({
 				<Button
 					label="Changer le mot de passe"
 					size="medium"
-					:handler="handlePasswordReset"
+					submit
 				/>
 			</div>
 		</form>
