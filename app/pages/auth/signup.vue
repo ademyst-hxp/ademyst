@@ -17,7 +17,10 @@ const regex = {
 	email: /\S+@\S+\.\S+/,
 	password: /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/,
 	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+	referrer: /^[A-Fa-f0-9]{6,10}$/,
 };
+
+const referrer = useRoute().query.referrer as string | undefined;
 
 const payload = ref<{
 	email: string;
@@ -26,6 +29,7 @@ const payload = ref<{
 	token: string;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
+	referrer: string | null;
 }>({
 	email: "",
 	password: "",
@@ -33,6 +37,7 @@ const payload = ref<{
 	token: "",
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
+	referrer: referrer ?? null,
 });
 
 const valid = computed(() => ({
@@ -47,6 +52,8 @@ const valid = computed(() => ({
 	privacyPolicyConsent: payload.value.privacyPolicyConsent,
 	token:
 		payload.value.token.length > 0 && regex.sudo.test(payload.value.token),
+	referrer:
+		payload.value.referrer !== null && regex.referrer.test(payload.value.referrer),
 }));
 
 const handleSignup = async () => {
@@ -227,6 +234,16 @@ useHead({
 				<template #error> Le token sudo est invalide. </template>
 			</Input>
 			<Input
+				v-model="payload.referrer"
+				label="Code de parrainage"
+				type="text"
+				placeholder="XXXXXXXX"
+				:validate="regex.referrer"
+				required
+			>
+				<template #error> Le code de parrainage est invalide. </template>
+			</Input>
+			<Input
 				v-model="payload.termsOfServiceConsent"
 				label="Accepter les conditions d'utilisation"
 				type="checkbox"
@@ -258,7 +275,8 @@ useHead({
 							valid.password_confirmation &&
 							valid.termsOfServiceConsent &&
 							valid.privacyPolicyConsent &&
-							valid.token
+							valid.token &&
+							valid.referrer
 						)
 					"
 				/>

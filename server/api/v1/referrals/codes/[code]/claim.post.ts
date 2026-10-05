@@ -9,13 +9,22 @@ import { retrieveCleanReferralCode } from "~~/server/utils/converters/referrals"
 
 import { giveReferralBadge } from "~~/server/jobs/signup";
 
+function normalizeCode(value: unknown): string | null {
+	if (typeof value !== "string") return null;
+
+	const code = value.trim().toUpperCase();
+	if (!code || !/^[A-Fa-f0-9]{6,10}$/u.test(code)) return null;
+
+	return code;
+}
+
 export default defineEventHandler(async (event: H3Event) => {
 	const { db, client } = createDb();
 
 	try {
-		const id = event.context.params?.id;
+		const code = normalizeCode(event.context.params?.code);
 
-		if (!id) {
+		if (!code) {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Missing referral code ID",
@@ -27,7 +36,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		const [result] = await db
 			.select()
 			.from(referralCodes)
-			.where(eq(referralCodes.id, id));
+			.where(eq(referralCodes.code, code));
 
 		if (!result) {
 			throw createError({
@@ -47,8 +56,6 @@ export default defineEventHandler(async (event: H3Event) => {
 			code: result.code,
 			referredId: identity.profileId,
 		});
-
-		await giveReferralBadge(identity.profileId, result.code);
 
 		const cleanReferral = await retrieveCleanReferralCode(
 			event,

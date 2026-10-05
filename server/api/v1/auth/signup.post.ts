@@ -1,14 +1,14 @@
 import type { H3Event } from "h3";
 
 import { createDb } from "#server/db";
-import { eq } from "drizzle-orm";
+import { and, or, eq, lt, isNull } from "drizzle-orm";
 import {
 	accounts,
 	sessions,
 	emailConfirmationTokens,
 } from "#server/db/schema/accounts";
 import { profiles, profileLinks } from "#server/db/schema/profiles";
-
+import { referrals, referralCodes } from "~~/server/db/schema/referrals";
 import {
 	appearanceSettings,
 	privacySettings,
@@ -20,7 +20,11 @@ import { hashPassword } from "#server/utils/password";
 import { verifyBeamProfile } from "#server/utils/beam";
 import { sendEmailConfirmation } from "#server/utils/mail";
 
-import { giveBeamBadge, giveSignupBadges } from "#server/jobs/signup";
+import {
+	giveBeamBadge,
+	giveReferralBadge,
+	giveSignupBadges,
+} from "#server/jobs/signup";
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -41,6 +45,15 @@ function normalizePassword(value: unknown): string | null {
 	if (!/[^A-Za-z0-9]/u.test(value)) return null;
 
 	return value;
+}
+
+function normalizeCode(value: unknown): string | null {
+	if (typeof value !== "string") return null;
+
+	const code = value.trim().toUpperCase();
+	if (!code || !/^[A-Fa-f0-9]{6,10}$/u.test(code)) return null;
+
+	return code;
 }
 
 async function buildConfirmationEmail(
@@ -66,6 +79,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
 		const email = normalizeEmail(body?.email);
 		const password = normalizePassword(body?.password);
+		const referrer = normalizeCode(body?.referrer);
 
 		// The sudo token is mandatory and is used to retrieve the Beam profile.
 		const token =
@@ -226,6 +240,34 @@ export default defineEventHandler(async (event: H3Event) => {
 				ipAddress,
 				userAgent,
 			});
+
+			/* Parrainage */
+
+			if (referrer) {
+				const [referralCode] = await tx
+					.select()
+					.from(referralCodes)
+					.where(
+						and(
+							eq(referralCodes.code, referrer),
+							eq(referralCodes.enabled, true),
+							or(
+								isNull(referralCodes.expiresAt),
+								lt(referralCodes.expiresAt, new Date()),
+							),
+						),
+					)
+					.limit(1);
+
+				if (referralCode) {
+					await tx.insert(referrals).values({
+						code: referralCode.code,
+						referredId: profile.id,
+					});
+
+					await giveReferralBadge(profile.id, referralCode.code);
+				}
+			}
 
 			/* Confirmation de l'email */
 

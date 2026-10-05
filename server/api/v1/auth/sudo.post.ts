@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
 	try {
 		const body = await readBody(event);
 
-		const action = event.context.params?.action;
+		const action = body?.action;
 
 		const email = normalizeEmail(body?.email);
 		const newEmail = normalizeEmail(body?.newEmail);

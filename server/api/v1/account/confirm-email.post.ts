@@ -108,9 +108,10 @@ export default defineEventHandler(async (event) => {
 				.limit(1);
 
 			if (myReferral) {
-				await tx.update(referrals).set({ confirmed: true }).where(
-					eq(referrals.id, myReferral.id),
-				);
+				await tx
+					.update(referrals)
+					.set({ confirmed: true, confirmedAt: new Date() })
+					.where(eq(referrals.id, myReferral.id));
 			}
 
 			return tokenRow.email;

@@ -11,9 +11,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	const { db, client } = createDb();
 
 	try {
-		const id = event.context.params?.id;
+		const code = event.context.params?.code;
 
-		if (!id) {
+		if (!code) {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Missing referral code ID",
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		const [result] = await db
 			.select()
 			.from(referralCodes)
-			.where(eq(referralCodes.id, id));
+			.where(eq(referralCodes.code, code));
 
 		if (!result) {
 			throw createError({
