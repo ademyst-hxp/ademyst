@@ -8,6 +8,8 @@ import {
 	emailConfirmationTokens,
 } from "#server/db/schema/accounts";
 
+import { referrals } from "~~/server/db/schema/referrals";
+
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
 
@@ -97,6 +99,18 @@ export default defineEventHandler(async (event) => {
 				});
 			} catch {
 				// Email confirmation already succeeded; notification failures should not fail the request.
+			}
+
+			const [myReferral] = await tx
+				.select()
+				.from(referrals)
+				.where(eq(referrals.referredId, tokenRow.accountId))
+				.limit(1);
+
+			if (myReferral) {
+				await tx.update(referrals).set({ confirmed: true }).where(
+					eq(referrals.id, myReferral.id),
+				);
 			}
 
 			return tokenRow.email;

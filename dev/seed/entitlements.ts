@@ -217,8 +217,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 	{
 		id: "team",
 		name: "Membre de l'Équipe",
-		description:
-			"Ce badge est accordé aux membres de l'équipe d'Ademyst.",
+		description: "Ce badge est accordé aux membres de l'équipe d'Ademyst.",
 		family: "level",
 		rarity: "unclassified",
 		color: "#00A045",
@@ -231,6 +230,46 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		family: "level",
 		rarity: "unclassified",
 		color: "#C00200",
+		createdAt: new Date(),
+	},
+	{
+		id: "parrain",
+		name: "Parrain",
+		description:
+			"Ce badge est accordé aux membres ayant parrainé au moins une personne.",
+		family: "reward",
+		rarity: "rare",
+		color: "#E22E6D",
+		createdAt: new Date(),
+	},
+	{
+		id: "me_and_my_friends",
+		name: "Mes Amis et Moi",
+		description:
+			"Ce badge est accordé aux membres ayant parrainé au moins 5 personnes.",
+		family: "reward",
+		rarity: "epic",
+		color: "#133F87",
+		createdAt: new Date(),
+	},
+	{
+		id: "the_ambassador",
+		name: "Ambassadeur",
+		description:
+			"Ce badge est accordé aux membres ayant parrainé au moins 20 personnes.",
+		family: "reward",
+		rarity: "collector",
+		color: "#FF7050",
+		createdAt: new Date(),
+	},
+	{
+		id: "the_user_trader",
+		name: "Le Trafficant d'Utilisateurs",
+		description:
+			"Ce badge est accordé aux membres ayant parrainé au moins 50 personnes.",
+		family: "reward",
+		rarity: "legendary",
+		color: "#B3A557",
 		createdAt: new Date(),
 	},
 ];

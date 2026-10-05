@@ -2,8 +2,13 @@ import type { H3Event } from "h3";
 
 import { createDb } from "#server/db";
 import { eq } from "drizzle-orm";
-import { accounts, sessions } from "#server/db/schema/accounts";
+import {
+	accounts,
+	sessions,
+	emailConfirmationTokens,
+} from "#server/db/schema/accounts";
 import { profiles, profileLinks } from "#server/db/schema/profiles";
+
 import {
 	appearanceSettings,
 	privacySettings,
@@ -13,6 +18,7 @@ import { generateHexId } from "#server/utils/ids";
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
 import { hashPassword } from "#server/utils/password";
 import { verifyBeamProfile } from "#server/utils/beam";
+import { sendEmailConfirmation } from "#server/utils/mail";
 
 import { giveBeamBadge, giveSignupBadges } from "#server/jobs/signup";
 
@@ -35,6 +41,21 @@ function normalizePassword(value: unknown): string | null {
 	if (!/[^A-Za-z0-9]/u.test(value)) return null;
 
 	return value;
+}
+
+async function buildConfirmationEmail(
+	email: string,
+	confirmationToken: string,
+	userAgent: string | null,
+	ipAddress: string | null,
+) {
+	await sendEmailConfirmation(
+		email,
+		`${process.env.APP_URL}/account/confirm-email?token=${confirmationToken}`,
+		new Date(),
+		userAgent ?? "unknown",
+		ipAddress ?? "unknown",
+	);
 }
 
 export default defineEventHandler(async (event: H3Event) => {
@@ -205,6 +226,23 @@ export default defineEventHandler(async (event: H3Event) => {
 				ipAddress,
 				userAgent,
 			});
+
+			/* Confirmation de l'email */
+
+			const confirmationToken = generateHexId();
+
+			await tx.insert(emailConfirmationTokens).values({
+				accountId: account.id,
+				email: account.email,
+				token: confirmationToken,
+			});
+
+			await buildConfirmationEmail(
+				account.email,
+				confirmationToken,
+				userAgent,
+				ipAddress,
+			);
 
 			return {
 				account,
