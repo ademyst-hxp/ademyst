@@ -17,10 +17,19 @@
 	font-display: swap;
 }
 
+@font-face {
+	font-family: "Outfit";
+	src: url("/fonts/Outfit-VariableFont_wght.ttf") format("truetype");
+	font-style: normal;
+	font-weight: 100 900;
+	font-display: swap;
+}
+
 /** DECLA **/
 
 :root {
 	--font-sans: "Instrument Sans", Verdana, sans-serif;
+	--font-title: "Outfit", Verdana, sans-serif;
 	--font-serif: "Tiro Bangla", "Times New Roman", serif;
 	--font-whispers: "Sansita Swashed", "Times New Roman", serif;
 }

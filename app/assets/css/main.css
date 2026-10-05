@@ -65,6 +65,9 @@
 	--color-input-focus-ring: var(--clr-input-focus-ring);
 
 	--font-sans: var(--font-sans);
+	--font-title: var(--font-title);
+	--font-serif: var(--font-serif);
+	--font-whispers: var(--font-whispers);
 
 	--txt-base: 1rem;
 	--text-base: var(--txt-base);

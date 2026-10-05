@@ -8,7 +8,7 @@ const props = defineProps<{
 	variant?:
 		| "primary"
 		| "secondary"
-		| "tertiary"
+		| "white"
 		| "danger"
 		| "success"
 		| "warning"
@@ -17,7 +17,7 @@ const props = defineProps<{
 	disabled?: boolean;
 }>();
 
-let _class = "flex items-center text-medium font-medium";
+let _class = "flex items-center text-medium font-medium transition-colors duration-200";
 let _iconclass = "";
 
 switch (props.size) {
@@ -25,7 +25,7 @@ switch (props.size) {
 		_class +=
 			props.variant === "link"
 				? "text-sm"
-				: " gap-1 text-sm rounded-xl";
+				: " gap-1 text-sm rounded-tl-xl rounded-tr-md rounded-br-xl rounded-bl-md";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -43,7 +43,7 @@ switch (props.size) {
 		_class +=
 			props.variant === "link"
 				? "text-lg"
-				: " gap-2 text-lg rounded-full";
+				: " gap-2 text-lg rounded-tr-3xl rounded-tl-xl rounded-bl-3xl rounded-br-xl";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -59,7 +59,7 @@ switch (props.size) {
 		break;
 	case "medium":
 	default:
-		_class += props.variant === "link" ? "" : " gap-1.5 rounded-full";
+		_class += props.variant === "link" ? "" : " gap-1.5 rounded-tr-2xl rounded-tl-lg rounded-bl-2xl rounded-br-lg";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -76,16 +76,14 @@ switch (props.size) {
 
 switch (props.variant) {
 	case undefined:
-		_class += " bg-button text-button-text hover:bg-button-hover";
-		break;
 	case "primary":
-		_class += " bg-accent text-white hover:bg-accent-darkened";
+		_class += " bg-gradient-to-tr from-primary to-secondary text-white hover:from-secondary hover:to-primary";
 		break;
 	case "secondary":
 		_class += " bg-muted-background text-muted";
 		break;
-	case "tertiary":
-		_class += " bg-tertiary/15 text-white";
+	case "white":
+		_class += " bg-white/10 text-white border-2 border-white/20 hover:bg-white/15";
 		break;
 	case "danger":
 		_class += " bg-danger text-white hover:bg-danger-darkened";
