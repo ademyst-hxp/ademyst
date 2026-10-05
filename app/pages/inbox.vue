@@ -202,7 +202,7 @@ const groupedActions = computed(() => {
 </script>
 <template>
 	<Teleport to="#header">
-		<h1 class="text-2xl font-bold text-center">Notifications</h1>
+		<h1 class="text-2xl font-bold font-title text-center">Notifications</h1>
 		<Button
 			label="Actualiser"
 			:handler="refreshNotifications"

@@ -48,7 +48,7 @@ const reviewReport = async (status: "reviewed" | "rejected" | "pending") => {
 				class="w-full -mx-2"
 			/>
 			<template v-else>
-				<h3 class="text-xl font-bold">{{ data.reason }}</h3>
+				<h3 class="text-xl font-bold font-title">{{ data.reason }}</h3>
 				<span class="text-muted text-sm">
 					{{
 						new Date(data.createdAt).toLocaleString("fr-FR", {
@@ -151,7 +151,7 @@ const reviewReport = async (status: "reviewed" | "rejected" | "pending") => {
 			/>
 		</div>
 		<div v-if="editable" class="flex flex-col gap-4">
-			<h3 class="flex items-center gap-2 text-lg font-semibold">
+			<h3 class="flex items-center gap-2 text-lg font-semibold font-title">
 				<HandThumbUpIcon class="w-6 h-6" /> Bonnes pratiques
 			</h3>
 			<ul class="list-disc list-inside">

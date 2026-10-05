@@ -53,7 +53,7 @@ useHead({
 </script>
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center">Paramètres</h1>
+		<h1 class="text-3xl font-bold font-title text-center">Paramètres</h1>
 	</Teleport>
 	<section class="flex flex-col gap-2">
 		<div class="flex gap-2 max-md:flex-col">
@@ -86,7 +86,7 @@ useHead({
 		</div>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Compte et profil</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Compte et profil</h2>
 		<Actions
 			scale="sm"
 			:actions="[
@@ -109,7 +109,7 @@ useHead({
 		/>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Préférences</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Préférences</h2>
 		<Actions
 			scale="sm"
 			:actions="[
@@ -132,7 +132,7 @@ useHead({
 		/>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Autres</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Autres</h2>
 		<Actions
 			:actions="[
 				{

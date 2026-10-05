@@ -35,7 +35,7 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center">Mentions légales</h1>
+		<h1 class="text-3xl font-bold text-center font-title">Mentions légales</h1>
 	</Teleport>
 
 	<header
@@ -46,7 +46,7 @@ useHead({
 			<span class="font-semibold">Ademyst</span>
 		</div>
 
-		<h2 class="text-3xl font-bold">Mentions légales</h2>
+		<h2 class="text-3xl font-bold font-title">Mentions légales</h2>
 
 		<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
 	</header>
@@ -55,7 +55,7 @@ useHead({
 		class="rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
 	>
 		<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
-			<h2>1. Éditeur</h2>
+			<h2 class="font-title">1. Éditeur</h2>
 
 			<p>Le site et la plateforme Ademyst sont édités par :</p>
 
@@ -69,15 +69,15 @@ useHead({
 				</div>
 			</div>
 
-			<h2>2. Directeur de la publication</h2>
+			<h2 class="font-title">2. Directeur de la publication</h2>
 
 			<p>
 				<strong>Loan JEAN</strong>
 			</p>
 
-			<h2>3. Hébergement et infrastructure</h2>
+			<h2 class="font-title">3. Hébergement et infrastructure</h2>
 
-			<h3>Cloudflare</h3>
+			<h3 class="font-title">Cloudflare</h3>
 
 			<p>
 				Ademyst utilise Cloudflare Pages pour l'hébergement et la
@@ -91,7 +91,7 @@ useHead({
 				États-Unis
 			</p>
 
-			<h3>Supabase</h3>
+			<h3 class="font-title">Supabase</h3>
 
 			<p>
 				Ademyst utilise Supabase pour sa base de données PostgreSQL et
@@ -102,7 +102,7 @@ useHead({
 				<strong>Supabase, Inc.</strong>
 			</p>
 
-			<h2>4. Propriété intellectuelle</h2>
+			<h2 class="font-title">4. Propriété intellectuelle</h2>
 
 			<p>
 				Le nom « Ademyst », son identité visuelle, son logo, ses
@@ -118,7 +118,7 @@ useHead({
 				d'Utilisation.
 			</p>
 
-			<h2>5. Contenus publiés par les utilisateurs</h2>
+			<h2 class="font-title">5. Contenus publiés par les utilisateurs</h2>
 
 			<p>Ademyst permet à ses utilisateurs de publier des contenus.</p>
 
@@ -127,7 +127,7 @@ useHead({
 				publie.
 			</p>
 
-			<h2>6. Données personnelles</h2>
+			<h2 class="font-title">6. Données personnelles</h2>
 
 			<p>
 				Les traitements de données personnelles effectués dans le cadre
@@ -140,7 +140,7 @@ useHead({
 				>.
 			</p>
 
-			<h2>7. Conditions d'utilisation</h2>
+			<h2 class="font-title">7. Conditions d'utilisation</h2>
 
 			<p>
 				Les règles applicables à l'utilisation de la plateforme sont
@@ -150,7 +150,7 @@ useHead({
 				>.
 			</p>
 
-			<h2>8. Cookies et traceurs</h2>
+			<h2 class="font-title">8. Cookies et traceurs</h2>
 
 			<p>
 				Ademyst peut utiliser des cookies et autres traceurs nécessaires
@@ -162,7 +162,7 @@ useHead({
 				dans la Politique de confidentialité.
 			</p>
 
-			<h2>9. Responsabilité</h2>
+			<h2 class="font-title">9. Responsabilité</h2>
 
 			<p>
 				Ademyst met en œuvre des moyens raisonnables afin de maintenir
@@ -180,14 +180,14 @@ useHead({
 				nécessairement Ademyst.
 			</p>
 
-			<h2>10. Droit applicable</h2>
+			<h2 class="font-title">10. Droit applicable</h2>
 
 			<p>
 				Les présentes mentions légales sont soumises au droit français,
 				sous réserve des dispositions impératives applicables.
 			</p>
 
-			<h2>11. Contact</h2>
+			<h2 class="font-title">11. Contact</h2>
 
 			<div
 				class="not-prose flex items-center gap-3 rounded-2xl bg-surface border border-surface-border px-6 py-4"

@@ -30,10 +30,10 @@ const props = withDefaults(
 		</div>
 
 		<div class="grow flex flex-col gap-2">
-			<h4 class="text-lg font-medium" v-if="data.updatedAt">
+			<h4 class="text-lg font-medium font-title" v-if="data.updatedAt">
 				Votre sanction a été modifiée
 			</h4>
-			<h4 class="text-lg font-medium" v-else>
+			<h4 class="text-lg font-medium font-title" v-else>
 				Vous avez reçu une sanction
 			</h4>
 			<SanctionCard :data="data.sanction" class="w-full" />

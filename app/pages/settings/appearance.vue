@@ -123,12 +123,12 @@ const saveSettings = async () => {
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">Apparence & Accessibilité</h1>
+			<h1 class="justify-self-center text-2xl font-bold font-title">Apparence & Accessibilité</h1>
 		</nav>
 	</Teleport>
 
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Thème</h2>
+		<h2 class="text-xl font-semibold font-title">Thème</h2>
 		<p class="text-muted">
 			Choisissez le thème de l'application pour une expérience visuelle
 			optimale.
@@ -214,7 +214,7 @@ const saveSettings = async () => {
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Police et taille</h2>
+		<h2 class="text-xl font-semibold font-title">Police et taille</h2>
 		<div class="flex items-center gap-2">
 			<p class="font-medium">Taille de la police :</p>
 			<Button

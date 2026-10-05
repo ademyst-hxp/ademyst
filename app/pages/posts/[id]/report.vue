@@ -167,7 +167,7 @@ const submitReport = async () => {
 	<Teleport to="#header">
 		<PostBox v-if="post" :data="post" />
 		<template v-else-if="!postPending">
-			<h1 class="text-2xl font-bold">Publication introuvable</h1>
+			<h1 class="text-2xl font-bold font-title">Publication introuvable</h1>
 			<p>La publication que vous recherchez n'existe pas.</p>
 		</template>
 	</Teleport>

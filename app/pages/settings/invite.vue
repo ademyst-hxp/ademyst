@@ -55,14 +55,14 @@ useHead({
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">
+			<h1 class="justify-self-center text-2xl font-bold font-title">
 				Faire parler d'Ademyst
 			</h1>
 		</nav>
 	</Teleport>
 
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">
+		<h2 class="text-xl font-semibold font-title">
 			Cette page n'est pas encore disponible.
 		</h2>
 		<Info :icon="UsersIcon" title="Bientôt les liens de parainnages ;)">

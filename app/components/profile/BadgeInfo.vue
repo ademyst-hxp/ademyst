@@ -27,7 +27,7 @@ const close = () => {
 				class="h-16 w-16"
 			/>
 			<div class="flex flex-col">
-				<h2 class="flex justify-start items-center gap-2 text-2xl font-semibold">
+				<h2 class="flex justify-start items-center gap-2 text-2xl font-semibold font-title">
 					{{ props.badge.name }}
 					<RarityLabel :rarity="props.badge.rarity" />
 				</h2>

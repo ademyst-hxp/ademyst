@@ -40,7 +40,7 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center">Confidentialité</h1>
+		<h1 class="text-3xl font-bold text-center font-title">Confidentialité</h1>
 	</Teleport>
 
 	<header
@@ -51,7 +51,7 @@ useHead({
 			<span class="font-semibold">Ademyst</span>
 		</div>
 
-		<h2 class="text-3xl font-bold">Politique de confidentialité</h2>
+		<h2 class="text-3xl font-bold font-title">Politique de confidentialité</h2>
 
 		<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
 	</header>
@@ -60,7 +60,7 @@ useHead({
 		class="rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
 	>
 		<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
-			<h2>1. Responsable du traitement</h2>
+			<h2 class="font-title">1. Responsable du traitement</h2>
 
 			<p>
 				Le responsable du traitement des données personnelles dans le
@@ -76,9 +76,9 @@ useHead({
 				</div>
 			</div>
 
-			<h2>2. Données collectées</h2>
+			<h2 class="font-title">2. Données collectées</h2>
 
-			<h3>Informations de compte</h3>
+			<h3 class="font-title">Informations de compte</h3>
 
 			<ul>
 				<li>adresse e-mail ;</li>
@@ -88,7 +88,7 @@ useHead({
 				<li>localisation, lorsqu'elle est fournie.</li>
 			</ul>
 
-			<h3>Contenus</h3>
+			<h3 class="font-title">Contenus</h3>
 
 			<ul>
 				<li>publications ;</li>
@@ -99,7 +99,7 @@ useHead({
 				<li>signalements.</li>
 			</ul>
 
-			<h3>Données techniques</h3>
+			<h3 class="font-title">Données techniques</h3>
 
 			<ul>
 				<li>adresse IP ;</li>
@@ -110,7 +110,7 @@ useHead({
 				<li>informations relatives aux erreurs.</li>
 			</ul>
 
-			<h2>3. Utilisation des données</h2>
+			<h2 class="font-title">3. Utilisation des données</h2>
 
 			<p>Les données peuvent notamment être utilisées pour :</p>
 
@@ -138,7 +138,7 @@ useHead({
 				</p>
 			</div>
 
-			<h2>4. Bases légales</h2>
+			<h2 class="font-title">4. Bases légales</h2>
 
 			<p>
 				Selon le traitement concerné, Ademyst peut traiter les données
@@ -158,9 +158,9 @@ useHead({
 				<li>du consentement lorsque celui-ci est requis.</li>
 			</ul>
 
-			<h2>5. Prestataires techniques</h2>
+			<h2 class="font-title">5. Prestataires techniques</h2>
 
-			<h3>Cloudflare</h3>
+			<h3 class="font-title">Cloudflare</h3>
 
 			<p>
 				Ademyst utilise Cloudflare Pages pour l'hébergement et la
@@ -173,7 +173,7 @@ useHead({
 				sécurisation de ses services.
 			</p>
 
-			<h3>Supabase</h3>
+			<h3 class="font-title">Supabase</h3>
 
 			<p>Ademyst utilise Supabase pour son infrastructure de données.</p>
 
@@ -198,7 +198,7 @@ useHead({
 				<p class="text-muted m-0!">West EU (Paris) — eu-west-3</p>
 			</div>
 
-			<h2>6. Transferts de données</h2>
+			<h2 class="font-title">6. Transferts de données</h2>
 
 			<p>
 				Ademyst privilégie, lorsque cela est possible, l'utilisation
@@ -216,7 +216,7 @@ useHead({
 				utilisés lorsque des transferts internationaux sont nécessaires.
 			</p>
 
-			<h2>7. Contenus publics</h2>
+			<h2 class="font-title">7. Contenus publics</h2>
 
 			<p>
 				Ademyst étant un réseau social, les contenus que vous choisissez
@@ -229,7 +229,7 @@ useHead({
 				personnelles que vous ne souhaitez pas rendre publiques.
 			</p>
 
-			<h2>8. Conservation</h2>
+			<h2 class="font-title">8. Conservation</h2>
 
 			<p>
 				Les données sont conservées pendant une durée proportionnée à
@@ -254,7 +254,7 @@ useHead({
 				</li>
 			</ul>
 
-			<h2>9. Suppression du compte</h2>
+			<h2 class="font-title">9. Suppression du compte</h2>
 
 			<p>L'utilisateur peut demander la suppression de son compte.</p>
 
@@ -264,7 +264,7 @@ useHead({
 				et des nécessités de sécurité.
 			</p>
 
-			<h2>10. Sécurité</h2>
+			<h2 class="font-title">10. Sécurité</h2>
 
 			<p>
 				Ademyst met en œuvre des mesures techniques et
@@ -273,7 +273,7 @@ useHead({
 				non autorisés.
 			</p>
 
-			<h2>11. Cookies et traceurs</h2>
+			<h2 class="font-title">11. Cookies et traceurs</h2>
 
 			<p>
 				Ademyst cherche à limiter les cookies et traceurs au strict
@@ -292,7 +292,7 @@ useHead({
 				consentement approprié.
 			</p>
 
-			<h2>12. Vos droits</h2>
+			<h2 class="font-title">12. Vos droits</h2>
 
 			<p>
 				Dans les conditions prévues par le RGPD, vous disposez notamment
@@ -317,7 +317,7 @@ useHead({
 				<strong>contact@ejnalo.me</strong>
 			</p>
 
-			<h2>13. Réclamation auprès de la CNIL</h2>
+			<h2 class="font-title">13. Réclamation auprès de la CNIL</h2>
 
 			<p>
 				Vous pouvez adresser une réclamation à la Commission nationale
@@ -331,7 +331,7 @@ useHead({
 				France
 			</p>
 
-			<h2>14. Modification de la politique</h2>
+			<h2 class="font-title">14. Modification de la politique</h2>
 
 			<p>
 				Cette politique peut être modifiée afin de tenir compte de
@@ -339,7 +339,7 @@ useHead({
 				réglementation applicable.
 			</p>
 
-			<h2>15. Contact</h2>
+			<h2 class="font-title">15. Contact</h2>
 
 			<div
 				class="not-prose flex items-center gap-3 rounded-2xl bg-surface border border-surface-border px-6 py-4"

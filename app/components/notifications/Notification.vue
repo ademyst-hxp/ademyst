@@ -39,7 +39,7 @@ const props = withDefaults(
 		:scale="scale"
 	/>
 	<div v-else class="flex flex-col gap-2">
-		<h4 class="text-lg font-medium">
+		<h4 class="text-lg font-medium font-title">
 			Notification de type <code>{{ data.type }}</code>
 		</h4>
 		<p class="text-sm text-surface-text-muted">

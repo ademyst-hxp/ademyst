@@ -173,7 +173,7 @@ const handlePublish = async () => {
 </script>
 <template>
 	<Teleport to="#header">
-		<h1 class="text-2xl font-bold text-center">Écrire une publication</h1>
+		<h1 class="text-2xl font-bold font-title text-center">Écrire une publication</h1>
 		<div class="flex flex-col gap-2">
 			<Input
 				v-model="isPrev"

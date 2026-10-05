@@ -138,14 +138,14 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">
+			<h1 class="justify-self-center text-2xl font-bold font-title">
 				Confidentialité<template class="max-md:hidden"> & Vie privée</template>
 			</h1>
 		</nav>
 	</Teleport>
 
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Visibilité</h2>
+		<h2 class="text-xl font-semibold font-title">Visibilité</h2>
 		<p class="text-muted">
 			Choisissez la visibilité par défaut des différentes parties de votre
 			compte.
@@ -190,7 +190,7 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Consentements</h2>
+		<h2 class="text-xl font-semibold font-title">Consentements</h2>
 		<p class="text-muted">
 			Gérez vos consentements pour les conditions d'utilisation et la
 			politique de confidentialité.
@@ -219,7 +219,7 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title">Vous cherchiez peut-être...</h2>
 		<div class="flex flex-col gap-2">
 			<Actions
 				scale="sm"

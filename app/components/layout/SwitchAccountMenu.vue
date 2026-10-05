@@ -33,7 +33,7 @@ const handleAddAccount = async () => {
 	<Popup>
 		<slot />
 		<Box class="items-center w-full max-h-full sm:w-lg">
-			<h2 class="text-3xl font-medium text-surface-text mb-4">
+			<h2 class="text-3xl font-medium font-title text-surface-text mb-4">
 				Changer de compte
 			</h2>
 			<div

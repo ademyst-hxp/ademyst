@@ -220,7 +220,7 @@ const isNameDialogOpen = ref(false);
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">
+			<h1 class="justify-self-center text-2xl font-bold font-title">
 				Modifier votre profil
 			</h1>
 		</nav>
@@ -298,7 +298,7 @@ const isNameDialogOpen = ref(false);
 		/>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Liens</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Liens</h2>
 		<div class="flex flex-col gap-2">
 			<Box scale="sm" layout="vertical-divide">
 				<div
@@ -341,7 +341,7 @@ const isNameDialogOpen = ref(false);
 		</div>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Vous cherchiez peut-être...</h2>
 		<Actions
 			scale="sm"
 			:actions="[

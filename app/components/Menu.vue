@@ -36,7 +36,7 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 	<Popup>
 		<slot />
 		<Box class="items-center w-full max-h-full sm:w-lg">
-			<h2 class="text-xl font-semibold text-surface-text mb-4 sm:text-3xl">
+			<h2 class="text-xl font-semibold text-surface-text mb-4 font-title sm:text-3xl">
 				{{ title || "Menu" }}
 			</h2>
 			<div

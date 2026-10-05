@@ -37,7 +37,7 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center">Conditions d'utilisation</h1>
+		<h1 class="text-3xl font-bold text-center font-title">Conditions d'utilisation</h1>
 	</Teleport>
 
 	<section class="flex flex-col gap-6">
@@ -49,7 +49,7 @@ useHead({
 				<span class="font-semibold">Ademyst</span>
 			</div>
 
-			<h2 class="text-3xl font-bold">
+			<h2 class="text-3xl font-bold font-title">
 				Conditions Générales d'Utilisation
 			</h2>
 
@@ -60,7 +60,7 @@ useHead({
 			class="rounded-3xl bg-surface border border-surface-border p-6 md:p-10"
 		>
 			<div class="prose prose-surface max-w-none">
-				<h2>1. Objet</h2>
+				<h2 class="font-title">1. Objet</h2>
 
 				<p>
 					Les présentes Conditions Générales d'Utilisation (ci-après «
@@ -79,7 +79,7 @@ useHead({
 					CGU.
 				</p>
 
-				<h2>2. Accès à la plateforme</h2>
+				<h2 class="font-title">2. Accès à la plateforme</h2>
 
 				<p>
 					L'accès à certaines fonctionnalités d'Ademyst nécessite la
@@ -92,7 +92,7 @@ useHead({
 					personne.
 				</p>
 
-				<h2>3. Compte utilisateur</h2>
+				<h2 class="font-title">3. Compte utilisateur</h2>
 
 				<p>
 					L'utilisateur est responsable de la confidentialité de ses
@@ -106,7 +106,7 @@ useHead({
 					délais.
 				</p>
 
-				<h2>4. Publications</h2>
+				<h2 class="font-title">4. Publications</h2>
 
 				<p>
 					Les utilisateurs conservent leurs droits sur les contenus
@@ -131,7 +131,7 @@ useHead({
 					ses utilisateurs.
 				</p>
 
-				<h2>5. Responsabilité des utilisateurs</h2>
+				<h2 class="font-title">5. Responsabilité des utilisateurs</h2>
 
 				<p>
 					Chaque utilisateur demeure responsable des contenus qu'il
@@ -149,7 +149,7 @@ useHead({
 					</p>
 				</div>
 
-				<h2>6. Contenus interdits</h2>
+				<h2 class="font-title">6. Contenus interdits</h2>
 
 				<p>Il est notamment interdit de publier des contenus :</p>
 
@@ -182,7 +182,7 @@ useHead({
 					<li>violant les règles de la communauté d'Ademyst.</li>
 				</ul>
 
-				<h2>7. Intelligence artificielle</h2>
+				<h2 class="font-title">7. Intelligence artificielle</h2>
 
 				<p>
 					Ademyst s'oppose à l'utilisation de contenus générés par
@@ -203,7 +203,7 @@ useHead({
 					d'intelligence artificielle.
 				</p>
 
-				<h2>8. Modération</h2>
+				<h2 class="font-title">8. Modération</h2>
 
 				<p>
 					Ademyst peut utiliser des mécanismes de modération humains
@@ -221,7 +221,7 @@ useHead({
 					<li>la suppression définitive d'un compte.</li>
 				</ul>
 
-				<h2>9. Signalement</h2>
+				<h2 class="font-title">9. Signalement</h2>
 
 				<p>
 					Tout utilisateur peut signaler un contenu qu'il estime
@@ -233,7 +233,7 @@ useHead({
 					plateforme.
 				</p>
 
-				<h2>10. Contestation d'une décision</h2>
+				<h2 class="font-title">10. Contestation d'une décision</h2>
 
 				<p>
 					Lorsqu'une décision de modération affecte un utilisateur,
@@ -246,7 +246,7 @@ useHead({
 					l'utilisateur avec la décision concernée.
 				</p>
 
-				<h2>11. Propriété intellectuelle</h2>
+				<h2 class="font-title">11. Propriété intellectuelle</h2>
 
 				<p>
 					Le nom « Ademyst », son identité visuelle, son logo, ses
@@ -255,7 +255,7 @@ useHead({
 					matière de propriété intellectuelle.
 				</p>
 
-				<h2>12. Disponibilité</h2>
+				<h2 class="font-title">12. Disponibilité</h2>
 
 				<p>
 					Ademyst met en œuvre des moyens raisonnables afin d'assurer
@@ -268,7 +268,7 @@ useHead({
 					techniques ou de force majeure.
 				</p>
 
-				<h2>13. Suppression du compte</h2>
+				<h2 class="font-title">13. Suppression du compte</h2>
 
 				<p>
 					L'utilisateur peut supprimer son compte conformément aux
@@ -281,7 +281,7 @@ useHead({
 					la sécurité de la plateforme.
 				</p>
 
-				<h2>14. Données personnelles</h2>
+				<h2 class="font-title">14. Données personnelles</h2>
 
 				<p>
 					Les traitements de données personnelles réalisés dans le
@@ -294,7 +294,7 @@ useHead({
 					>.
 				</p>
 
-				<h2>15. Droit applicable</h2>
+				<h2 class="font-title">15. Droit applicable</h2>
 
 				<p>
 					Les présentes CGU sont soumises au droit français, sous
@@ -302,7 +302,7 @@ useHead({
 					bénéficier l'utilisateur.
 				</p>
 
-				<h2>16. Contact</h2>
+				<h2 class="font-title">16. Contact</h2>
 
 				<p>Pour toute question concernant ces conditions :</p>
 

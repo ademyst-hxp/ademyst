@@ -79,14 +79,14 @@ onMounted(async () => {
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">
+			<h1 class="justify-self-center text-2xl font-bold font-title">
 				Compte & Accès
 			</h1>
 		</nav>
 	</Teleport>
 
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Infos de connexion</h2>
+		<h2 class="text-xl font-semibold font-title">Infos de connexion</h2>
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 			<Box class="flex-0 -space-y-1 md:col-span-2" scale="sm">
 				<span class="text-2xl font-bold">{{ account?.email }}</span>
@@ -142,11 +142,11 @@ onMounted(async () => {
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Historique de sécurité</h2>
+		<h2 class="text-xl font-semibold font-title">Historique de sécurité</h2>
 		<p class="text-muted text-center">Cette section arrive très bientôt.</p>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title">Vous cherchiez peut-être...</h2>
 		<div class="flex flex-col gap-2">
 			<Actions
 				scale="sm"

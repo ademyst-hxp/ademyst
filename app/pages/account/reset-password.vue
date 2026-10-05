@@ -64,7 +64,7 @@ useHead({
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg">
-		<h1 class="text-2xl text-center font-bold">
+		<h1 class="text-2xl text-center font-bold font-title">
 			Réinitialisation du mot de passe
 		</h1>
 		<p>

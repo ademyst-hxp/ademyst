@@ -79,7 +79,7 @@ useHead({
 	<section
 		class="flex flex-col gap-2 bg-surface text-surface-text border border-surface-border rounded-3xl px-6 py-4"
 	>
-		<h2 class="text-lg font-semibold mb-2">Procéder à la suppression</h2>
+		<h2 class="text-xl font-semibold font-title">Procéder à la suppression</h2>
 		<p v-if="session" class="flex justify-start items-center gap-2 text-danger">
 			Connecté en tant que
 			<span class="flex items-center gap-1">

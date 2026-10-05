@@ -75,7 +75,7 @@ const textClass = computed(() =>
 				class="grow flex flex-col -space-y-1"
 				:class="minified ? '' : 'items-center'"
 			>
-				<h3 v-if="minified" class="opacity-75">
+				<h3 v-if="minified" class="font-title opacity-75">
 					{{ author }}
 				</h3>
 

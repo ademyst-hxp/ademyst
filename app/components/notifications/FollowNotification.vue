@@ -18,7 +18,7 @@ const props = withDefaults(
 	<Box :scale="scale" layout="horizontal" class="items-center">
 		<template v-if="data.type == 'request'">
 			<ClockIcon class="w-6 h-6" />
-			<h4 class="font-medium">
+			<h4 class="font-medium font-title">
 				<RouterLink :to="`/@${data.issuer.name}`">
 					{{
 						data.issuer.displayName ||
@@ -31,7 +31,7 @@ const props = withDefaults(
 		</template>
 		<template v-else-if="data.type == 'request_accepted'">
 			<ClockIcon class="w-6 h-6" />
-			<h4 class="font-medium">
+			<h4 class="font-medium font-title">
 				<RouterLink :to="`/@${data.issuer.name}`">
 					{{
 						data.issuer.displayName ||
@@ -44,7 +44,7 @@ const props = withDefaults(
 		</template>
 		<template v-else-if="data.type == 'happened'">
 			<UserPlusIcon class="w-6 h-6" />
-			<h4 class="font-medium">
+			<h4 class="font-medium font-title">
 				<RouterLink :to="`/@${data.issuer.name}`">
 					{{
 						data.issuer.displayName ||

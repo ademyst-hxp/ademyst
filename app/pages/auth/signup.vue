@@ -108,7 +108,7 @@ useHead({
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg">
-		<h1 class="text-2xl text-center font-bold">Créer un compte</h1>
+		<h1 class="text-2xl text-center font-bold font-title">Créer un compte</h1>
 		<p v-if="session" class="flex justify-center items-center gap-2 text-center text-success">
 			Connecté en tant que
 			<span class="flex items-center gap-1">

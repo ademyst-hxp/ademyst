@@ -119,7 +119,7 @@ const step = ref(0);
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg" v-if="step == 0" @submit.prevent="handleLogin">
-		<h1 class="text-2xl text-center font-bold">Mode Sudo</h1>
+		<h1 class="text-2xl text-center font-bold font-title">Mode Sudo</h1>
 		<p
 			v-if="session"
 			class="flex items-center gap-2 text-center text-success"
@@ -198,7 +198,7 @@ const step = ref(0);
 		</form>
 	</Box>
 	<Box class="w-full md:max-w-lg" v-if="step == 1">
-		<h1 class="text-2xl text-center font-bold">Changer d'adresse e-mail</h1>
+		<h1 class="text-2xl text-center font-bold font-title">Changer d'adresse e-mail</h1>
 		<p
 			v-if="session"
 			class="flex items-center gap-2 text-center text-success"

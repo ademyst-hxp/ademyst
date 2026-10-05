@@ -53,10 +53,10 @@ const reportTypeMap: Record<string, string> = {
 		</div>
 
 		<div class="flex flex-col gap-2">
-			<h4 class="text-lg font-medium" v-if="data.updatedAt">
+			<h4 class="text-lg font-medium font-title" v-if="data.updatedAt">
 				Du nouveau sur votre signalement
 			</h4>
-			<h4 class="text-lg font-medium" v-else>
+			<h4 class="text-lg font-medium font-title" v-else>
 				Nous avons reçu votre signalement
 			</h4>
 		</div>

@@ -146,7 +146,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold">
+			<h1 class="justify-self-center text-2xl font-bold font-title">
 				<template class="max-sm:hidden">Gérer vos badges</template>
 				<template class="sm:hidden">Badges</template>
 			</h1>
@@ -162,7 +162,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 		>
 			<div>
 				<p>Mon niveau:</p>
-				<h2 class="text-xl font-semibold">
+				<h2 class="text-xl font-semibold font-title">
 					<template v-if="session?.profile.level === 0"
 						>Banni</template
 					>
@@ -202,7 +202,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 		vos réalisations.
 	</p>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Mes badges</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Mes badges</h2>
 		<p
 			v-if="!entitlements || entitlements.length === 0"
 			class="text-muted px-8"
@@ -214,7 +214,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			class="flex flex-col gap-2"
 			v-if="levelBadges && levelBadges.length > 0"
 		>
-			<h3 class="text-lg font-semibold px-8">Badges de grade</h3>
+			<h3 class="text-lg font-semibold font-title px-8">Badges de grade</h3>
 			<Actions
 				scale="sm"
 				:actions="
@@ -233,7 +233,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			class="flex flex-col gap-2"
 			v-if="certificationBadges && certificationBadges.length > 0"
 		>
-			<h3 class="text-lg font-semibold px-8">Certifications</h3>
+			<h3 class="text-lg font-semibold font-title px-8">Certifications</h3>
 			<Actions
 				scale="sm"
 				:actions="
@@ -253,7 +253,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			v-if="otherBadges && otherBadges.length > 0"
 		>
 			<h3
-				class="text-lg font-semibold px-8"
+				class="text-lg font-semibold font-title px-8"
 				v-if="
 					(levelBadges && levelBadges.length > 0) ||
 					(certificationBadges && certificationBadges.length > 0)
@@ -277,7 +277,7 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 		</div>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold px-8">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title px-8">Vous cherchiez peut-être...</h2>
 		<Actions
 			scale="sm"
 			layout="horizontal"
