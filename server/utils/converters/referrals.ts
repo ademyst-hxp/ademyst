@@ -1,4 +1,4 @@
-import { inArray, eq, count } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 
 import type { H3Event } from "h3";
 
@@ -54,11 +54,14 @@ export async function retrieveCleanReferralCode(
 			throw new Error("Author not found");
 		}
 
-		const profile = await retrieveCleanProfile(event, identity, author);
-
-		const [uses] = await db.select({ count: count() })
+		const [uses] = await db
+			.select({
+				count: count(),
+			})
 			.from(referrals)
 			.where(eq(referrals.code, referralCode.code));
+
+		const profile = await retrieveCleanProfile(event, identity, author);
 
 		return convertReferralCode(referralCode, uses?.count ?? 0, profile);
 	} finally {
@@ -84,6 +87,8 @@ export async function retrieveSeveralCleanReferralCodes(
 			),
 		];
 
+		const codes = dbReferralCodes.map((referralCode) => referralCode.code);
+
 		const dbAuthors = await db
 			.select()
 			.from(profiles)
@@ -99,9 +104,13 @@ export async function retrieveSeveralCleanReferralCodes(
 			authorsList.map((author) => [author.id, author]),
 		);
 
-		const usesCounts = await db.select({ code: referralCodes.code, count: count() })
+		const usesCounts = await db
+			.select({
+				code: referrals.code,
+				count: count(),
+			})
 			.from(referrals)
-			.where(inArray(referrals.code, dbReferralCodes.map((referralCode) => referralCode.code)))
+			.where(inArray(referrals.code, codes))
 			.groupBy(referrals.code);
 
 		const usesMap = new Map<string, number>(
@@ -115,9 +124,11 @@ export async function retrieveSeveralCleanReferralCodes(
 				throw new Error("Author not found");
 			}
 
-			const uses = usesMap.get(referralCode.code) ?? 0;
-
-			return convertReferralCode(referralCode, uses, author);
+			return convertReferralCode(
+				referralCode,
+				usesMap.get(referralCode.code) ?? 0,
+				author,
+			);
 		});
 	} finally {
 		await client.end();
@@ -138,6 +149,7 @@ export async function retrieveCleanReferral(
 				.from(referralCodes)
 				.where(eq(referralCodes.code, referral.code))
 				.limit(1),
+
 			db
 				.select()
 				.from(profiles)
@@ -155,6 +167,7 @@ export async function retrieveCleanReferral(
 
 		const [cleanReferralCode, cleanReferred] = await Promise.all([
 			retrieveCleanReferralCode(event, identity, referralCode),
+
 			retrieveCleanProfile(event, identity, referred),
 		]);
 
@@ -202,6 +215,7 @@ export async function retrieveSeveralCleanReferrals(
 
 		const [referralCodesList, referredList] = await Promise.all([
 			retrieveSeveralCleanReferralCodes(event, identity, dbReferralCodes),
+
 			retrieveSeveralCleanProfiles(event, identity, dbReferredProfiles),
 		]);
 
