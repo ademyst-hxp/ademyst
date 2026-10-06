@@ -31,7 +31,7 @@ export default defineEventHandler(async (event: H3Event) => {
 						.from(referrals)
 						.innerJoin(
 							referralCodes,
-							eq(referrals.code, referralCodes.id),
+							eq(referrals.code, referralCodes.code),
 						)
 						.where(eq(referralCodes.authorId, identity.profileId))
 						.offset(offset)
