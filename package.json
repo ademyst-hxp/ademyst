@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "nuxt build",
 		"dev": "nuxt dev",
+		"dev:cf": "npm run build && wrangler pages dev ./dist",
 		"generate": "nuxt generate",
 		"db:push": "node server/db/scripts/fix-level-id.mjs && drizzle-kit push --force",
 		"preview": "nuxt preview",
@@ -42,6 +43,7 @@
 		"@capacitor/cli": "^8.3.4",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^25.8.0",
-		"drizzle-kit": "^0.31.10"
+		"drizzle-kit": "^0.31.10",
+		"wrangler": "^4.148.0"
 	}
 }

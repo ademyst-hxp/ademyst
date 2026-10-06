@@ -31,6 +31,10 @@ export default defineNuxtConfig({
 		}
 	},
 
+	nitro: {
+		preset: "cloudflare-pages"
+	},
+
 	vite: {
 		plugins: [tailwindcss(), svgLoader()],
 	},
