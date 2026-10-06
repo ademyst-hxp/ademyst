@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
 import { processAvatar } from "~~/server/utils/helpers/files";
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const identity = await requireAuth(event);
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
 	const avatar = await processAvatar(file.data, contentType);
 
-	const storage = useStorage(event, "avatars");
+	const storage = useDrive(event, "avatars");
 
 	const userId = identity.profileId;
 

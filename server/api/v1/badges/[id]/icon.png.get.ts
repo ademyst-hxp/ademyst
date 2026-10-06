@@ -1,4 +1,4 @@
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	const badgeId = event.context.params?.id;
@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const storage = useStorage(event, 'badges');
+	const storage = useDrive(event, 'badges');
 
 	const badgeKey = `${badgeId}.png`;
 

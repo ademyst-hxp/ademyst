@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
 
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const { db, client } = createDb();
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event: H3Event) => {
 			});
 		}
 
-		const storage = useStorage(event, 'avatars');
+		const storage = useDrive(event, 'avatars');
 
 		const avatarKey = `${profile.id}.webp`;
 

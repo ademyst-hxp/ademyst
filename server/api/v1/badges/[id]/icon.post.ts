@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
 import { processBadgeIcon } from "~~/server/utils/helpers/files";
-import { useStorage } from "~~/server/utils/drive";
+import { useDrive } from "~~/server/utils/drive";
 
 export default defineEventHandler(async (event) => {
 	await requireAuth(event, {
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
 
 	const avatar = await processBadgeIcon(file.data, contentType);
 
-	const storage = useStorage(event, "badges");
+	const storage = useDrive(event, "badges");
 
 	const key = `${badgeId}.png`;
 

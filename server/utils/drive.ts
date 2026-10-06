@@ -62,7 +62,7 @@ export class ObjectStorage {
 	}
 }
 
-export function useStorage(event: H3Event, bucket: string): ObjectStorage {
+export function useDrive(event: H3Event, bucket: string): ObjectStorage {
 	if (event.context.storage) {
 		return event.context.storage;
 	}
