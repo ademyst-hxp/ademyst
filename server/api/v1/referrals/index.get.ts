@@ -1,7 +1,8 @@
 import type { H3Event } from "h3";
 
+import { eq, and } from "drizzle-orm";
+
 import { createDb } from "#server/db";
-import { eq } from "drizzle-orm";
 
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 
@@ -24,15 +25,18 @@ export default defineEventHandler(async (event: H3Event) => {
 			? await db.select().from(referrals).offset(offset).limit(limit)
 			: (
 					await db
-						.select()
+						.select({
+							referral: referrals,
+						})
 						.from(referrals)
 						.innerJoin(
 							referralCodes,
-							eq(referralCodes.authorId, identity.profileId),
+							eq(referrals.code, referralCodes.id),
 						)
+						.where(eq(referralCodes.authorId, identity.profileId))
 						.offset(offset)
 						.limit(limit)
-				).map((row) => row.referrals);
+				).map((row) => row.referral);
 
 		const cleanReferrals = await retrieveSeveralCleanReferrals(
 			event,
