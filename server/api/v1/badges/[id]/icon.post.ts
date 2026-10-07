@@ -30,7 +30,20 @@ export default defineEventHandler(async (event) => {
 
 	const contentType = file.type ?? "application/octet-stream";
 
-	const avatar = await processBadgeIcon(file.data, contentType);
+	const cloudflare = event.context.cloudflare;
+
+	if (!cloudflare?.env?.IMAGES) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Cloudflare Images binding is not configured",
+		});
+	}
+
+	const avatar = await processBadgeIcon(
+		file.data,
+		contentType,
+		cloudflare.env.IMAGES,
+	);
 
 	const storage = useDrive(event, "badges");
 

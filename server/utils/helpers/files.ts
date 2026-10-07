@@ -1,5 +1,3 @@
-import sharp from "sharp";
-
 const MAX_FILE_SIZE = 1 * 1024 * 1024; // Je suis pas Elon Musk
 const MAX_WIDTH = 8192;
 const MAX_HEIGHT = 8192;
@@ -13,194 +11,196 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 
 export interface ProcessedImage {
-	buffer: Buffer;
+	buffer: ArrayBuffer;
 	width: number;
 	height: number;
 	size: number;
 	contentType: "image/webp";
 }
 
-export async function processImage(
-	input: Buffer,
+interface ImagesBinding {
+	info(image: ReadableStream<Uint8Array>): Promise<{
+		width?: number;
+		height?: number;
+	}>;
+
+	input(image: ReadableStream<Uint8Array>): {
+		transform(options: {
+			width?: number;
+			height?: number;
+			fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
+		}): {
+			output(options: { format: "image/webp"; quality?: number }): {
+				response(): Promise<Response>;
+			};
+		};
+	};
+}
+
+function normalizeContentType(contentType: string | undefined): string {
+	return (contentType ?? "").split(";")[0]!.trim().toLowerCase();
+}
+
+function toUint8Array(input: ArrayBuffer | Uint8Array): Uint8Array {
+	if (input instanceof Uint8Array) {
+		return input;
+	}
+
+	return new Uint8Array(input);
+}
+
+function toImageStream(
+	input: ArrayBuffer | Uint8Array,
+): ReadableStream<Uint8Array> {
+	const bytes = toUint8Array(input);
+
+	return new ReadableStream<Uint8Array>({
+		start(controller) {
+			controller.enqueue(bytes);
+			controller.close();
+		},
+	});
+}
+
+async function validateImage(
+	input: ArrayBuffer | Uint8Array,
 	contentType: string,
-): Promise<ProcessedImage> {
-	if (!ALLOWED_MIME_TYPES.has(contentType)) {
+	images: ImagesBinding,
+	name: string,
+) {
+	const normalizedContentType = normalizeContentType(contentType);
+
+	if (!ALLOWED_MIME_TYPES.has(normalizedContentType)) {
 		throw createError({
 			statusCode: 415,
-			statusMessage: "Unsupported image type",
+			statusMessage: `Unsupported image type: ${
+				normalizedContentType || "unknown"
+			}`,
 		});
 	}
 
-	if (input.length > MAX_FILE_SIZE) {
+	if (input.byteLength > MAX_FILE_SIZE) {
 		throw createError({
 			statusCode: 413,
-			statusMessage: "Image is too large",
+			statusMessage: `${name} is too large`,
 		});
 	}
 
-	const image = sharp(input, {
-		limitInputPixels: MAX_PIXELS,
-	});
+	const metadata = await images.info(toImageStream(input));
 
-	const metadata = await image.metadata();
+	const width = metadata.width ?? 0;
+	const height = metadata.height ?? 0;
 
-	if (!metadata.width || !metadata.height) {
+	if (!width || !height) {
 		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid image",
+			statusCode: 415,
+			statusMessage: `${name} has invalid dimensions`,
 		});
 	}
 
-	if (metadata.width > MAX_WIDTH) {
+	if (width > MAX_WIDTH || height > MAX_HEIGHT) {
 		throw createError({
-			statusCode: 400,
-			statusMessage: `Image width exceeds ${MAX_WIDTH}px`,
+			statusCode: 413,
+			statusMessage: `${name} dimensions are too large`,
 		});
 	}
 
-	if (metadata.height > MAX_HEIGHT) {
+	if (width * height > MAX_PIXELS) {
 		throw createError({
-			statusCode: 400,
-			statusMessage: `Image height exceeds ${MAX_HEIGHT}px`,
+			statusCode: 413,
+			statusMessage: `${name} has too many pixels`,
 		});
 	}
 
-	const pixels = metadata.width * metadata.height;
+	return {
+		width,
+		height,
+	};
+}
 
-	if (pixels > MAX_PIXELS) {
+async function transformToWebp(
+	input: ArrayBuffer | Uint8Array,
+	images: ImagesBinding,
+	width: number,
+	height: number,
+	quality: number,
+): Promise<ArrayBuffer> {
+	const result = await (
+		await images
+			.input(toImageStream(input))
+			.transform({
+				width,
+				height,
+				fit: "cover",
+			})
+			.output({
+				format: "image/webp",
+				quality,
+			})
+	).response();
+
+	if (!result.ok) {
 		throw createError({
-			statusCode: 400,
-			statusMessage: "Image contains too many pixels",
+			statusCode: 500,
+			statusMessage: `Image transformation failed: ${result.status} ${result.statusText}`,
 		});
 	}
 
-	const buffer = await image
-		.resize({
-			width: 4096,
-			height: 4096,
-			fit: "inside",
-			withoutEnlargement: true,
-		})
-		.webp({
-			quality: 82,
-		})
-		.toBuffer();
+	return result.arrayBuffer();
+}
 
-	const outputMetadata = await sharp(buffer).metadata();
+export async function processImage(
+	input: ArrayBuffer | Uint8Array,
+	contentType: string,
+	images: ImagesBinding,
+): Promise<ProcessedImage> {
+	const metadata = await validateImage(input, contentType, images, "Image");
+
+	const buffer = await transformToWebp(input, images, 4096, 4096, 82);
+
+	const output = new Uint8Array(buffer);
 
 	return {
 		buffer,
-		width: outputMetadata.width!,
-		height: outputMetadata.height!,
-		size: buffer.length,
+		width: metadata.width,
+		height: metadata.height,
+		size: output.byteLength,
 		contentType: "image/webp",
 	};
 }
 
-export async function processAvatar(input: Buffer, contentType: string) {
-	if (!ALLOWED_MIME_TYPES.has(contentType)) {
-		throw createError({
-			statusCode: 415,
-			statusMessage: "Unsupported image type",
-		});
-	}
+export async function processAvatar(
+	input: ArrayBuffer | Uint8Array,
+	contentType: string,
+	images: ImagesBinding,
+): Promise<ProcessedImage> {
+	await validateImage(input, contentType, images, "Avatar");
 
-	if (input.length > MAX_FILE_SIZE) {
-		throw createError({
-			statusCode: 413,
-			statusMessage: "Avatar is too large",
-		});
-	}
-
-	const image = sharp(input, {
-		limitInputPixels: MAX_PIXELS,
-	});
-
-	const metadata = await image.metadata();
-
-	if (!metadata.width || !metadata.height) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid image",
-		});
-	}
-
-	if (metadata.width * metadata.height > MAX_PIXELS) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Image contains too many pixels",
-		});
-	}
-
-	const buffer = await image
-		.resize(512, 512, {
-			fit: "cover",
-			position: "centre",
-			withoutEnlargement: false,
-		})
-		.webp({
-			quality: 85,
-		})
-		.toBuffer();
+	const buffer = await transformToWebp(input, images, 512, 512, 85);
 
 	return {
 		buffer,
 		width: 512,
 		height: 512,
-		size: buffer.length,
-		contentType: "image/webp" as const,
+		size: buffer.byteLength,
+		contentType: "image/webp",
 	};
 }
 
-export async function processBadgeIcon(input: Buffer, contentType: string) {
-	if (contentType !== "image/png") {
-		throw createError({
-			statusCode: 415,
-			statusMessage: "Unsupported image type",
-		});
-	}
+export async function processBadgeIcon(
+	input: ArrayBuffer | Uint8Array,
+	contentType: string,
+	images: ImagesBinding,
+): Promise<ProcessedImage> {
+	await validateImage(input, contentType, images, "Badge icon");
 
-	if (input.length > MAX_FILE_SIZE) {
-		throw createError({
-			statusCode: 413,
-			statusMessage: "Badge icon is too large",
-		});
-	}
-
-	const image = sharp(input, {
-		limitInputPixels: MAX_PIXELS,
-	});
-
-	const metadata = await image.metadata();
-
-	if (!metadata.width || !metadata.height) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid image",
-		});
-	}
-
-	if (metadata.width * metadata.height > MAX_PIXELS) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Image contains too many pixels",
-		});
-	}
-
-	const buffer = await image
-		.resize(512, 512, {
-			fit: "cover",
-			position: "centre",
-			withoutEnlargement: false,
-		})
-		.png()
-		.toBuffer();
+	const buffer = await transformToWebp(input, images, 512, 512, 90);
 
 	return {
 		buffer,
 		width: 512,
 		height: 512,
-		size: buffer.length,
-		contentType: "image/png" as const,
+		size: buffer.byteLength,
+		contentType: "image/webp",
 	};
 }

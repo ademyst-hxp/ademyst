@@ -19,7 +19,27 @@ export default defineEventHandler(async (event) => {
 
 	const contentType = file.type ?? "application/octet-stream";
 
-	const avatar = await processAvatar(file.data, contentType);
+	console.log({
+		filename: file?.filename,
+		type: file?.type,
+		size: file?.data?.length,
+		firstBytes: file?.data ? Array.from(file.data.slice(0, 16)) : null,
+	});
+
+	const cloudflare = event.context.cloudflare;
+
+	if (!cloudflare?.env?.IMAGES) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Cloudflare Images binding is not configured",
+		});
+	}
+
+	const avatar = await processAvatar(
+		file.data,
+		contentType,
+		cloudflare.env.IMAGES,
+	);
 
 	const storage = useDrive(event, "avatars");
 
@@ -32,7 +52,7 @@ export default defineEventHandler(async (event) => {
 	});
 
 	const url = await storage.signedUrl(key, {
-		expiresIn: 60 * 60, // 1 hour
+		expiresIn: 60 * 60,
 	});
 
 	return {
