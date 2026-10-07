@@ -30,7 +30,10 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-	(e: "update:modelValue", value: string | number | boolean): void;
+	(
+		e: "update:modelValue",
+		value: string | number | boolean | Date | File | null,
+	): void;
 	(e: "focus", event: FocusEvent): void;
 	(e: "blur", event: FocusEvent): void;
 	(e: "enter", value: string): void;
@@ -103,9 +106,24 @@ const isFilled = computed(() => {
 
 function onInput(event: Event) {
 	const target = event.target as HTMLInputElement;
-	const value = target.value;
 
-	emit("update:modelValue", value);
+	switch (props.type) {
+		case "number":
+			emit("update:modelValue", Number(target.value));
+			break;
+
+		case "checkbox":
+			emit("update:modelValue", target.checked);
+			break;
+
+		case "file":
+			emit("update:modelValue", target.files?.[0] ?? null);
+			break;
+
+		default:
+			emit("update:modelValue", target.value);
+			break;
+	}
 }
 
 function onFocus(event: FocusEvent) {
@@ -223,7 +241,7 @@ function onEnter(event: KeyboardEvent) {
 						: type
 				"
 				class="grow outline-none"
-				:value="modelValue"
+				:value="type === 'file' ? undefined : modelValue"
 				:placeholder="placeholder"
 				:disabled="disabled"
 				@input="onInput"
