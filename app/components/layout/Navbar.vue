@@ -19,7 +19,7 @@ import Menu from "../Menu.vue";
 import Avatar from "../profile/Avatar.vue";
 import SwitchAccountMenu from "./SwitchAccountMenu.vue";
 
-const { refresh, session } = useAuthSession();
+const { refresh, logout, session } = useAuthSession();
 refresh();
 
 const { data: notifications, refresh: refreshNotifications } = useAsyncData(
@@ -195,7 +195,10 @@ const path = computed(() => useRoute().path);
 				label: 'Déconnexion',
 				icon: ArrowRightEndOnRectangleIcon,
 				danger: true,
-				handler: '/logout',
+				handler: async () => {
+					await logout();
+					await navigateTo('/');
+				},
 			},
 		]"
 		@close="isMenuOpen = false"
