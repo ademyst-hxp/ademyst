@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "nuxt build",
 		"dev": "nuxt dev",
-		"dev:cf": "npm run build && wrangler pages dev ./dist",
+		"dev:cf": "npm run build && wrangler dev",
 		"generate": "nuxt generate",
 		"db:push": "node server/db/scripts/fix-level-id.mjs && drizzle-kit push --force",
 		"preview": "nuxt preview",
