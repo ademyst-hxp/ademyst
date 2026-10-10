@@ -264,7 +264,7 @@ export default defineEventHandler(async (event: H3Event) => {
 					referredId: profile.id,
 				});
 
-				await giveReferralBadge(tx, profile.id, referralCode.code);
+				await giveReferralBadge(tx, referralCode.code);
 			}
 		}
 

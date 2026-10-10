@@ -86,7 +86,6 @@ export async function giveBeamBadge(
 // querying outside of it while the transaction is open would never resolve.
 export async function giveReferralBadge(
 	db: DbTransaction,
-	issuerId: string,
 	code: string,
 ): Promise<void> {
 	const [invite] = await db
@@ -105,10 +104,12 @@ export async function giveReferralBadge(
 		.where(and(eq(referrals.code, code), eq(referrals.confirmed, true)))
 		.limit(1);
 
+	const referrerId = invite.authorId;
+
 	if ((referralCount?.count ?? 0) < 5) return;
 
 	await db.insert(badgesEntitlements).values({
-		profileId: issuerId,
+		profileId: referrerId,
 		badgeId: "parrain",
 		name: "Badge Parrain Offert",
 		reason: "Vous avez parrainé 5 personnes ou plus à la communauté.",
@@ -119,7 +120,7 @@ export async function giveReferralBadge(
 	if ((referralCount?.count ?? 0) < 10) return;
 
 	await db.insert(badgesEntitlements).values({
-		profileId: issuerId,
+		profileId: referrerId,
 		badgeId: "me_and_my_friends",
 		name: "Badge Mes Amis et Moi Offert",
 		reason: "Vous avez parrainé 10 personnes ou plus à la communauté.",
@@ -130,7 +131,7 @@ export async function giveReferralBadge(
 	if ((referralCount?.count ?? 0) < 20) return;
 
 	await db.insert(badgesEntitlements).values({
-		profileId: issuerId,
+		profileId: referrerId,
 		badgeId: "the_ambassador",
 		name: "Badge Ambassadeur Offert",
 		reason: "Vous avez parrainé 20 personnes ou plus à la communauté.",
@@ -141,7 +142,7 @@ export async function giveReferralBadge(
 	if ((referralCount?.count ?? 0) < 50) return;
 
 	await db.insert(badgesEntitlements).values({
-		profileId: issuerId,
+		profileId: referrerId,
 		badgeId: "the_user_trader",
 		name: "Badge Le Trafficant d'Utilisateurs Offert",
 		reason: "Vous avez parrainé 50 personnes ou plus à la communauté.",
