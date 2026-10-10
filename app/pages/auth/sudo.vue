@@ -70,10 +70,6 @@ const handleLogin = async () => {
 	} catch (error) {
 		console.error("Error during login:", error);
 	}
-
-	if (session.value) {
-		await navigateTo("/discover");
-	}
 };
 
 definePageMeta({
