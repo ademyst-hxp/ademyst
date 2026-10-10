@@ -65,6 +65,8 @@ const handleSignup = async () => {
 		// Rediriger ou afficher un message de succès
 		await login(payload.value.email, payload.value.password);
 
+		await refresh();
+
 		if (session.value) {
 			await navigateTo("/discover");
 		}
