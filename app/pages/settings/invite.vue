@@ -290,6 +290,11 @@ useHead({
 				Aucun parrainage pour le moment. Partage ton code pour inviter
 				tes amis !
 			</p>
+			<Button
+				label="Générer un code"
+				variant="primary"
+				:handler="generateReferralCode"
+			/>
 		</Box>
 	</section>
 </template>
