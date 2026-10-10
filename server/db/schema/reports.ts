@@ -5,6 +5,7 @@ import {
 	text,
 	pgEnum,
 	varchar,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
@@ -56,7 +57,9 @@ export const postReports = pgTable("post_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("post_reports_reported_post_id_idx").on(table.reportedPostId),
+]).enableRLS();
 
 export type PostReport = typeof postReports.$inferSelect;
 

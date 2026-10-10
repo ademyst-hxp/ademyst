@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { badges } from "~~/server/db/schema/shop";
 
 import type { ItemRarity } from "~~/shared/models/shop";
@@ -79,44 +79,40 @@ const validatePayload = (
 };
 
 export default defineEventHandler(async (event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const badgeId = event.context.params?.id;
+	const badgeId = event.context.params?.id;
 
-		const entries = await readBody(event);
-		const payload = validatePayload(entries);
+	const entries = await readBody(event);
+	const payload = validatePayload(entries);
 
-		await requireAuth(event, {
-			min_level: 8,
+	await requireAuth(event, {
+		min_level: 8,
+	});
+
+	if (!badgeId) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing badge ID",
 		});
-
-		if (!badgeId) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Missing badge ID",
-			});
-		}
-
-		const [badge] = await db
-			.select()
-			.from(badges)
-			.where(eq(badges.id, badgeId))
-			.limit(1);
-
-		if (!badge) {
-			throw createError({
-				statusCode: 404,
-				statusMessage: "Badge not found",
-			});
-		}
-
-		await db.update(badges).set(payload).where(eq(badges.id, badge.id));
-
-		return {
-			status: "ok",
-		};
-	} finally {
-		await client.end();
 	}
+
+	const [badge] = await db
+		.select()
+		.from(badges)
+		.where(eq(badges.id, badgeId))
+		.limit(1);
+
+	if (!badge) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "Badge not found",
+		});
+	}
+
+	await db.update(badges).set(payload).where(eq(badges.id, badge.id));
+
+	return {
+		status: "ok",
+	};
 });

@@ -1,6 +1,6 @@
 import { createError, readBody, type H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { posts } from "#server/db/schema/interactions";
@@ -42,67 +42,63 @@ const validatePayload = (
 };
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event, { min_level: 2 });
-		const user = await getUser(event, identity);
+	const identity = await requireAuth(event, { min_level: 2 });
+	const user = await getUser(event, identity);
 
-		if (!user) {
-			throw createError({
-				statusCode: 401,
-				statusMessage: "Unauthorized",
-			});
-		}
-
-		const body = await readBody(event);
-		const id = normalizeId(event.context.params?.id);
-
-		if (!id) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Invalid post id",
-			});
-		}
-
-		const specs = {
-			max_length:
-				user.profile.level >= 5
-					? 5000
-					: user.profile.level >= 4
-						? 2000
-						: 1000,
-		};
-
-		const { content, visibility } = validatePayload(body, specs);
-
-		let updatedAt = undefined;
-		if (content) updatedAt = new Date();
-
-		const [editedPost] = await db
-			.update(posts)
-			.set({
-				content,
-				visibility,
-				updatedAt,
-			})
-			.where(eq(posts.id, id))
-			.returning();
-
-		if (!editedPost) {
-			throw createError({
-				statusCode: 500,
-				statusMessage: "Failed to edit post",
-			});
-		}
-
-		const post = await retrieveCleanPost(event, identity, editedPost);
-
-		return {
-			status: "ok",
-			data: post,
-		};
-	} finally {
-		await client.end();
+	if (!user) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+		});
 	}
+
+	const body = await readBody(event);
+	const id = normalizeId(event.context.params?.id);
+
+	if (!id) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid post id",
+		});
+	}
+
+	const specs = {
+		max_length:
+			user.profile.level >= 5
+				? 5000
+				: user.profile.level >= 4
+					? 2000
+					: 1000,
+	};
+
+	const { content, visibility } = validatePayload(body, specs);
+
+	let updatedAt = undefined;
+	if (content) updatedAt = new Date();
+
+	const [editedPost] = await db
+		.update(posts)
+		.set({
+			content,
+			visibility,
+			updatedAt,
+		})
+		.where(eq(posts.id, id))
+		.returning();
+
+	if (!editedPost) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Failed to edit post",
+		});
+	}
+
+	const post = await retrieveCleanPost(event, identity, editedPost);
+
+	return {
+		status: "ok",
+		data: post,
+	};
 });

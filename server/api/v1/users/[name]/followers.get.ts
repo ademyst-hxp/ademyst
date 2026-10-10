@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
@@ -16,89 +16,85 @@ import { getIdentity } from "#server/utils/auth";
 import { retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await getIdentity(event);
+	const identity = await getIdentity(event);
 
-		const name = event.context.params?.name;
-		const limit = Number(event.context.query?.limit) || 100;
-		const offset = Number(event.context.query?.offset) || 0;
+	const name = event.context.params?.name;
+	const limit = Number(event.context.query?.limit) || 100;
+	const offset = Number(event.context.query?.offset) || 0;
 
-		if (limit > 100) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Limit cannot exceed 100",
-			});
-		}
+	if (limit > 100) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Limit cannot exceed 100",
+		});
+	}
 
-		if (offset < 0) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Offset cannot be negative",
-			});
-		}
+	if (offset < 0) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Offset cannot be negative",
+		});
+	}
 
-		if (!name) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Missing username",
-			});
-		}
+	if (!name) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing username",
+		});
+	}
 
-		const [profile] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.name, name))
-			.limit(1);
+	const [profile] = await db
+		.select()
+		.from(profiles)
+		.where(eq(profiles.name, name))
+		.limit(1);
 
-		if (!profile) {
-			throw createError({
-				statusCode: 404,
-				statusMessage: "User not found",
-			});
-		}
+	if (!profile) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "User not found",
+		});
+	}
 
-		const relationships = await getRelationshipStatus(
-			event,
-			identity,
-			profile,
-		);
-		const privacy = await getPrivacySettings(event, profile);
-		const access = await canAccess(privacy, relationships);
+	const relationships = await getRelationshipStatus(
+		event,
+		identity,
+		profile,
+	);
+	const privacy = await getPrivacySettings(event, profile);
+	const access = await canAccess(privacy, relationships);
 
-		if (!access.profile) {
-			setResponseStatus(event, 206);
-
-			return {
-				status: "partial",
-				followers: [],
-			};
-		}
-
-		const followers = (
-			await db
-				.select({
-					profile: profiles,
-				})
-				.from(follows)
-				.where(eq(follows.followingId, profile.id))
-				.innerJoin(profiles, eq(profiles.id, follows.followerId))
-				.limit(limit)
-				.offset(offset)
-		).map((row) => row.profile);
+	if (!access.profile) {
+		setResponseStatus(event, 206);
 
 		return {
-			status: "ok",
-			followers: await retrieveSeveralCleanProfiles(
-				event,
-				identity,
-				followers,
-			),
-			next: offset + limit,
-			hasNext: followers.length === limit,
+			status: "partial",
+			followers: [],
 		};
-	} finally {
-		await client.end();
 	}
+
+	const followers = (
+		await db
+			.select({
+				profile: profiles,
+			})
+			.from(follows)
+			.where(eq(follows.followingId, profile.id))
+			.innerJoin(profiles, eq(profiles.id, follows.followerId))
+			.limit(limit)
+			.offset(offset)
+	).map((row) => row.profile);
+
+	return {
+		status: "ok",
+		followers: await retrieveSeveralCleanProfiles(
+			event,
+			identity,
+			followers,
+		),
+		next: offset + limit,
+		hasNext: followers.length === limit,
+	};
 });

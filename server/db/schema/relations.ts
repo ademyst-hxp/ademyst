@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, uuid, timestamp, varchar, index } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
 
@@ -14,7 +14,10 @@ export const follows = pgTable("follows", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("follows_follower_id_following_id_idx").on(table.followerId, table.followingId),
+	index("follows_following_id_idx").on(table.followingId),
+]).enableRLS();
 
 export type Follow = typeof follows.$inferSelect;
 
@@ -30,7 +33,10 @@ export const friendships = pgTable("friendships", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("friendships_profile_a_id_profile_b_id_idx").on(table.profileAId, table.profileBId),
+	index("friendships_profile_b_id_idx").on(table.profileBId),
+]).enableRLS();
 
 export type Friendship = typeof friendships.$inferSelect;
 
@@ -78,6 +84,9 @@ export const blocks = pgTable("blocks", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("blocks_blocker_id_blocked_id_idx").on(table.blockerId, table.blockedId),
+	index("blocks_blocked_id_idx").on(table.blockedId),
+]).enableRLS();
 
 export type Block = typeof blocks.$inferSelect;

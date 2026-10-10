@@ -8,6 +8,7 @@ import {
 	check,
 	varchar,
 	uuid,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
@@ -46,6 +47,10 @@ export const posts = pgTable(
 		}).onDelete("cascade"),
 
 		check("posts_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
+
+		index("posts_created_at_idx").on(table.createdAt),
+		index("posts_profile_id_idx").on(table.profileId),
+		index("posts_parent_id_idx").on(table.parentId),
 	],
 ).enableRLS();
 
@@ -67,7 +72,9 @@ export const postReactions = pgTable("post_reactions", {
 	reaction: postsReactionsEnum("reaction").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("post_reactions_post_id_profile_id_idx").on(table.postId, table.profileId),
+]).enableRLS();
 
 export type PostReaction = typeof postReactions.$inferSelect;
 
@@ -91,7 +98,9 @@ export const postsFlags = pgTable("post_flags", {
 	type: postsFlagEnum("type").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("post_flags_post_id_idx").on(table.postId),
+]).enableRLS();
 
 export type PostFlag = typeof postsFlags.$inferSelect;
 
@@ -127,6 +136,9 @@ export const whispers = pgTable(
 	},
 	(table) => [
 		check("whispers_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
+
+		index("whispers_created_at_idx").on(table.createdAt),
+		index("whispers_profile_id_idx").on(table.profileId),
 	],
 ).enableRLS();
 
@@ -146,6 +158,8 @@ export const whisperReactions = pgTable("whisper_reactions", {
 	reaction: text("reaction").notNull(),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("whisper_reactions_whisper_id_profile_id_idx").on(table.whisperId, table.profileId),
+]).enableRLS();
 
 export type WhisperReaction = typeof whisperReactions.$inferSelect;

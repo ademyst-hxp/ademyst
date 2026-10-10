@@ -1,4 +1,4 @@
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles, profileLinks } from "~~/server/db/schema/profiles";
@@ -96,178 +96,174 @@ const validatePayload = (
 };
 
 export default defineEventHandler(async (event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const name = event.context.params?.name;
+	const name = event.context.params?.name;
 
-		const entries = await readBody(event);
-		const payload = validatePayload(entries);
+	const entries = await readBody(event);
+	const payload = validatePayload(entries);
 
-		const identity = await getIdentity(event);
+	const identity = await getIdentity(event);
 
-		if (!identity) {
+	if (!identity) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+		});
+	}
+
+	if (!name) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing username",
+		});
+	}
+
+	const [profile] = await db
+		.select()
+		.from(profiles)
+		.where(eq(profiles.name, name))
+		.limit(1);
+
+	if (!profile) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "User not found",
+		});
+	}
+
+	if (profile.accountId !== identity.accountId) {
+		throw createError({
+			statusCode: 403,
+			statusMessage: "You are not authorized to update this profile",
+		});
+	}
+
+	let beamProfile: Awaited<ReturnType<typeof verifyBeamProfile>> | null =
+		null;
+
+	/*
+	 * If "name" is present in the payload, Beam verification
+	 * is always required — even if the requested name is
+	 * identical to the current name.
+	 *
+	 * If "name" is absent, no request is made to Beam.
+	 */
+	if (payload.name !== undefined) {
+		if (!payload.token) {
 			throw createError({
 				statusCode: 401,
-				statusMessage: "Unauthorized",
+				statusMessage:
+					"A valid Beam sudo token is required when updating the username",
 			});
 		}
 
-		if (!name) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Missing username",
-			});
-		}
+		beamProfile = await verifyBeamProfile(payload.token);
 
-		const [profile] = await db
+		const [beamLink] = await db
 			.select()
-			.from(profiles)
-			.where(eq(profiles.name, name))
+			.from(profileLinks)
+			.where(
+				and(
+					eq(profileLinks.profileId, profile.id),
+					eq(profileLinks.type, "beam"),
+				),
+			)
 			.limit(1);
 
-		if (!profile) {
-			throw createError({
-				statusCode: 404,
-				statusMessage: "User not found",
-			});
-		}
-
-		if (profile.accountId !== identity.accountId) {
+		if (!beamLink) {
 			throw createError({
 				statusCode: 403,
-				statusMessage: "You are not authorized to update this profile",
+				statusMessage:
+					"A linked Beam account is required to update the username",
 			});
 		}
 
-		let beamProfile: Awaited<ReturnType<typeof verifyBeamProfile>> | null =
-			null;
-
 		/*
-		 * If "name" is present in the payload, Beam verification
-		 * is always required — even if the requested name is
-		 * identical to the current name.
-		 *
-		 * If "name" is absent, no request is made to Beam.
+		 * The verified Beam account must be the Beam account
+		 * already linked to this profile.
 		 */
-		if (payload.name !== undefined) {
-			if (!payload.token) {
-				throw createError({
-					statusCode: 401,
-					statusMessage:
-						"A valid Beam sudo token is required when updating the username",
-				});
-			}
-
-			beamProfile = await verifyBeamProfile(payload.token);
-
-			const [beamLink] = await db
-				.select()
-				.from(profileLinks)
-				.where(
-					and(
-						eq(profileLinks.profileId, profile.id),
-						eq(profileLinks.type, "beam"),
-					),
-				)
-				.limit(1);
-
-			if (!beamLink) {
-				throw createError({
-					statusCode: 403,
-					statusMessage:
-						"A linked Beam account is required to update the username",
-				});
-			}
-
-			/*
-			 * The verified Beam account must be the Beam account
-			 * already linked to this profile.
-			 */
-			if (beamLink.resourceId !== beamProfile.id) {
-				throw createError({
-					statusCode: 403,
-					statusMessage:
-						"The Beam token does not belong to your linked Beam account",
-				});
-			}
-
-			/*
-			 * The requested username must be exactly the username
-			 * returned by the verified Beam account.
-			 */
-			if (payload.name !== beamProfile.name) {
-				throw createError({
-					statusCode: 403,
-					statusMessage:
-						"The requested username does not match your Beam username",
-				});
-			}
-
-			/*
-			 * Prevent claiming an existing local username.
-			 */
-			const [nameMatch] = await db
-				.select({ id: profiles.id })
-				.from(profiles)
-				.where(eq(profiles.name, beamProfile.name))
-				.limit(1);
-
-			if (nameMatch && nameMatch.id !== profile.id) {
-				throw createError({
-					statusCode: 409,
-					statusMessage: "Profile name already in use",
-				});
-			}
-
-			/*
-			 * FUTURE PUBLIC-SIGNUP / USERNAME PROTECTION:
-			 *
-			 * If Beam exposes a dedicated endpoint to verify username
-			 * ownership/reservation, perform that check here too.
-			 *
-			 * A Beam username must never be claimed locally without
-			 * successful verification of the corresponding Beam account.
-			 */
+		if (beamLink.resourceId !== beamProfile.id) {
+			throw createError({
+				statusCode: 403,
+				statusMessage:
+					"The Beam token does not belong to your linked Beam account",
+			});
 		}
 
 		/*
-		 * The token is only used for Beam verification and must
-		 * never be persisted in the profile.
+		 * The requested username must be exactly the username
+		 * returned by the verified Beam account.
 		 */
-		const { token: _token, ...profileUpdate } = payload;
-
-		await db
-			.update(profiles)
-			.set(profileUpdate)
-			.where(eq(profiles.id, profile.id));
-
-		/*
-		 * Keep the Beam link synchronized when "name" was supplied.
-		 *
-		 * This is intentionally based on beamProfile rather than
-		 * payload.name because Beam is the source of truth.
-		 */
-		if (beamProfile) {
-			await db
-				.update(profileLinks)
-				.set({
-					name: beamProfile.display_name || beamProfile.name,
-					url: `https://beam.ejnalo.me/${beamProfile.name}`,
-					resourceName: beamProfile.name,
-				})
-				.where(
-					and(
-						eq(profileLinks.profileId, profile.id),
-						eq(profileLinks.type, "beam"),
-					),
-				);
+		if (payload.name !== beamProfile.name) {
+			throw createError({
+				statusCode: 403,
+				statusMessage:
+					"The requested username does not match your Beam username",
+			});
 		}
 
-		return {
-			status: "ok",
-		};
-	} finally {
-		await client.end();
+		/*
+		 * Prevent claiming an existing local username.
+		 */
+		const [nameMatch] = await db
+			.select({ id: profiles.id })
+			.from(profiles)
+			.where(eq(profiles.name, beamProfile.name))
+			.limit(1);
+
+		if (nameMatch && nameMatch.id !== profile.id) {
+			throw createError({
+				statusCode: 409,
+				statusMessage: "Profile name already in use",
+			});
+		}
+
+		/*
+		 * FUTURE PUBLIC-SIGNUP / USERNAME PROTECTION:
+		 *
+		 * If Beam exposes a dedicated endpoint to verify username
+		 * ownership/reservation, perform that check here too.
+		 *
+		 * A Beam username must never be claimed locally without
+		 * successful verification of the corresponding Beam account.
+		 */
 	}
+
+	/*
+	 * The token is only used for Beam verification and must
+	 * never be persisted in the profile.
+	 */
+	const { token: _token, ...profileUpdate } = payload;
+
+	await db
+		.update(profiles)
+		.set(profileUpdate)
+		.where(eq(profiles.id, profile.id));
+
+	/*
+	 * Keep the Beam link synchronized when "name" was supplied.
+	 *
+	 * This is intentionally based on beamProfile rather than
+	 * payload.name because Beam is the source of truth.
+	 */
+	if (beamProfile) {
+		await db
+			.update(profileLinks)
+			.set({
+				name: beamProfile.display_name || beamProfile.name,
+				url: `https://beam.ejnalo.me/${beamProfile.name}`,
+				resourceName: beamProfile.name,
+			})
+			.where(
+				and(
+					eq(profileLinks.profileId, profile.id),
+					eq(profileLinks.type, "beam"),
+				),
+			);
+	}
+
+	return {
+		status: "ok",
+	};
 });

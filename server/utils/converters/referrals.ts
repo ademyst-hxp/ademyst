@@ -2,7 +2,7 @@ import { count, eq, inArray } from "drizzle-orm";
 
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 
 import {
 	type Referral as DbReferral,
@@ -43,30 +43,26 @@ export async function retrieveCleanReferralCode(
 	identity: Identity | null | undefined,
 	referralCode: DbReferralCode,
 ): Promise<ReferralCode> {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const author = await db.query.profiles.findFirst({
-			where: (profile, { eq }) => eq(profile.id, referralCode.authorId),
-		});
+	const author = await db.query.profiles.findFirst({
+		where: (profile, { eq }) => eq(profile.id, referralCode.authorId),
+	});
 
-		if (!author) {
-			throw new Error("Author not found");
-		}
-
-		const [uses] = await db
-			.select({
-				count: count(),
-			})
-			.from(referrals)
-			.where(eq(referrals.code, referralCode.code));
-
-		const profile = await retrieveCleanProfile(event, identity, author);
-
-		return convertReferralCode(referralCode, uses?.count ?? 0, profile);
-	} finally {
-		await client.end();
+	if (!author) {
+		throw new Error("Author not found");
 	}
+
+	const [uses] = await db
+		.select({
+			count: count(),
+		})
+		.from(referrals)
+		.where(eq(referrals.code, referralCode.code));
+
+	const profile = await retrieveCleanProfile(event, identity, author);
+
+	return convertReferralCode(referralCode, uses?.count ?? 0, profile);
 }
 
 export async function retrieveSeveralCleanReferralCodes(
@@ -74,65 +70,61 @@ export async function retrieveSeveralCleanReferralCodes(
 	identity: Identity | null | undefined,
 	dbReferralCodes: DbReferralCode[],
 ): Promise<ReferralCode[]> {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		if (dbReferralCodes.length === 0) {
-			return [];
+	if (dbReferralCodes.length === 0) {
+		return [];
+	}
+
+	const authorIds = [
+		...new Set(
+			dbReferralCodes.map((referralCode) => referralCode.authorId),
+		),
+	];
+
+	const codes = dbReferralCodes.map((referralCode) => referralCode.code);
+
+	const dbAuthors = await db
+		.select()
+		.from(profiles)
+		.where(inArray(profiles.id, authorIds));
+
+	const authorsList = await retrieveSeveralCleanProfiles(
+		event,
+		identity,
+		dbAuthors,
+	);
+
+	const authors = new Map<string, Profile>(
+		authorsList.map((author) => [author.id, author]),
+	);
+
+	const usesCounts = await db
+		.select({
+			code: referrals.code,
+			count: count(),
+		})
+		.from(referrals)
+		.where(inArray(referrals.code, codes))
+		.groupBy(referrals.code);
+
+	const usesMap = new Map<string, number>(
+		usesCounts.map((row) => [row.code, row.count ?? 0]),
+	);
+
+	return dbReferralCodes.map((referralCode) => {
+		const author = authors.get(referralCode.authorId);
+
+		if (!author) {
+			throw new Error("Author not found");
 		}
 
-		const authorIds = [
-			...new Set(
-				dbReferralCodes.map((referralCode) => referralCode.authorId),
-			),
-		];
-
-		const codes = dbReferralCodes.map((referralCode) => referralCode.code);
-
-		const dbAuthors = await db
-			.select()
-			.from(profiles)
-			.where(inArray(profiles.id, authorIds));
-
-		const authorsList = await retrieveSeveralCleanProfiles(
-			event,
-			identity,
-			dbAuthors,
+		return convertReferralCode(
+			referralCode,
+			usesMap.get(referralCode.code) ?? 0,
+			author,
 		);
-
-		const authors = new Map<string, Profile>(
-			authorsList.map((author) => [author.id, author]),
-		);
-
-		const usesCounts = await db
-			.select({
-				code: referrals.code,
-				count: count(),
-			})
-			.from(referrals)
-			.where(inArray(referrals.code, codes))
-			.groupBy(referrals.code);
-
-		const usesMap = new Map<string, number>(
-			usesCounts.map((row) => [row.code, row.count ?? 0]),
-		);
-
-		return dbReferralCodes.map((referralCode) => {
-			const author = authors.get(referralCode.authorId);
-
-			if (!author) {
-				throw new Error("Author not found");
-			}
-
-			return convertReferralCode(
-				referralCode,
-				usesMap.get(referralCode.code) ?? 0,
-				author,
-			);
-		});
-	} finally {
-		await client.end();
-	}
+	});
 }
 
 export async function retrieveCleanReferral(
@@ -140,48 +132,44 @@ export async function retrieveCleanReferral(
 	identity: Identity | null | undefined,
 	referral: DbReferral,
 ): Promise<Referral> {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const [[referralCode], [referred]] = await Promise.all([
-			db
-				.select()
-				.from(referralCodes)
-				.where(eq(referralCodes.code, referral.code))
-				.limit(1),
+	const [[referralCode], [referred]] = await Promise.all([
+		db
+			.select()
+			.from(referralCodes)
+			.where(eq(referralCodes.code, referral.code))
+			.limit(1),
 
-			db
-				.select()
-				.from(profiles)
-				.where(eq(profiles.id, referral.referredId))
-				.limit(1),
-		]);
+		db
+			.select()
+			.from(profiles)
+			.where(eq(profiles.id, referral.referredId))
+			.limit(1),
+	]);
 
-		if (!referralCode) {
-			throw new Error("Referral code not found");
-		}
-
-		if (!referred) {
-			throw new Error("Referred profile not found");
-		}
-
-		const [cleanReferralCode, cleanReferred] = await Promise.all([
-			retrieveCleanReferralCode(event, identity, referralCode),
-
-			retrieveCleanProfile(event, identity, referred),
-		]);
-
-		return {
-			id: referral.id,
-			referralCode: cleanReferralCode,
-			referred: cleanReferred,
-			confirmed: referral.confirmed,
-			createdAt: referral.createdAt,
-			confirmedAt: referral.confirmedAt ?? null,
-		};
-	} finally {
-		await client.end();
+	if (!referralCode) {
+		throw new Error("Referral code not found");
 	}
+
+	if (!referred) {
+		throw new Error("Referred profile not found");
+	}
+
+	const [cleanReferralCode, cleanReferred] = await Promise.all([
+		retrieveCleanReferralCode(event, identity, referralCode),
+
+		retrieveCleanProfile(event, identity, referred),
+	]);
+
+	return {
+		id: referral.id,
+		referralCode: cleanReferralCode,
+		referred: cleanReferred,
+		confirmed: referral.confirmed,
+		createdAt: referral.createdAt,
+		confirmedAt: referral.confirmedAt ?? null,
+	};
 }
 
 export async function retrieveSeveralCleanReferrals(
@@ -189,70 +177,66 @@ export async function retrieveSeveralCleanReferrals(
 	identity: Identity | null | undefined,
 	dbReferrals: DbReferral[],
 ): Promise<Referral[]> {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		if (dbReferrals.length === 0) {
-			return [];
+	if (dbReferrals.length === 0) {
+		return [];
+	}
+
+	const referralCodeValues = [
+		...new Set(dbReferrals.map((referral) => referral.code)),
+	];
+
+	const referredIds = [
+		...new Set(dbReferrals.map((referral) => referral.referredId)),
+	];
+
+	const [dbReferralCodes, dbReferredProfiles] = await Promise.all([
+		db
+			.select()
+			.from(referralCodes)
+			.where(inArray(referralCodes.code, referralCodeValues)),
+
+		db.select().from(profiles).where(inArray(profiles.id, referredIds)),
+	]);
+
+	const [referralCodesList, referredList] = await Promise.all([
+		retrieveSeveralCleanReferralCodes(event, identity, dbReferralCodes),
+
+		retrieveSeveralCleanProfiles(event, identity, dbReferredProfiles),
+	]);
+
+	const referralCodesMap = new Map(
+		referralCodesList.map((referralCode) => [
+			referralCode.code,
+			referralCode,
+		]),
+	);
+
+	const referredMap = new Map(
+		referredList.map((profile) => [profile.id, profile]),
+	);
+
+	return dbReferrals.map((referral) => {
+		const referralCode = referralCodesMap.get(referral.code);
+
+		if (!referralCode) {
+			throw new Error("Referral code not found");
 		}
 
-		const referralCodeValues = [
-			...new Set(dbReferrals.map((referral) => referral.code)),
-		];
+		const referred = referredMap.get(referral.referredId);
 
-		const referredIds = [
-			...new Set(dbReferrals.map((referral) => referral.referredId)),
-		];
+		if (!referred) {
+			throw new Error("Referred profile not found");
+		}
 
-		const [dbReferralCodes, dbReferredProfiles] = await Promise.all([
-			db
-				.select()
-				.from(referralCodes)
-				.where(inArray(referralCodes.code, referralCodeValues)),
-
-			db.select().from(profiles).where(inArray(profiles.id, referredIds)),
-		]);
-
-		const [referralCodesList, referredList] = await Promise.all([
-			retrieveSeveralCleanReferralCodes(event, identity, dbReferralCodes),
-
-			retrieveSeveralCleanProfiles(event, identity, dbReferredProfiles),
-		]);
-
-		const referralCodesMap = new Map(
-			referralCodesList.map((referralCode) => [
-				referralCode.code,
-				referralCode,
-			]),
-		);
-
-		const referredMap = new Map(
-			referredList.map((profile) => [profile.id, profile]),
-		);
-
-		return dbReferrals.map((referral) => {
-			const referralCode = referralCodesMap.get(referral.code);
-
-			if (!referralCode) {
-				throw new Error("Referral code not found");
-			}
-
-			const referred = referredMap.get(referral.referredId);
-
-			if (!referred) {
-				throw new Error("Referred profile not found");
-			}
-
-			return {
-				id: referral.id,
-				referralCode,
-				referred,
-				confirmed: referral.confirmed,
-				createdAt: referral.createdAt,
-				confirmedAt: referral.confirmedAt ?? null,
-			};
-		});
-	} finally {
-		await client.end();
-	}
+		return {
+			id: referral.id,
+			referralCode,
+			referred,
+			confirmed: referral.confirmed,
+			createdAt: referral.createdAt,
+			confirmedAt: referral.confirmedAt ?? null,
+		};
+	});
 }

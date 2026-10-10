@@ -6,6 +6,7 @@ import {
 	pgEnum,
 	boolean,
 	integer,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
@@ -71,7 +72,9 @@ export const privacySettings = pgTable("privacy_settings", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("privacy_settings_account_id_idx").on(table.accountId),
+]).enableRLS();
 
 export type PrivacySettings = typeof privacySettings.$inferSelect;
 

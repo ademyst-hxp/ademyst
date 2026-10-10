@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { and, or, eq, lt, isNull } from "drizzle-orm";
 import {
 	accounts,
@@ -72,266 +72,262 @@ async function buildConfirmationEmail(
 }
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const body = await readBody(event);
+	const body = await readBody(event);
 
-		const email = normalizeEmail(body?.email);
-		const password = normalizePassword(body?.password);
-		const referrer = normalizeCode(body?.referrer);
+	const email = normalizeEmail(body?.email);
+	const password = normalizePassword(body?.password);
+	const referrer = normalizeCode(body?.referrer);
 
-		// The sudo token is mandatory and is used to retrieve the Beam profile.
-		const token =
-			typeof body?.token === "string" ? body.token.trim() : null;
+	// The sudo token is mandatory and is used to retrieve the Beam profile.
+	const token =
+		typeof body?.token === "string" ? body.token.trim() : null;
 
-		const termsOfServiceConsent = body?.termsOfServiceConsent === true;
+	const termsOfServiceConsent = body?.termsOfServiceConsent === true;
 
-		const privacyPolicyConsent = body?.privacyPolicyConsent === true;
+	const privacyPolicyConsent = body?.privacyPolicyConsent === true;
 
-		if (!email || !password || !token) {
+	if (!email || !password || !token) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid signup payload",
+		});
+	}
+
+	if (!termsOfServiceConsent || !privacyPolicyConsent) {
+		throw createError({
+			statusCode: 400,
+			statusMessage:
+				"Terms of service and privacy policy consent are required",
+		});
+	}
+
+	/*
+	 * No account/profile is created before this succeeds.
+	 *
+	 * This guarantees that a signup always has a valid Beam
+	 * verification associated with it.
+	 */
+	const beamProfile = await verifyBeamProfile(token);
+
+	/*
+	 * The local profile name is always taken from the verified
+	 * Beam profile.
+	 */
+	const name = beamProfile.name;
+
+	const [emailMatch] = await db
+		.select({ id: accounts.id })
+		.from(accounts)
+		.where(eq(accounts.email, email))
+		.limit(1);
+
+	if (emailMatch) {
+		throw createError({
+			statusCode: 409,
+			statusMessage: "Email already in use",
+		});
+	}
+
+	const [nameMatch] = await db
+		.select({ id: profiles.id })
+		.from(profiles)
+		.where(eq(profiles.name, name))
+		.limit(1);
+
+	if (nameMatch) {
+		throw createError({
+			statusCode: 409,
+			statusMessage: "Profile name already in use",
+		});
+	}
+
+	const passwordHash = await hashPassword(password);
+	const profileId = generateHexId();
+
+	const ipAddress = getRequestIP(event) ?? null;
+	const userAgent = getHeader(event, "user-agent") ?? null;
+
+	const displayName = beamProfile.display_name || null;
+
+	const birthday = beamProfile.birthday
+		? new Date(beamProfile.birthday).toISOString().split("T")[0]
+		: null;
+
+	const result = await db.transaction(async (tx) => {
+		const [account] = await tx
+			.insert(accounts)
+			.values({
+				email,
+				passwordHash,
+			})
+			.returning({
+				id: accounts.id,
+				email: accounts.email,
+			});
+
+		if (!account) {
 			throw createError({
-				statusCode: 400,
-				statusMessage: "Invalid signup payload",
+				statusCode: 500,
+				statusMessage: "Failed to create account",
 			});
 		}
 
-		if (!termsOfServiceConsent || !privacyPolicyConsent) {
+		await tx.insert(appearanceSettings).values({
+			accountId: account.id,
+		});
+
+		await tx.insert(privacySettings).values({
+			accountId: account.id,
+		});
+
+		const [profile] = await tx
+			.insert(profiles)
+			.values({
+				id: profileId,
+				accountId: account.id,
+				name,
+				displayName,
+				bio: beamProfile.description || null,
+				pronouns: beamProfile.pronouns || null,
+				birthday,
+				level: 2,
+			})
+			.returning({
+				id: profiles.id,
+				name: profiles.name,
+				displayName: profiles.displayName,
+			});
+
+		if (!profile) {
 			throw createError({
-				statusCode: 400,
-				statusMessage:
-					"Terms of service and privacy policy consent are required",
+				statusCode: 500,
+				statusMessage: "Failed to create profile",
 			});
 		}
 
-		/*
-		 * No account/profile is created before this succeeds.
-		 *
-		 * This guarantees that a signup always has a valid Beam
-		 * verification associated with it.
-		 */
-		const beamProfile = await verifyBeamProfile(token);
+		await tx.insert(profileLinks).values({
+			profileId: profile.id,
+			name: beamProfile.display_name || beamProfile.name,
+			type: "beam",
+			url: `https://beam.ejnalo.me/${beamProfile.name}`,
+			resourceId: beamProfile.id,
+			resourceName: beamProfile.name,
+		});
 
-		/*
-		 * The local profile name is always taken from the verified
-		 * Beam profile.
-		 */
-		const name = beamProfile.name;
-
-		const [emailMatch] = await db
-			.select({ id: accounts.id })
-			.from(accounts)
-			.where(eq(accounts.email, email))
-			.limit(1);
-
-		if (emailMatch) {
-			throw createError({
-				statusCode: 409,
-				statusMessage: "Email already in use",
-			});
-		}
-
-		const [nameMatch] = await db
-			.select({ id: profiles.id })
-			.from(profiles)
-			.where(eq(profiles.name, name))
-			.limit(1);
-
-		if (nameMatch) {
-			throw createError({
-				statusCode: 409,
-				statusMessage: "Profile name already in use",
-			});
-		}
-
-		const passwordHash = await hashPassword(password);
-		const profileId = generateHexId();
-
-		const ipAddress = getRequestIP(event) ?? null;
-		const userAgent = getHeader(event, "user-agent") ?? null;
-
-		const displayName = beamProfile.display_name || null;
-
-		const birthday = beamProfile.birthday
-			? new Date(beamProfile.birthday).toISOString().split("T")[0]
-			: null;
-
-		const result = await db.transaction(async (tx) => {
-			const [account] = await tx
-				.insert(accounts)
-				.values({
-					email,
-					passwordHash,
-				})
-				.returning({
-					id: accounts.id,
-					email: accounts.email,
-				});
-
-			if (!account) {
-				throw createError({
-					statusCode: 500,
-					statusMessage: "Failed to create account",
-				});
-			}
-
-			await tx.insert(appearanceSettings).values({
-				accountId: account.id,
-			});
-
-			await tx.insert(privacySettings).values({
-				accountId: account.id,
-			});
-
-			const [profile] = await tx
-				.insert(profiles)
-				.values({
-					id: profileId,
-					accountId: account.id,
-					name,
-					displayName,
-					bio: beamProfile.description || null,
-					pronouns: beamProfile.pronouns || null,
-					birthday,
-					level: 2,
-				})
-				.returning({
-					id: profiles.id,
-					name: profiles.name,
-					displayName: profiles.displayName,
-				});
-
-			if (!profile) {
-				throw createError({
-					statusCode: 500,
-					statusMessage: "Failed to create profile",
-				});
-			}
-
-			await tx.insert(profileLinks).values({
-				profileId: profile.id,
-				name: beamProfile.display_name || beamProfile.name,
-				type: "beam",
-				url: `https://beam.ejnalo.me/${beamProfile.name}`,
-				resourceId: beamProfile.id,
-				resourceName: beamProfile.name,
-			});
-
-			const accessToken = await signAccessToken(
-				{
-					sub: account.id,
-					email: account.email,
-					profileId: profile.id,
-				},
-				{ subject: account.id },
-			);
-
-			const refreshToken = await signRefreshToken(
-				{
-					sub: account.id,
-					profileId: profile.id,
-				},
-				{ subject: account.id },
-			);
-
-			await tx.insert(sessions).values({
-				accountId: account.id,
-				token: refreshToken,
-				ipAddress,
-				userAgent,
-			});
-
-			/* Parrainage */
-
-			if (referrer) {
-				const [referralCode] = await tx
-					.select()
-					.from(referralCodes)
-					.where(
-						and(
-							eq(referralCodes.code, referrer),
-							eq(referralCodes.enabled, true),
-							or(
-								isNull(referralCodes.expiresAt),
-								lt(referralCodes.expiresAt, new Date()),
-							),
-						),
-					)
-					.limit(1);
-
-				if (referralCode) {
-					await tx.insert(referrals).values({
-						code: referralCode.code,
-						referredId: profile.id,
-					});
-
-					await giveReferralBadge(profile.id, referralCode.code);
-				}
-			}
-
-			/* Confirmation de l'email */
-
-			const confirmationToken = generateHexId();
-
-			await tx.insert(emailConfirmationTokens).values({
-				accountId: account.id,
+		const accessToken = await signAccessToken(
+			{
+				sub: account.id,
 				email: account.email,
-				token: confirmationToken,
-			});
+				profileId: profile.id,
+			},
+			{ subject: account.id },
+		);
 
-			await buildConfirmationEmail(
-				account.email,
-				confirmationToken,
-				userAgent,
-				ipAddress,
-			);
+		const refreshToken = await signRefreshToken(
+			{
+				sub: account.id,
+				profileId: profile.id,
+			},
+			{ subject: account.id },
+		);
 
-			return {
-				account,
-				profile,
-				accessToken,
-				refreshToken,
-			};
+		await tx.insert(sessions).values({
+			accountId: account.id,
+			token: refreshToken,
+			ipAddress,
+			userAgent,
 		});
 
-		setCookie(event, "refreshToken", result.refreshToken, {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			path: "/",
-			maxAge: 60 * 60 * 24 * 30,
-		});
+		/* Parrainage */
 
-		setCookie(event, "accessToken", result.accessToken, {
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "lax",
-			path: "/",
-			maxAge: 60 * 15,
-		});
+		if (referrer) {
+			const [referralCode] = await tx
+				.select()
+				.from(referralCodes)
+				.where(
+					and(
+						eq(referralCodes.code, referrer),
+						eq(referralCodes.enabled, true),
+						or(
+							isNull(referralCodes.expiresAt),
+							lt(referralCodes.expiresAt, new Date()),
+						),
+					),
+				)
+				.limit(1);
 
-		try {
-			await giveBeamBadge(
-				event,
-				result.profile!.id,
-				new Date(beamProfile.creation_date),
-			);
-		} catch (error) {
-			console.error("Error occurred while giving Beam badge:", error);
+			if (referralCode) {
+				await tx.insert(referrals).values({
+					code: referralCode.code,
+					referredId: profile.id,
+				});
+
+				await giveReferralBadge(tx, referralCode.code);
+			}
 		}
 
-		try {
-			await giveSignupBadges(event, result.profile!.id);
-		} catch (error) {
-			console.error("Error occurred while giving signup badges:", error);
-		}
+		/* Confirmation de l'email */
+
+		const confirmationToken = generateHexId();
+
+		await tx.insert(emailConfirmationTokens).values({
+			accountId: account.id,
+			email: account.email,
+			token: confirmationToken,
+		});
+
+		await buildConfirmationEmail(
+			account.email,
+			confirmationToken,
+			userAgent,
+			ipAddress,
+		);
 
 		return {
-			account: result.account,
-			profile: result.profile,
-			accessToken: result.accessToken,
-			refreshToken: result.refreshToken,
+			account,
+			profile,
+			accessToken,
+			refreshToken,
 		};
-	} finally {
-		await client.end();
+	});
+
+	setCookie(event, "refreshToken", result.refreshToken, {
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+		path: "/",
+		maxAge: 60 * 60 * 24 * 30,
+	});
+
+	setCookie(event, "accessToken", result.accessToken, {
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "lax",
+		path: "/",
+		maxAge: 60 * 15,
+	});
+
+	try {
+		await giveBeamBadge(
+			event,
+			result.profile!.id,
+			new Date(beamProfile.creation_date),
+		);
+	} catch (error) {
+		console.error("Error occurred while giving Beam badge:", error);
 	}
+
+	try {
+		await giveSignupBadges(event, result.profile!.id);
+	} catch (error) {
+		console.error("Error occurred while giving signup badges:", error);
+	}
+
+	return {
+		account: result.account,
+		profile: result.profile,
+		accessToken: result.accessToken,
+		refreshToken: result.refreshToken,
+	};
 });

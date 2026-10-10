@@ -1,6 +1,6 @@
 import { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { appearanceSettings } from "#server/db/schema/settings";
@@ -91,103 +91,99 @@ function normalizeAppearanceSettings(
 }
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event);
+	const identity = await requireAuth(event);
 
-		if (!identity) {
-			throw createError({
-				statusCode: 401,
-				statusMessage: "Unauthorized",
-			});
-		}
+	if (!identity) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+		});
+	}
 
-		let [settings] = await db
-			.select()
-			.from(appearanceSettings)
-			.where(eq(appearanceSettings.accountId, identity.accountId))
-			.limit(1);
+	let [settings] = await db
+		.select()
+		.from(appearanceSettings)
+		.where(eq(appearanceSettings.accountId, identity.accountId))
+		.limit(1);
 
-		if (!settings) {
-			const defaultSettings = generateDefaultAppearanceSettings();
-
-			[settings] = await db
-				.insert(appearanceSettings)
-				.values({
-					...defaultSettings,
-					id: undefined,
-					accountId: identity.accountId,
-					updatedAt: new Date(),
-					createdAt: new Date(),
-				})
-				.returning();
-		}
-
-		const body = await readBody<UpdateAppearanceSettingsRequest>(event);
-		const normalizedSettings = normalizeAppearanceSettings(body, settings!);
+	if (!settings) {
+		const defaultSettings = generateDefaultAppearanceSettings();
 
 		[settings] = await db
-			.update(appearanceSettings)
-			.set({
-				...normalizedSettings,
+			.insert(appearanceSettings)
+			.values({
+				...defaultSettings,
+				id: undefined,
+				accountId: identity.accountId,
 				updatedAt: new Date(),
+				createdAt: new Date(),
 			})
-			.where(eq(appearanceSettings.accountId, identity.accountId))
 			.returning();
-
-		if (!settings) {
-			throw createError({
-				statusCode: 500,
-				statusMessage: "Failed to update appearance settings",
-			});
-		}
-
-		setCookie(event, "theme", settings.theme, {
-			maxAge: 60 * 60 * 24 * 30, // 30 days
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-		});
-
-		setCookie(
-			event,
-			"high-contrast",
-			settings.highContrast ? "true" : "false",
-			{
-				maxAge: 60 * 60 * 24 * 30, // 30 days
-				httpOnly: true,
-				secure: process.env.NODE_ENV === "production",
-				sameSite: "strict",
-			},
-		);
-
-		setCookie(event, "font-size", settings.fontSize.toString(), {
-			maxAge: 60 * 60 * 24 * 30, // 30 days
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-		});
-
-		setCookie(event, "density", settings.uiDensity, {
-			maxAge: 60 * 60 * 24 * 30, // 30 days
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-		});
-
-		setCookie(event, "alter", settings.alter ? "true" : "false", {
-			maxAge: 60 * 60 * 24 * 30, // 30 days
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-			sameSite: "strict",
-		});
-
-		return {
-			status: "ok",
-			settings,
-		};
-	} finally {
-		await client.end();
 	}
+
+	const body = await readBody<UpdateAppearanceSettingsRequest>(event);
+	const normalizedSettings = normalizeAppearanceSettings(body, settings!);
+
+	[settings] = await db
+		.update(appearanceSettings)
+		.set({
+			...normalizedSettings,
+			updatedAt: new Date(),
+		})
+		.where(eq(appearanceSettings.accountId, identity.accountId))
+		.returning();
+
+	if (!settings) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Failed to update appearance settings",
+		});
+	}
+
+	setCookie(event, "theme", settings.theme, {
+		maxAge: 60 * 60 * 24 * 30, // 30 days
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "strict",
+	});
+
+	setCookie(
+		event,
+		"high-contrast",
+		settings.highContrast ? "true" : "false",
+		{
+			maxAge: 60 * 60 * 24 * 30, // 30 days
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "strict",
+		},
+	);
+
+	setCookie(event, "font-size", settings.fontSize.toString(), {
+		maxAge: 60 * 60 * 24 * 30, // 30 days
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "strict",
+	});
+
+	setCookie(event, "density", settings.uiDensity, {
+		maxAge: 60 * 60 * 24 * 30, // 30 days
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "strict",
+	});
+
+	setCookie(event, "alter", settings.alter ? "true" : "false", {
+		maxAge: 60 * 60 * 24 * 30, // 30 days
+		httpOnly: true,
+		secure: process.env.NODE_ENV === "production",
+		sameSite: "strict",
+	});
+
+	return {
+		status: "ok",
+		settings,
+	};
 });
