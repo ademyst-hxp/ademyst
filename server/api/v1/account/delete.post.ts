@@ -53,6 +53,19 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 
+		const [accountRow] = await tx
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(eq(accounts.id, tokenRow.accountId))
+			.limit(1);
+
+		if (!accountRow) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Account not found",
+			});
+		}
+
 		await tx
 			.update(accountDeletionTokens)
 			.set({ usedAt: new Date(), revoked: true })

@@ -17,7 +17,7 @@ export const sanctions = pgTable("sanctions", {
 
 	accountId: uuid("account_id")
 		.notNull()
-		.references(() => accounts.id, { onDelete: "restrict" }),
+		.references(() => accounts.id, { onDelete: "cascade" }),
 
 	issuerId: uuid("issuer_id")
 		.notNull()

@@ -26,11 +26,11 @@ export const profileReports = pgTable("profile_reports", {
 
 	reporterId: uuid("reporter_id")
 		.notNull()
-		.references(() => accounts.id, { onDelete: "restrict" }),
+		.references(() => accounts.id, { onDelete: "cascade" }),
 
 	reportedProfileId: varchar("reported_profile_id", { length: 10 })
 		.notNull()
-		.references(() => profiles.id, { onDelete: "restrict" }),
+		.references(() => profiles.id, { onDelete: "set null" }),
 
 	reason: text("reason").notNull(),
 	details: text("details"),
@@ -46,11 +46,11 @@ export const postReports = pgTable("post_reports", {
 
 	reporterId: uuid("reporter_id")
 		.notNull()
-		.references(() => accounts.id, { onDelete: "restrict" }),
+		.references(() => accounts.id, { onDelete: "cascade" }),
 
 	reportedPostId: varchar("reported_post_id", { length: 10 })
 		.notNull()
-		.references(() => posts.id, { onDelete: "restrict" }),
+		.references(() => posts.id, { onDelete: "set null" }),
 
 	reason: text("reason").notNull(),
 	details: text("details"),
@@ -68,11 +68,11 @@ export const whisperReports = pgTable("whisper_reports", {
 
 	reporterId: uuid("reporter_id")
 		.notNull()
-		.references(() => accounts.id, { onDelete: "restrict" }),
+		.references(() => accounts.id, { onDelete: "cascade" }),
 
 	reportedWhisperId: varchar("reported_whisper_id", { length: 10 })
 		.notNull()
-		.references(() => whispers.id, { onDelete: "restrict" }),
+		.references(() => whispers.id, { onDelete: "set null" }),
 
 	reason: text("reason").notNull(),
 	details: text("details"),
