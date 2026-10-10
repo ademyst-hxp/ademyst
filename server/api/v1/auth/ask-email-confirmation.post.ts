@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const confirmationToken = generateHexId();
+	const confirmationToken = generateHexId(32);
 
 	await db.insert(emailConfirmationTokens).values({
 		accountId: account.id,
