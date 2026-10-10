@@ -10,7 +10,7 @@ const { error, login, refresh, session } = useAuthSession();
 const { $api } = useNuxtApp();
 
 const password = ref("");
-const token = useRoute().query.token as string;
+const token = useRoute().query.sudo as string;
 const passwordRegex =
 	/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
 
