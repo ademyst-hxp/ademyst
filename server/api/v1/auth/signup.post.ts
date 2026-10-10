@@ -56,21 +56,6 @@ function normalizeCode(value: unknown): string | null {
 	return code;
 }
 
-async function buildConfirmationEmail(
-	email: string,
-	confirmationToken: string,
-	userAgent: string | null,
-	ipAddress: string | null,
-) {
-	await sendEmailConfirmation(
-		email,
-		`${process.env.APP_URL}/account/confirm-email?token=${confirmationToken}`,
-		new Date(),
-		userAgent ?? "unknown",
-		ipAddress ?? "unknown",
-	);
-}
-
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
@@ -267,23 +252,6 @@ export default defineEventHandler(async (event: H3Event) => {
 				await giveReferralBadge(tx, referralCode.code);
 			}
 		}
-
-		/* Confirmation de l'email */
-
-		const confirmationToken = generateHexId();
-
-		await tx.insert(emailConfirmationTokens).values({
-			accountId: account.id,
-			email: account.email,
-			token: confirmationToken,
-		});
-
-		await buildConfirmationEmail(
-			account.email,
-			confirmationToken,
-			userAgent,
-			ipAddress,
-		);
 
 		return {
 			account,
