@@ -88,11 +88,11 @@ interface UpdateAppearanceSettingsRequest {
 }
 
 const payload = ref<UpdateAppearanceSettingsRequest>({
-	scheme: defaultAppearanceSettings.theme as "light" | "dark" | "system",
-	highContrast: defaultAppearanceSettings.highContrast,
-	fontSize: defaultAppearanceSettings.fontSize,
-	density: defaultAppearanceSettings.uiDensity,
-	alter: defaultAppearanceSettings.alter,
+	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as "light" | "dark" | "system",
+	highContrast: (settings.value?.highContrast || defaultAppearanceSettings.highContrast),
+	fontSize: (settings.value?.fontSize || defaultAppearanceSettings.fontSize),
+	density: (settings.value?.uiDensity || defaultAppearanceSettings.uiDensity),
+	alter: (settings.value?.alter || defaultAppearanceSettings.alter),
 });
 
 const saveSettings = async () => {
