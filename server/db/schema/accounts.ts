@@ -9,6 +9,7 @@ import {
 	varchar,
 	uuid,
 	integer,
+	index,
 } from "drizzle-orm/pg-core";
 
 export const accounts = pgTable("accounts", {
@@ -39,7 +40,9 @@ export const sessions = pgTable("sessions", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("sessions_account_id_idx").on(table.accountId),
+]).enableRLS();
 
 export type Session = typeof sessions.$inferSelect;
 

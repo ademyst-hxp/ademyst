@@ -34,7 +34,7 @@ const randomQuote = quotes[Math.floor(Math.random() * quotes.length)]!;
 <template>
 	<div class="min-h-dvh _no_container flex flex-row-reverse h-screen">
 		<div
-			class="hidden lg:flex flex-col items-center justify-center bg-[url('/images/splash_1.png')] bg-cover bg-center text-white p-16 lg:w-1/2"
+			class="hidden lg:flex flex-col items-center justify-center bg-[url('/images/splash_1.webp')] bg-cover bg-center text-white p-16 lg:w-1/2"
 		>
 			<div
 				id="citation"

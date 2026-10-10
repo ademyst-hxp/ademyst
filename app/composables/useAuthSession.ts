@@ -89,10 +89,20 @@ function sanitizeSessions(list: StoredSession[]): {
 
 const MAX_TIMEOUT_DELAY = 2_147_483_647;
 
+// The navbar and the page both refresh the session while rendering: they
+// share one /auth/me call per app instance (keyed so that concurrent server
+// renders never see each other's request).
+const pendingRefreshes = new WeakMap<object, Promise<SessionSnapshot | null>>();
+
 export const useAuthSession = () => {
-	const { $api } = useNuxtApp();
+	const nuxtApp = useNuxtApp();
+	const { $api } = nuxtApp;
 
 	const session = useState<SessionSnapshot | null>("session", () => null);
+	const refreshedOnServer = useState<boolean>(
+		"sessionRefreshedOnServer",
+		() => false,
+	);
 	const error = useState<string | null>("sessionError", () => null);
 	const loading = useState<boolean>("sessionLoading", () => false);
 
@@ -269,7 +279,7 @@ export const useAuthSession = () => {
 		}
 	};
 
-	const refresh = async () => {
+	const fetchSession = async () => {
 		loading.value = true;
 		error.value = null;
 
@@ -309,7 +319,35 @@ export const useAuthSession = () => {
 			return null;
 		} finally {
 			loading.value = false;
+
+			if (import.meta.server) {
+				refreshedOnServer.value = true;
+			}
 		}
+	};
+
+	const refresh = () => {
+		// The server already refreshed the session for this page load and
+		// sent the result along with the payload.
+		if (
+			import.meta.client &&
+			nuxtApp.isHydrating &&
+			refreshedOnServer.value
+		) {
+			return Promise.resolve(session.value);
+		}
+
+		let pending = pendingRefreshes.get(nuxtApp);
+
+		if (!pending) {
+			pending = fetchSession().finally(() => {
+				pendingRefreshes.delete(nuxtApp);
+			});
+
+			pendingRefreshes.set(nuxtApp, pending);
+		}
+
+		return pending;
 	};
 
 	const switchSession = async (sessionId: string) => {

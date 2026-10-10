@@ -5,7 +5,8 @@ import {
 	uuid,
 	varchar,
 	integer,
-	boolean
+	boolean,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
@@ -29,7 +30,9 @@ export const badgesEntitlements = pgTable("badges_entitlements", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
-}).enableRLS();
+}, (table) => [
+	index("badges_entitlements_profile_id_idx").on(table.profileId),
+]).enableRLS();
 
 export type BadgeEntitlement = typeof badgesEntitlements.$inferSelect;
 
@@ -51,6 +54,8 @@ export const levelsEntitlements = pgTable("levels_entitlements", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	expiresAt: timestamp("expires_at"),
-}).enableRLS();
+}, (table) => [
+	index("levels_entitlements_profile_id_idx").on(table.profileId),
+]).enableRLS();
 
 export type LevelEntitlement = typeof levelsEntitlements.$inferSelect;

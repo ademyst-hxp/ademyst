@@ -8,6 +8,7 @@ import {
 	foreignKey,
 	varchar,
 	uuid,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
@@ -43,6 +44,8 @@ export const attachments = pgTable("attachments", {
 		.default("everyone"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("attachments_post_id_idx").on(table.postId),
+]).enableRLS();
 
 export type Attachment = typeof attachments.$inferSelect;

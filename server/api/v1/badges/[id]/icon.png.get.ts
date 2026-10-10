@@ -25,5 +25,8 @@ export default defineEventHandler(async (event) => {
 		expiresIn: 60 * 60 * 24,
 	});
 
+	// Kept well under the signed URL lifetime.
+	setResponseHeader(event, "Cache-Control", "private, max-age=3600");
+
 	return sendRedirect(event, url, 302);
 });

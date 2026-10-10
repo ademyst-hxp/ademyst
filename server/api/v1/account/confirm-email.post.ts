@@ -1,7 +1,7 @@
 import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import {
 	accountModificationHistory,
 	accounts,
@@ -19,106 +19,102 @@ function normalizeToken(value: unknown): string | null {
 }
 
 export default defineEventHandler(async (event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const body = await readBody(event);
+	const body = await readBody(event);
 
-		const token = normalizeToken(body?.token);
+	const token = normalizeToken(body?.token);
 
-		if (!token) {
+	if (!token) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid payload",
+		});
+	}
+
+	const result = await db.transaction(async (tx) => {
+		const [tokenRow] = await tx
+			.select({
+				id: emailConfirmationTokens.id,
+				accountId: emailConfirmationTokens.accountId,
+				email: emailConfirmationTokens.email,
+			})
+			.from(emailConfirmationTokens)
+			.where(
+				and(
+					eq(emailConfirmationTokens.token, token),
+					isNull(emailConfirmationTokens.usedAt),
+					eq(emailConfirmationTokens.revoked, false),
+				),
+			)
+			.limit(1);
+
+		if (!tokenRow) {
 			throw createError({
 				statusCode: 400,
-				statusMessage: "Invalid payload",
+				statusMessage: "Invalid or expired token",
 			});
 		}
 
-		const result = await db.transaction(async (tx) => {
-			const [tokenRow] = await tx
-				.select({
-					id: emailConfirmationTokens.id,
-					accountId: emailConfirmationTokens.accountId,
-					email: emailConfirmationTokens.email,
-				})
-				.from(emailConfirmationTokens)
-				.where(
-					and(
-						eq(emailConfirmationTokens.token, token),
-						isNull(emailConfirmationTokens.usedAt),
-						eq(emailConfirmationTokens.revoked, false),
-					),
-				)
-				.limit(1);
+		const [emailMatch] = await tx
+			.select({ id: accounts.id })
+			.from(accounts)
+			.where(eq(accounts.email, tokenRow.email))
+			.limit(1);
 
-			if (!tokenRow) {
-				throw createError({
-					statusCode: 400,
-					statusMessage: "Invalid or expired token",
-				});
-			}
+		if (emailMatch && emailMatch.id !== tokenRow.accountId) {
+			throw createError({
+				statusCode: 409,
+				statusMessage: "Email already in use",
+			});
+		}
 
-			const [emailMatch] = await tx
-				.select({ id: accounts.id })
-				.from(accounts)
-				.where(eq(accounts.email, tokenRow.email))
-				.limit(1);
+		await tx
+			.update(accounts)
+			.set({
+				email: tokenRow.email,
+				confirmedAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.where(eq(accounts.id, tokenRow.accountId));
 
-			if (emailMatch && emailMatch.id !== tokenRow.accountId) {
-				throw createError({
-					statusCode: 409,
-					statusMessage: "Email already in use",
-				});
-			}
+		await tx
+			.update(emailConfirmationTokens)
+			.set({ usedAt: new Date(), revoked: true })
+			.where(eq(emailConfirmationTokens.id, tokenRow.id));
 
+		try {
+			const ipAddress = getRequestIP(event) ?? null;
+			const userAgent = getHeader(event, "user-agent") ?? null;
+
+			const safeUserAgent = userAgent ?? "unknown";
+			const safeIp = ipAddress ?? "unknown";
+
+			await tx.insert(accountModificationHistory).values({
+				accountId: tokenRow.accountId,
+				action: "email_confirmation",
+				ipAddress: safeIp,
+				userAgent: safeUserAgent,
+			});
+		} catch {
+			// Email confirmation already succeeded; notification failures should not fail the request.
+		}
+
+		const [myReferral] = await tx
+			.select()
+			.from(referrals)
+			.where(eq(referrals.referredId, tokenRow.accountId))
+			.limit(1);
+
+		if (myReferral) {
 			await tx
-				.update(accounts)
-				.set({
-					email: tokenRow.email,
-					confirmedAt: new Date(),
-					updatedAt: new Date(),
-				})
-				.where(eq(accounts.id, tokenRow.accountId));
+				.update(referrals)
+				.set({ confirmed: true, confirmedAt: new Date() })
+				.where(eq(referrals.id, myReferral.id));
+		}
 
-			await tx
-				.update(emailConfirmationTokens)
-				.set({ usedAt: new Date(), revoked: true })
-				.where(eq(emailConfirmationTokens.id, tokenRow.id));
+		return tokenRow.email;
+	});
 
-			try {
-				const ipAddress = getRequestIP(event) ?? null;
-				const userAgent = getHeader(event, "user-agent") ?? null;
-
-				const safeUserAgent = userAgent ?? "unknown";
-				const safeIp = ipAddress ?? "unknown";
-
-				await tx.insert(accountModificationHistory).values({
-					accountId: tokenRow.accountId,
-					action: "email_confirmation",
-					ipAddress: safeIp,
-					userAgent: safeUserAgent,
-				});
-			} catch {
-				// Email confirmation already succeeded; notification failures should not fail the request.
-			}
-
-			const [myReferral] = await tx
-				.select()
-				.from(referrals)
-				.where(eq(referrals.referredId, tokenRow.accountId))
-				.limit(1);
-
-			if (myReferral) {
-				await tx
-					.update(referrals)
-					.set({ confirmed: true, confirmedAt: new Date() })
-					.where(eq(referrals.id, myReferral.id));
-			}
-
-			return tokenRow.email;
-		});
-
-		return { ok: true, email: result };
-	} finally {
-		await client.end();
-	}
+	return { ok: true, email: result };
 });

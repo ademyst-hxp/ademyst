@@ -8,6 +8,7 @@ import {
 	date,
 	uuid,
 	integer,
+	index,
 } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
@@ -44,6 +45,8 @@ export const profiles = pgTable(
 	},
 	(table) => [
 		check("profiles_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
+
+		index("profiles_account_id_idx").on(table.accountId),
 	],
 ).enableRLS();
 
@@ -65,6 +68,8 @@ export const profileLinks = pgTable("profile_links", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	index("profile_links_profile_id_idx").on(table.profileId),
+]).enableRLS();
 
 export type ProfileLink = typeof profileLinks.$inferSelect;

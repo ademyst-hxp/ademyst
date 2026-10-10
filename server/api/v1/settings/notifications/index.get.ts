@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { notificationSettings } from "#server/db/schema/settings";
@@ -22,37 +22,33 @@ function generateDefaultNotificationSettings(): NotificationSettings {
 }
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event);
+	const identity = await requireAuth(event);
 
-		const [settings] = await db
-			.select()
-			.from(notificationSettings)
-			.where(eq(notificationSettings.accountId, identity.accountId))
-			.limit(1);
+	const [settings] = await db
+		.select()
+		.from(notificationSettings)
+		.where(eq(notificationSettings.accountId, identity.accountId))
+		.limit(1);
 
-		if (!settings) {
-			const defaultSettings =
-				generateDefaultNotificationSettings() as NotificationSettings
+	if (!settings) {
+		const defaultSettings =
+			generateDefaultNotificationSettings() as NotificationSettings
 
-			await db.insert(notificationSettings).values({
-				...defaultSettings,
-				accountId: identity.accountId,
-			});
-
-			return {
-				status: "ok",
-				settings: defaultSettings,
-			};
-		}
+		await db.insert(notificationSettings).values({
+			...defaultSettings,
+			accountId: identity.accountId,
+		});
 
 		return {
 			status: "ok",
-			settings,
+			settings: defaultSettings,
 		};
-	} finally {
-		await client.end();
 	}
+
+	return {
+		status: "ok",
+		settings,
+	};
 });

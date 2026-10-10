@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 
 import { posts } from "#server/db/schema/interactions";
 
@@ -57,58 +57,54 @@ const validatePayload = (
 };
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event, { min_level: 2 });
-		const user = await getUser(event, identity);
+	const identity = await requireAuth(event, { min_level: 2 });
+	const user = await getUser(event, identity);
 
-		if (!user) {
-			throw createError({
-				statusCode: 401,
-				statusMessage: "Unauthorized",
-			});
-		}
-
-		const body = await readBody(event);
-		const specs = {
-			max_length:
-				user.profile.level >= 5
-					? 5000
-					: user.profile.level >= 4
-						? 2000
-						: 1000,
-		};
-
-		const { parentId, content, visibility } = validatePayload(body, specs);
-
-		const id = generateHexId();
-
-		const [createdPost] = await db
-			.insert(posts)
-			.values({
-				id,
-				profileId: identity.profileId,
-				parentId,
-				content,
-				visibility,
-			})
-			.returning();
-
-		if (!createdPost) {
-			throw createError({
-				statusCode: 500,
-				statusMessage: "Failed to create post",
-			});
-		}
-
-		const post = await retrieveCleanPost(event, identity, createdPost);
-
-		return {
-			status: "ok",
-			data: post,
-		};
-	} finally {
-		await client.end();
+	if (!user) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Unauthorized",
+		});
 	}
+
+	const body = await readBody(event);
+	const specs = {
+		max_length:
+			user.profile.level >= 5
+				? 5000
+				: user.profile.level >= 4
+					? 2000
+					: 1000,
+	};
+
+	const { parentId, content, visibility } = validatePayload(body, specs);
+
+	const id = generateHexId();
+
+	const [createdPost] = await db
+		.insert(posts)
+		.values({
+			id,
+			profileId: identity.profileId,
+			parentId,
+			content,
+			visibility,
+		})
+		.returning();
+
+	if (!createdPost) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Failed to create post",
+		});
+	}
+
+	const post = await retrieveCleanPost(event, identity, createdPost);
+
+	return {
+		status: "ok",
+		data: post,
+	};
 });

@@ -1,20 +1,16 @@
-import { createDb } from "~~/server/db";
+import { useDb } from "~~/server/db";
 
 import { badges } from "~~/server/db/schema/shop";
 
 import { retrieveSeveralCleanBadges } from "~~/server/utils/converters/shop";
 
 export default defineEventHandler(async (event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const badgesList = await db.select().from(badges);
+	const badgesList = await db.select().from(badges);
 
-		return {
-			status: "ok",
-			badges: await retrieveSeveralCleanBadges(event, badgesList),
-		};
-	} finally {
-		await client.end();
-	}
+	return {
+		status: "ok",
+		badges: await retrieveSeveralCleanBadges(event, badgesList),
+	};
 });

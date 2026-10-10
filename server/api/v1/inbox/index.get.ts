@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq, count } from "drizzle-orm";
 
 import {
@@ -18,86 +18,82 @@ const endpoints = {
 };
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await getIdentity(event);
+	const identity = await getIdentity(event);
 
-		if (!identity) {
-			return {
-				notifications: [],
-				endpoints,
-			};
-		}
-
-		const [
-			accountSanctionNotificationsResult,
-			postSanctionNotificationsResult,
-			reportNotificationsResult,
-			postNotificationsResult,
-			whisperNotificationsResult,
-			followNotificationsResult,
-		] = await Promise.all([
-			db
-				.select()
-				.from(accountSanctionNotifications)
-				.where(
-					eq(
-						accountSanctionNotifications.profileId,
-						identity.profileId,
-					),
-				),
-			db
-				.select()
-				.from(postSanctionNotifications)
-				.where(
-					eq(postSanctionNotifications.profileId, identity.profileId),
-				),
-			db
-				.select()
-				.from(reportNotifications)
-				.where(eq(reportNotifications.profileId, identity.profileId)),
-			db
-				.select()
-				.from(postNotifications)
-				.where(eq(postNotifications.profileId, identity.profileId)),
-			db
-				.select()
-				.from(whisperNotifications)
-				.where(eq(whisperNotifications.profileId, identity.profileId)),
-			db
-				.select()
-				.from(followNotifications)
-				.where(eq(followNotifications.profileId, identity.profileId)),
-		]);
-
-		const notificationsObject = await retrieveCleanInboxNotifications(
-			event,
-			identity,
-			{
-				accountSanctions: accountSanctionNotificationsResult,
-				postSanctions: postSanctionNotificationsResult,
-				reports: reportNotificationsResult,
-				posts: postNotificationsResult,
-				whispers: whisperNotificationsResult,
-				follows: followNotificationsResult,
-			},
-		);
-
-		const notifications = [
-			...notificationsObject.accountSanctions,
-			...notificationsObject.postSanctions,
-			...notificationsObject.reports,
-			...notificationsObject.posts,
-			...notificationsObject.whispers,
-			...notificationsObject.follows,
-		].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
+	if (!identity) {
 		return {
-			notifications,
+			notifications: [],
 			endpoints,
 		};
-	} finally {
-		await client.end();
 	}
+
+	const [
+		accountSanctionNotificationsResult,
+		postSanctionNotificationsResult,
+		reportNotificationsResult,
+		postNotificationsResult,
+		whisperNotificationsResult,
+		followNotificationsResult,
+	] = await Promise.all([
+		db
+			.select()
+			.from(accountSanctionNotifications)
+			.where(
+				eq(
+					accountSanctionNotifications.profileId,
+					identity.profileId,
+				),
+			),
+		db
+			.select()
+			.from(postSanctionNotifications)
+			.where(
+				eq(postSanctionNotifications.profileId, identity.profileId),
+			),
+		db
+			.select()
+			.from(reportNotifications)
+			.where(eq(reportNotifications.profileId, identity.profileId)),
+		db
+			.select()
+			.from(postNotifications)
+			.where(eq(postNotifications.profileId, identity.profileId)),
+		db
+			.select()
+			.from(whisperNotifications)
+			.where(eq(whisperNotifications.profileId, identity.profileId)),
+		db
+			.select()
+			.from(followNotifications)
+			.where(eq(followNotifications.profileId, identity.profileId)),
+	]);
+
+	const notificationsObject = await retrieveCleanInboxNotifications(
+		event,
+		identity,
+		{
+			accountSanctions: accountSanctionNotificationsResult,
+			postSanctions: postSanctionNotificationsResult,
+			reports: reportNotificationsResult,
+			posts: postNotificationsResult,
+			whispers: whisperNotificationsResult,
+			follows: followNotificationsResult,
+		},
+	);
+
+	const notifications = [
+		...notificationsObject.accountSanctions,
+		...notificationsObject.postSanctions,
+		...notificationsObject.reports,
+		...notificationsObject.posts,
+		...notificationsObject.whispers,
+		...notificationsObject.follows,
+	].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+	return {
+		notifications,
+		endpoints,
+	};
 });

@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 
-import { createDb } from "../db";
+import { useDb } from "../db";
 import type { H3Event } from "h3";
 
 import { profiles, Profile } from "../db/schema/profiles";
@@ -21,7 +21,7 @@ export interface UserIdentity extends Identity {
 }
 
 export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
 	const authorization = getHeader(event, "Authorization");
 	const accessTokenCookie = getCookie(event, "accessToken");
@@ -29,7 +29,6 @@ export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
 	const token = getBearerToken(authorization) ?? accessTokenCookie ?? null;
 
 	if (!token) {
-		await client.end();
 		return null;
 	}
 
@@ -43,7 +42,6 @@ export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
 			.limit(1);
 
 		if (!session || session.length === 0) {
-			await client.end();
 			return null;
 		}
 
@@ -52,10 +50,7 @@ export const getIdentity = async (event: H3Event): Promise<Identity | null> => {
 			accountId: payload.sub ?? "",
 		};
 	} catch {
-		await client.end();
 		return null;
-	} finally {
-		await client.end();
 	}
 };
 
@@ -63,48 +58,43 @@ export const getUser = async (
 	event: H3Event,
 	identity: Identity,
 ): Promise<UserIdentity | null> => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const [[profile], [account]] = await Promise.all([
-			db
-				.select()
-				.from(profiles)
-				.where(eq(profiles.id, identity.profileId))
-				.limit(1),
-			db
-				.select()
-				.from(accounts)
-				.where(eq(accounts.id, identity.accountId))
-				.limit(1),
-		]);
-
-		if (!profile || !account) {
-			await client.end();
-			return null;
-		}
-
-		const profileLevels = await db
+	const [[profile], [account]] = await Promise.all([
+		db
 			.select()
-			.from(levelsEntitlements)
-			.where(
-				and(
-					eq(levelsEntitlements.profileId, profile.id),
-					eq(levelsEntitlements.enabled, true),
-				),
-			);
+			.from(profiles)
+			.where(eq(profiles.id, identity.profileId))
+			.limit(1),
+		db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, identity.accountId))
+			.limit(1),
+	]);
 
-		const level = getLevelFromEntitlements(profileLevels);
-
-		return {
-			profileId: identity.profileId,
-			accountId: identity.accountId,
-			profile: { ...profile, level },
-			account,
-		};
-	} finally {
-		await client.end();
+	if (!profile || !account) {
+		return null;
 	}
+
+	const profileLevels = await db
+		.select()
+		.from(levelsEntitlements)
+		.where(
+			and(
+				eq(levelsEntitlements.profileId, profile.id),
+				eq(levelsEntitlements.enabled, true),
+			),
+		);
+
+	const level = getLevelFromEntitlements(profileLevels);
+
+	return {
+		profileId: identity.profileId,
+		accountId: identity.accountId,
+		profile: { ...profile, level },
+		account,
+	};
 };
 
 export const getLevelFromEntitlements = (

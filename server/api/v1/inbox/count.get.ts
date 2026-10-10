@@ -1,5 +1,5 @@
 import type { H3Event } from "h3";
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq, count } from "drizzle-orm";
 
 import {
@@ -18,81 +18,77 @@ const endpoints = {
 };
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await getIdentity(event);
+	const identity = await getIdentity(event);
 
-		if (!identity) {
-			return {
-				count: 0,
-				critical: 0,
-				endpoints,
-			};
-		}
-
-		const [
-			accountSanctionNotificationsCount,
-			postSanctionNotificationsCount,
-			reportNotificationsCount,
-			postNotificationsCount,
-			whisperNotificationsCount,
-			followNotificationsCount,
-		] = await Promise.all([
-			db
-				.select({ count: count() })
-				.from(accountSanctionNotifications)
-				.where(
-					eq(
-						accountSanctionNotifications.profileId,
-						identity.profileId,
-					),
-				)
-				.then((result) => result[0]?.count ?? 0),
-			db
-				.select({ count: count() })
-				.from(postSanctionNotifications)
-				.where(
-					eq(postSanctionNotifications.profileId, identity.profileId),
-				)
-				.then((result) => result[0]?.count ?? 0),
-			db
-				.select({ count: count() })
-				.from(reportNotifications)
-				.where(eq(reportNotifications.profileId, identity.profileId))
-				.then((result) => result[0]?.count ?? 0),
-			db
-				.select({ count: count() })
-				.from(postNotifications)
-				.where(eq(postNotifications.profileId, identity.profileId))
-				.then((result) => result[0]?.count ?? 0),
-			db
-				.select({ count: count() })
-				.from(whisperNotifications)
-				.where(eq(whisperNotifications.profileId, identity.profileId))
-				.then((result) => result[0]?.count ?? 0),
-			db
-				.select({ count: count() })
-				.from(followNotifications)
-				.where(eq(followNotifications.profileId, identity.profileId))
-				.then((result) => result[0]?.count ?? 0),
-		]);
-
+	if (!identity) {
 		return {
-			count:
-				accountSanctionNotificationsCount +
-				postSanctionNotificationsCount +
-				reportNotificationsCount +
-				postNotificationsCount +
-				whisperNotificationsCount +
-				followNotificationsCount,
-			critical:
-				accountSanctionNotificationsCount +
-				postSanctionNotificationsCount +
-				reportNotificationsCount,
+			count: 0,
+			critical: 0,
 			endpoints,
 		};
-	} finally {
-		await client.end();
 	}
+
+	const [
+		accountSanctionNotificationsCount,
+		postSanctionNotificationsCount,
+		reportNotificationsCount,
+		postNotificationsCount,
+		whisperNotificationsCount,
+		followNotificationsCount,
+	] = await Promise.all([
+		db
+			.select({ count: count() })
+			.from(accountSanctionNotifications)
+			.where(
+				eq(
+					accountSanctionNotifications.profileId,
+					identity.profileId,
+				),
+			)
+			.then((result) => result[0]?.count ?? 0),
+		db
+			.select({ count: count() })
+			.from(postSanctionNotifications)
+			.where(
+				eq(postSanctionNotifications.profileId, identity.profileId),
+			)
+			.then((result) => result[0]?.count ?? 0),
+		db
+			.select({ count: count() })
+			.from(reportNotifications)
+			.where(eq(reportNotifications.profileId, identity.profileId))
+			.then((result) => result[0]?.count ?? 0),
+		db
+			.select({ count: count() })
+			.from(postNotifications)
+			.where(eq(postNotifications.profileId, identity.profileId))
+			.then((result) => result[0]?.count ?? 0),
+		db
+			.select({ count: count() })
+			.from(whisperNotifications)
+			.where(eq(whisperNotifications.profileId, identity.profileId))
+			.then((result) => result[0]?.count ?? 0),
+		db
+			.select({ count: count() })
+			.from(followNotifications)
+			.where(eq(followNotifications.profileId, identity.profileId))
+			.then((result) => result[0]?.count ?? 0),
+	]);
+
+	return {
+		count:
+			accountSanctionNotificationsCount +
+			postSanctionNotificationsCount +
+			reportNotificationsCount +
+			postNotificationsCount +
+			whisperNotificationsCount +
+			followNotificationsCount,
+		critical:
+			accountSanctionNotificationsCount +
+			postSanctionNotificationsCount +
+			reportNotificationsCount,
+		endpoints,
+	};
 });

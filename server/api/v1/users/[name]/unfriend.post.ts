@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
@@ -11,96 +11,92 @@ import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event);
+	const identity = await requireAuth(event);
 
-		const name = event.context.params?.name;
+	const name = event.context.params?.name;
 
-		if (!name) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Missing username",
-			});
-		}
+	if (!name) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing username",
+		});
+	}
 
-		const [profile] = await db
-			.select()
-			.from(profiles)
-			.where(eq(profiles.name, name))
-			.limit(1);
+	const [profile] = await db
+		.select()
+		.from(profiles)
+		.where(eq(profiles.name, name))
+		.limit(1);
 
-		if (!profile) {
-			throw createError({
-				statusCode: 404,
-				statusMessage: "User not found",
-			});
-		}
+	if (!profile) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "User not found",
+		});
+	}
 
-		const relationships = await getRelationshipStatus(
-			event,
-			identity,
-			profile,
-		);
+	const relationships = await getRelationshipStatus(
+		event,
+		identity,
+		profile,
+	);
 
-		if (!relationships.friend) {
-			setResponseStatus(event, 204);
+	if (!relationships.friend) {
+		setResponseStatus(event, 204);
 
-			return {
-				status: "ok",
-				message: "Not friends with this user",
-			};
-		}
+		return {
+			status: "ok",
+			message: "Not friends with this user",
+		};
+	}
 
-		const [request] = await db
-			.select()
-			.from(requests)
+	const [request] = await db
+		.select()
+		.from(requests)
+		.where(
+			and(
+				eq(requests.senderId, identity.profileId as string),
+				eq(requests.receiverId, profile.id),
+			),
+		)
+		.limit(1);
+
+	let any_action: boolean = false;
+
+	if (request) {
+		await db.delete(requests).where(eq(requests.id, request.id));
+		any_action = true;
+	}
+
+	if (relationships.friend) {
+		await db
+			.delete(friendships)
 			.where(
 				and(
-					eq(requests.senderId, identity.profileId as string),
-					eq(requests.receiverId, profile.id),
-				),
-			)
-			.limit(1);
-
-		let any_action: boolean = false;
-
-		if (request) {
-			await db.delete(requests).where(eq(requests.id, request.id));
-			any_action = true;
-		}
-
-		if (relationships.friend) {
-			await db
-				.delete(friendships)
-				.where(
-					and(
-						eq(
-							friendships.profileAId,
-							identity.profileId as string,
-						),
-						eq(friendships.profileBId, profile.id),
+					eq(
+						friendships.profileAId,
+						identity.profileId as string,
 					),
-				);
+					eq(friendships.profileBId, profile.id),
+				),
+			);
 
-			any_action = true;
-		}
+		any_action = true;
+	}
 
-		if (!any_action) {
-			setResponseStatus(event, 204);
+	if (!any_action) {
+		setResponseStatus(event, 204);
 
-			return {
-				status: "ok",
-				message: "Not friends with this user",
-			};
-		} else {
-			return {
-				status: "ok",
-				message: "Unfriended user successfully",
-			};
-		}
-	} finally {
-		await client.end();
+		return {
+			status: "ok",
+			message: "Not friends with this user",
+		};
+	} else {
+		return {
+			status: "ok",
+			message: "Unfriended user successfully",
+		};
 	}
 });

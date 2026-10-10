@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { notificationSettings } from "#server/db/schema/settings";
@@ -101,46 +101,23 @@ function normalizeNotificationSettings(
 }
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event);
+	const identity = await requireAuth(event);
 
-		let [settings] = await db
-			.select()
-			.from(notificationSettings)
-			.where(eq(notificationSettings.accountId, identity.accountId))
-			.limit(1);
+	let [settings] = await db
+		.select()
+		.from(notificationSettings)
+		.where(eq(notificationSettings.accountId, identity.accountId))
+		.limit(1);
 
-		if (!settings) {
-			const defaultSettings = generateDefaultNotificationSettings();
-
-			[settings] = await db
-				.insert(notificationSettings)
-				.values({
-					...(defaultSettings as NotificationSettings & {
-						securityAlertsEmail: boolean;
-						moderationAlertsEmail: boolean;
-						broadcastsEmail: boolean;
-						socialEmail: boolean;
-						interactionsEmail: boolean;
-						campaignEmail: boolean;
-					}),
-					accountId: identity.accountId,
-				})
-				.returning();
-		}
-
-		const body = await readBody<UpdateNotificationSettingsRequest>(event);
-		const normalizedSettings = normalizeNotificationSettings(
-			body,
-			settings! as NotificationSettings,
-		);
+	if (!settings) {
+		const defaultSettings = generateDefaultNotificationSettings();
 
 		[settings] = await db
-			.update(notificationSettings)
-			.set({
-				...(normalizedSettings as NotificationSettings & {
+			.insert(notificationSettings)
+			.values({
+				...(defaultSettings as NotificationSettings & {
 					securityAlertsEmail: boolean;
 					moderationAlertsEmail: boolean;
 					broadcastsEmail: boolean;
@@ -148,16 +125,35 @@ export default defineEventHandler(async (event: H3Event) => {
 					interactionsEmail: boolean;
 					campaignEmail: boolean;
 				}),
-				updatedAt: new Date(),
+				accountId: identity.accountId,
 			})
-			.where(eq(notificationSettings.accountId, identity.accountId))
 			.returning();
-
-		return {
-			status: "ok",
-			settings,
-		};
-	} finally {
-		await client.end();
 	}
+
+	const body = await readBody<UpdateNotificationSettingsRequest>(event);
+	const normalizedSettings = normalizeNotificationSettings(
+		body,
+		settings! as NotificationSettings,
+	);
+
+	[settings] = await db
+		.update(notificationSettings)
+		.set({
+			...(normalizedSettings as NotificationSettings & {
+				securityAlertsEmail: boolean;
+				moderationAlertsEmail: boolean;
+				broadcastsEmail: boolean;
+				socialEmail: boolean;
+				interactionsEmail: boolean;
+				campaignEmail: boolean;
+			}),
+			updatedAt: new Date(),
+		})
+		.where(eq(notificationSettings.accountId, identity.accountId))
+		.returning();
+
+	return {
+		status: "ok",
+		settings,
+	};
 });

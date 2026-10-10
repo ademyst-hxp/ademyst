@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "#server/db";
+import { useDb } from "#server/db";
 import { eq } from "drizzle-orm";
 
 import { privacySettings } from "#server/db/schema/settings";
@@ -79,53 +79,49 @@ function normalizePrivacySettings(
 }
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await requireAuth(event);
+	const identity = await requireAuth(event);
 
-		let [settings] = await db
-			.select()
-			.from(privacySettings)
-			.where(eq(privacySettings.accountId, identity.accountId))
-			.limit(1);
+	let [settings] = await db
+		.select()
+		.from(privacySettings)
+		.where(eq(privacySettings.accountId, identity.accountId))
+		.limit(1);
 
-		if (!settings) {
-			const defaultSettings = generateDefaultPrivacySettings();
-
-			[settings] = await db
-				.insert(privacySettings)
-				.values({
-					...defaultSettings as PrivacySettings & {
-						profileVisibility: Visibility;
-						birthdayVisibility: Visibility;
-					},
-					accountId: identity.accountId,
-				})
-				.returning();
-		}
-
-		const body = await readBody<UpdatePrivacySettingsRequest>(event);
-
-		const normalizedSettings = normalizePrivacySettings(body, settings! as PrivacySettings);
+	if (!settings) {
+		const defaultSettings = generateDefaultPrivacySettings();
 
 		[settings] = await db
-			.update(privacySettings)
-			.set({
-				...normalizedSettings as PrivacySettings & {
+			.insert(privacySettings)
+			.values({
+				...defaultSettings as PrivacySettings & {
 					profileVisibility: Visibility;
 					birthdayVisibility: Visibility;
 				},
-				updatedAt: new Date(),
+				accountId: identity.accountId,
 			})
-			.where(eq(privacySettings.accountId, identity.accountId))
 			.returning();
-
-		return {
-			status: "ok",
-			settings,
-		};
-	} finally {
-		await client.end();
 	}
+
+	const body = await readBody<UpdatePrivacySettingsRequest>(event);
+
+	const normalizedSettings = normalizePrivacySettings(body, settings! as PrivacySettings);
+
+	[settings] = await db
+		.update(privacySettings)
+		.set({
+			...normalizedSettings as PrivacySettings & {
+				profileVisibility: Visibility;
+				birthdayVisibility: Visibility;
+			},
+			updatedAt: new Date(),
+		})
+		.where(eq(privacySettings.accountId, identity.accountId))
+		.returning();
+
+	return {
+		status: "ok",
+		settings,
+	};
 });

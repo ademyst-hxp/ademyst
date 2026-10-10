@@ -1,6 +1,6 @@
 import type { H3Event } from "h3";
 
-import { createDb } from "~~/server/db";
+import { useDb } from "~~/server/db";
 import { eq } from "drizzle-orm";
 
 import { whispers } from "~~/server/db/schema/interactions";
@@ -10,39 +10,35 @@ import { retrieveCleanWhisper } from "#server/utils/converters/interactions";
 import { normalizeId } from "#server/utils/normalizers/ids";
 
 export default defineEventHandler(async (event: H3Event) => {
-	const { db, client } = createDb();
+	const db = useDb(event);
 
-	try {
-		const identity = await getIdentity(event);
-		const whisperId = normalizeId(event.context.params?.id);
+	const identity = await getIdentity(event);
+	const whisperId = normalizeId(event.context.params?.id);
 
-		if (!whisperId) {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Invalid whisper id",
-			});
-		}
-
-		const [candidate] = await db
-			.select()
-			.from(whispers)
-			.where(eq(whispers.id, whisperId))
-			.limit(1);
-
-		if (!candidate) {
-			throw createError({
-				statusCode: 404,
-				statusMessage: "Whisper not found",
-			});
-		}
-
-		const whisper = retrieveCleanWhisper(event, identity, candidate);
-
-		return {
-			status: "ok",
-			data: whisper,
-		};
-	} finally {
-		await client.end();
+	if (!whisperId) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid whisper id",
+		});
 	}
+
+	const [candidate] = await db
+		.select()
+		.from(whispers)
+		.where(eq(whispers.id, whisperId))
+		.limit(1);
+
+	if (!candidate) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "Whisper not found",
+		});
+	}
+
+	const whisper = retrieveCleanWhisper(event, identity, candidate);
+
+	return {
+		status: "ok",
+		data: whisper,
+	};
 });

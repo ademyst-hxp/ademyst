@@ -26,13 +26,19 @@ import {
 import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 
 import type { Whisper } from "~~/shared/models/interactions";
+import type { FeedTab } from "~/composables/useFeed";
 import Popup from "~/components/base/Popup.vue";
 
 const { $api } = useNuxtApp();
 
 const { session, refresh: refreshSession } = useAuthSession();
-const { whispers, suggestions, hits, following, users, refresh } = useFeed();
+const { whispers, suggestions, hits, following, users, refresh, loadTab } =
+	useFeed();
 const { blockUser } = useRelations();
+
+const tab = ref<FeedTab>("following");
+
+const refreshFeed = () => refresh(tab.value);
 
 await refreshSession();
 
@@ -42,7 +48,15 @@ if (!profile) {
 	await navigateTo("/auth/login");
 }
 
-await refresh();
+// Fetched once on the server and reused from the payload when hydrating,
+// instead of running again in the browser.
+await useAsyncData("discover-feed", async () => {
+	await refreshFeed();
+
+	return true;
+});
+
+watch(tab, (value) => loadTab(value));
 
 definePageMeta({
 	title: "Ademyst: Discover",
@@ -72,7 +86,6 @@ useHead({
 	],
 });
 
-const tab = ref<"following" | "suggest" | "hits">("following");
 const focusedWhisper = ref<Whisper | null>(null);
 
 const isVisibilityMenuOpen = ref(false);
@@ -146,7 +159,7 @@ const handleNewWhisper = async () => {
 	newWhisper.value.image = null;
 	newWhisper.value.visibility = "everyone";
 
-	await refresh();
+	await refreshFeed();
 };
 
 watch(
@@ -328,7 +341,7 @@ watch(
 				icon: NoSymbolIcon,
 				danger: true,
 				handler: () => {
-					blockUser(focusedWhisper!.profile.id, refresh);
+					blockUser(focusedWhisper!.profile.id, refreshFeed);
 					focusedWhisper = null;
 				},
 			},
