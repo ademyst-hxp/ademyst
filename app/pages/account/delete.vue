@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { AtSymbolIcon, KeyIcon, HomeIcon } from "@heroicons/vue/24/solid";
-
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
 import Avatar from "~/components/profile/Avatar.vue";
 
-const { error, login, refresh, session } = useAuthSession();
+const { refresh, session } = useAuthSession();
 
 const { $api } = useNuxtApp();
 
-const password = ref("");
 const token = useRoute().query.sudo as string;
-const passwordRegex =
-	/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
 
 await refresh();
 
@@ -22,7 +17,8 @@ const handleAccountDeletion = async () => {
 		body: { token },
 	});
 
-	// await navigateTo("/auth/login");
+	// Rediriger vers la page de connexion
+	await navigateTo("/auth/login");
 };
 
 definePageMeta({
@@ -76,9 +72,7 @@ useHead({
 			handler="/settings/privacy#export-data?intent=delete-account"
 		/>
 	</section-->
-	<section
-		class="flex flex-col gap-2 bg-surface text-surface-text border border-surface-border rounded-3xl px-6 py-4"
-	>
+	<Box>
 		<h2 class="text-xl font-semibold font-title">Procéder à la suppression</h2>
 		<p v-if="session" class="flex justify-start items-center gap-2 text-danger">
 			Connecté en tant que
@@ -102,5 +96,5 @@ useHead({
 			size="medium"
 			:handler="handleAccountDeletion"
 		/>
-	</section>
+	</Box>
 </template>
