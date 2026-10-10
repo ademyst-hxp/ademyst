@@ -53,13 +53,13 @@ useHead({
 
 type AccountResponse = {
 	status: "ok";
-	account: Account;
+	data: Account;
 };
 
 const { data: account, refresh: refreshSettings } = await useAsyncData(
 	"settings-account",
 	async () => {
-		return (await $api<AccountResponse>(`/account`)).account;
+		return (await $api<AccountResponse>(`/account`)).data;
 	},
 );
 
@@ -95,11 +95,11 @@ onMounted(async () => {
 			<Box class="flex-0 -space-y-1" scale="sm">
 				<p class="text-2xl font-bold">
 					{{
-						new Date(account?.createdAt || "").toLocaleDateString(
+						new Date(account?.createdAt || 0).toLocaleDateString(
 							"fr-FR",
 							{
 								day: "2-digit",
-								month: "2-digit",
+								month: "short",
 								year: "numeric",
 							},
 						)
@@ -110,11 +110,11 @@ onMounted(async () => {
 			<Box class="flex-0 -space-y-1" scale="sm">
 				<p class="text-2xl font-bold">
 					{{
-						new Date(account?.updatedAt || "").toLocaleDateString(
+						new Date(account?.updatedAt || 0).toLocaleDateString(
 							"fr-FR",
 							{
 								day: "2-digit",
-								month: "2-digit",
+								month: "short",
 								year: "numeric",
 							},
 						)
