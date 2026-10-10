@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
 		limiter = limiters.post;
 	} else if (path.startsWith("/api/v1/posts")) {
 		limiter = limiters.interact;
-	} else if (path.startsWith("/api/v1/@")) {
+	} else if (path.startsWith("/api/v1/users")) {
 		limiter = limiters.user_interact;
 	} else {
 		limiter = limiters.default;
