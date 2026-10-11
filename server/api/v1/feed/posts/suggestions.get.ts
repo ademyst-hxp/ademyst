@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
 					post.flags.reported
 				),
 		)
+		.filter((post) => post.profile.level >= 3)
 		.sort((a, b) => {
 			return b.stats.score - a.stats.score;
 		});

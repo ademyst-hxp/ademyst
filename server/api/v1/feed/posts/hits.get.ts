@@ -52,6 +52,7 @@ export default defineEventHandler(async (event) => {
 					(post.profile.level ?? 0) < 3
 				),
 		)
+		.filter((post) => post.profile.level >= 3)
 		.sort((a, b) => b.stats.reactions.like - a.stats.reactions.like);
 
 	return {
