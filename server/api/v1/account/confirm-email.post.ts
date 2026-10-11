@@ -66,7 +66,6 @@ export default defineEventHandler(async (event) => {
 		}
 
 		if (tokenRow.usedAt) {
-			console.log("Token already used:", tokenRow);
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Token already used",
