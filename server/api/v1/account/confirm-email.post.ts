@@ -29,6 +29,10 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid payload",
+			data: {
+				ok: false,
+				email: null,
+			},
 		});
 	}
 
@@ -42,7 +46,11 @@ export default defineEventHandler(async (event) => {
 		if (!tokenRow) {
 			throw createError({
 				statusCode: 400,
-				statusMessage: "Invalid or expired token",
+				statusMessage: "Invalid token",
+				data: {
+					ok: false,
+					email: null,
+				},
 			});
 		}
 
@@ -50,6 +58,10 @@ export default defineEventHandler(async (event) => {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Token revoked",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
 			});
 		}
 
@@ -58,6 +70,10 @@ export default defineEventHandler(async (event) => {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Token already used",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
 			});
 		}
 
@@ -71,6 +87,10 @@ export default defineEventHandler(async (event) => {
 			throw createError({
 				statusCode: 409,
 				statusMessage: "Email already in use",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
 			});
 		}
 
