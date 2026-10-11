@@ -127,10 +127,10 @@ const _stateclass = computed(() => {
 const isLoading = ref<boolean>(false);
 const hasError = ref<boolean>(false);
 
-async function callback() {
-	if (props.disabled || props.submit || isLoading.value) {
-		return;
-	}
+
+async function callback(event: MouseEvent) {
+	event.preventDefault();
+	event.stopPropagation();
 
 	try {
 		isLoading.value = true;
@@ -141,7 +141,7 @@ async function callback() {
 				const url = props.handler.slice(2);
 				window.open(url, "_blank");
 			} else {
-				window.location.href = props.handler;
+				await navigateTo(props.handler);
 			}
 		} else {
 			await props.handler();
@@ -156,7 +156,7 @@ async function callback() {
 <template>
 	<button
 		:class="[_class, _stateclass]"
-		@click="submit ? undefined : callback"
+		@click="submit ? undefined : callback($event)"
 		:disabled="props.disabled"
 		:type="props.submit ? 'submit' : 'button'"
 		tabindex="0"
