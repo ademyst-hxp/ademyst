@@ -3,7 +3,7 @@ import { and, eq, or, inArray } from "drizzle-orm";
 import { useDb } from "#server/db";
 import type { H3Event } from "h3";
 
-import { blocks, follows, friendships } from "#server/db/schema/relations";
+import { blocks, requests, follows, friendships } from "#server/db/schema/relations";
 import { Profile, profiles } from "#server/db/schema/profiles";
 import { privacySettings, PrivacySettings } from "#server/db/schema/settings";
 
@@ -11,6 +11,8 @@ import { Identity } from "../auth";
 
 export type Relationship = {
 	me: boolean; // A is B
+	requesting: boolean; // A requesting B
+	requested: boolean; // A requested by B
 	following: boolean; // A following B
 	followed: boolean; // A followed by B
 	friend: boolean; // A friend with B
@@ -27,6 +29,8 @@ export const getRelationshipStatus = async (
 
 	const relationship: Relationship = {
 		me: false,
+		requesting: false,
+		requested: false,
 		following: false,
 		followed: false,
 		friend: false,
@@ -98,6 +102,33 @@ export const getRelationshipStatus = async (
 		if (relationship.blocking || relationship.blocked) {
 			return relationship;
 		}
+	}
+
+	/*
+	 * ============================================================
+	 * Follow requests
+	 * ============================================================
+	 *
+	 * issuer -> target => requesting
+	 * target -> issuer => requested
+	 */
+	const [followRequest] = await db
+		.select({
+			senderId: requests.senderId,
+			receiverId: requests.receiverId,
+		})
+		.from(requests)
+		.where(
+			and(
+				eq(requests.senderId, issuer.id),
+				eq(requests.receiverId, target.id),
+			),
+		)
+		.limit(1);
+
+	if (followRequest) {
+		relationship.requesting = followRequest.senderId === issuer.id;
+		relationship.requested = followRequest.receiverId === target.id;
 	}
 
 	/*
@@ -312,6 +343,8 @@ export const getSeveralRelationshipStatus = async (
 
 	const base: Relationship = {
 		me: false,
+		requesting: false,
+		requested: false,
 		following: false,
 		followed: false,
 		friend: false,
@@ -350,7 +383,7 @@ export const getSeveralRelationshipStatus = async (
 
 	const targetIds = B.map((target) => target.id);
 
-	const [blockRelations, followRelations, friendRelations] =
+	const [blockRelations, requestsRelations, followRelations, friendRelations] =
 		await Promise.all([
 			db
 				.select({
@@ -367,6 +400,24 @@ export const getSeveralRelationshipStatus = async (
 						and(
 							eq(blocks.blockerId, issuer.id),
 							inArray(blocks.blockedId, targetIds),
+						),
+					),
+				),
+
+			db.select({
+				senderId: requests.senderId,
+				receiverId: requests.receiverId,
+			})
+				.from(requests)
+				.where(
+					or(
+						and(
+							eq(requests.senderId, issuer.id),
+							inArray(requests.receiverId, targetIds),
+						),
+						and(
+							eq(requests.receiverId, issuer.id),
+							inArray(requests.senderId, targetIds),
 						),
 					),
 				),
@@ -423,6 +474,19 @@ export const getSeveralRelationshipStatus = async (
 		}
 	}
 
+	const requesting = new Set<Profile["id"]>();
+	const requested = new Set<Profile["id"]>();
+
+	for (const relation of requestsRelations) {
+		if (relation.senderId === issuer.id) {
+			requesting.add(relation.receiverId);
+		}
+
+		if (relation.receiverId === issuer.id) {
+			requested.add(relation.senderId);
+		}
+	}
+
 	const following = new Set<Profile["id"]>();
 	const followed = new Set<Profile["id"]>();
 
@@ -462,6 +526,8 @@ export const getSeveralRelationshipStatus = async (
 			continue;
 		}
 
+		relationship.requesting = requesting.has(target.id);
+		relationship.requested = requested.has(target.id);
 		relationship.following = following.has(target.id);
 		relationship.followed = followed.has(target.id);
 		relationship.friend = friend.has(target.id);

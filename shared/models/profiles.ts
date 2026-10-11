@@ -2,6 +2,8 @@ import type { Badge } from "./shop";
 
 export type Relationship = {
 	me: boolean; // A is B
+	requesting: boolean; // A requesting B
+	requested: boolean; // A requested by B
 	following: boolean; // A following B
 	followed: boolean; // A followed by B
 	friend: boolean; // A friend with B
