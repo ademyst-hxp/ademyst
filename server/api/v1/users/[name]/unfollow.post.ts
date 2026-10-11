@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
 import { requests, follows, friendships } from "~~/server/db/schema/relations";
+import { followNotifications } from "~~/server/db/schema/inbox";
 
 import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 
@@ -64,6 +65,18 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	if (request) {
 		await db.delete(requests).where(eq(requests.id, request.id));
+		await db
+			.delete(followNotifications)
+			.where(
+				and(
+					eq(followNotifications.profileId, profile.id),
+					eq(
+						followNotifications.issuerId,
+						identity.profileId as string,
+					),
+					eq(followNotifications.type, "request"),
+				),
+			);
 		anyAction = true;
 	}
 

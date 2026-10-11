@@ -8,6 +8,8 @@ import {
 	whisperReports,
 } from "~~/server/db/schema/reports";
 
+import { profiles } from "~~/server/db/schema/profiles";
+
 import { reportNotifications } from "~~/server/db/schema/inbox";
 
 import type {
@@ -76,11 +78,7 @@ export default defineEventHandler(async (event) => {
 		);
 	} else if (_post_report) {
 		_type = "post";
-		_report = await retrieveCleanPostReport(
-			event,
-			identity,
-			_post_report,
-		);
+		_report = await retrieveCleanPostReport(event, identity, _post_report);
 	} else if (_whisper_report) {
 		_type = "whisper";
 		_report = await retrieveCleanWhisperReport(
@@ -118,6 +116,19 @@ export default defineEventHandler(async (event) => {
 		)
 		.execute();
 
+	const [reporterProfile] = await db
+		.select({ id: profiles.id })
+		.from(profiles)
+		.where(eq(profiles.accountId, _report.reporter.id))
+		.limit(1);
+
+	if (!reporterProfile) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Reporter profile not found",
+		});
+	}
+
 	const [existingNotification] = await db
 		.select()
 		.from(reportNotifications)
@@ -140,11 +151,11 @@ export default defineEventHandler(async (event) => {
 			.where(eq(reportNotifications.id, existingNotification.id));
 	} else {
 		await db.insert(reportNotifications).values({
-			profileId: _report.reporter.id,
+			profileId: reporterProfile.id,
 			profileReportId: _type === "profile" ? _report.id : null,
 			postReportId: _type === "post" ? _report.id : null,
 			whisperReportId: _type === "whisper" ? _report.id : null,
-			type: "read",
+			type: "update",
 			read: false,
 		});
 	}

@@ -3,7 +3,8 @@ import { createError, type H3Event } from "h3";
 import { useDb } from "#server/db";
 import { and, eq } from "drizzle-orm";
 
-import { postReactions } from "#server/db/schema/interactions";
+import { postReactions, posts } from "#server/db/schema/interactions";
+import { postNotifications } from "#server/db/schema/inbox";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
@@ -23,6 +24,19 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	await db.transaction(async (tx) => {
+		const [post] = await tx
+			.select({ profileId: posts.profileId })
+			.from(posts)
+			.where(eq(posts.id, postId))
+			.limit(1);
+
+		if (!post) {
+			throw createError({
+				statusCode: 404,
+				statusMessage: "Post not found",
+			});
+		}
+
 		await tx
 			.delete(postReactions)
 			.where(
@@ -37,6 +51,25 @@ export default defineEventHandler(async (event: H3Event) => {
 			profileId: identity.profileId,
 			reaction: "like",
 		});
+
+		await tx
+			.delete(postNotifications)
+			.where(
+				and(
+					eq(postNotifications.postId, postId),
+					eq(postNotifications.issuerId, identity.profileId),
+					eq(postNotifications.type, "reaction"),
+				),
+			);
+
+		if (post.profileId !== identity.profileId) {
+			await tx.insert(postNotifications).values({
+				profileId: post.profileId,
+				issuerId: identity.profileId,
+				postId,
+				type: "reaction",
+			});
+		}
 	});
 
 	return { status: "ok", liked: true };

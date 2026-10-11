@@ -4,6 +4,7 @@ import { useDb } from "#server/db";
 import { and, eq } from "drizzle-orm";
 
 import { postReactions } from "#server/db/schema/interactions";
+import { postNotifications } from "#server/db/schema/inbox";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
@@ -27,6 +28,16 @@ export default defineEventHandler(async (event: H3Event) => {
 			and(
 				eq(postReactions.postId, postId),
 				eq(postReactions.profileId, identity.profileId),
+			),
+		);
+
+	await db
+		.delete(postNotifications)
+		.where(
+			and(
+				eq(postNotifications.postId, postId),
+				eq(postNotifications.issuerId, identity.profileId),
+				eq(postNotifications.type, "reaction"),
 			),
 		);
 
