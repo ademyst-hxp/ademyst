@@ -42,6 +42,10 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid payload",
+			data: {
+				ok: false,
+				email: null,
+			},
 		});
 	}
 
@@ -58,6 +62,10 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 404,
 			statusMessage: "Account not found",
+			data: {
+				ok: false,
+				email: null,
+			},
 		});
 	}
 
@@ -72,10 +80,27 @@ export default defineEventHandler(async (event) => {
 	const userAgent = getHeader(event, "user-agent") ?? null;
 	const ipAddress = getRequestIP(event) ?? null;
 
-	await buildConfirmationEmail(
-		account.email,
-		confirmationToken,
-		userAgent,
-		ipAddress,
-	);
+	try {
+		await buildConfirmationEmail(
+			account.email,
+			confirmationToken,
+			userAgent,
+			ipAddress,
+		);
+	} catch (error) {
+		console.error("Failed to build confirmation email:", error);
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Failed to send confirmation email",
+			data: {
+				ok: false,
+				email: account.email,
+			},
+		});
+	}
+
+	return {
+		ok: true,
+		email: account.email,
+	};
 });
