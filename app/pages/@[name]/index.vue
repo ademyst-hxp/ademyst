@@ -23,6 +23,7 @@ import type { Badge } from "~~/shared/models/shop";
 type ProfileResponse = {
 	status: "ok";
 	profile: Profile;
+	canFollowDirectly: boolean;
 };
 
 const route = useRoute();
@@ -111,9 +112,49 @@ const relationship = computed<Relationship>(
 		},
 );
 
+const canFollowDirectly = computed(() => data.value?.canFollowDirectly ?? true);
+
+const handleFollow = async () => {
+	if (!profile.value) return;
+
+	const response = await followUser(profile.value.name);
+
+	if (response?.message === "Follow request sent") {
+		relationship.value.requesting = true;
+		relationship.value.following = false;
+	} else if (response?.message === "Now following this user") {
+		relationship.value.following = true;
+		relationship.value.requesting = false;
+	}
+};
+
+const handleUnfollow = async () => {
+	if (!profile.value) return;
+
+	const response = await unfollowUser(profile.value.name);
+
+	if (
+		response?.message === "Follow request cancelled" ||
+		response?.message === "Unfollowed user successfully"
+	) {
+		relationship.value.requesting = false;
+		relationship.value.following = false;
+		relationship.value.friend = false;
+	}
+};
+
+const followLabel = computed(() => {
+	if (relationship.value.requesting) return "Annuler la demande";
+	if (relationship.value.following) return "Se désabonner";
+	return canFollowDirectly.value ? "Suivre" : "Demander à suivre";
+});
+
 const isMe = computed(() => relationship.value.me);
 const canFollow = computed(
 	() =>
+		session.value &&
+		!isMe.value &&
+		!relationship.value.requesting &&
 		!relationship.value.me &&
 		!relationship.value.following &&
 		!relationship.value.blocking,
@@ -456,27 +497,21 @@ const focusedBadge = ref<Badge | null>(null);
 
 			<Button
 				v-if="canFollow"
-				label="Suivre"
+				:label="followLabel"
 				size="medium"
-				:handler="
-					() =>
-						followUser(profile!.name, () => {
-							relationship.following = true;
-						})
-				"
+				:handler="handleFollow"
 			/>
 
 			<Button
-				v-else-if="relationship.following"
-				label="Se désabonner"
+				v-else-if="relationship.following || relationship.requesting"
 				variant="secondary"
 				size="medium"
-				:handler="
-					() =>
-						unfollowUser(profile!.name, () => {
-							relationship.following = false;
-						})
+				:label="
+					relationship.requesting
+						? 'Annuler la demande'
+						: 'Se désabonner'
 				"
+				:handler="handleUnfollow"
 			/>
 
 			<Button

@@ -37,13 +37,9 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(
-		event,
-		identity,
-		profile,
-	);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
-	if (!relationships.following) {
+	if (!relationships.following && !relationships.requesting) {
 		setResponseStatus(event, 204);
 
 		return {
@@ -63,11 +59,12 @@ export default defineEventHandler(async (event: H3Event) => {
 		)
 		.limit(1);
 
-	let any_action: boolean = false;
+	let anyAction = false;
+	const wasRequesting = relationships.requesting;
 
 	if (request) {
 		await db.delete(requests).where(eq(requests.id, request.id));
-		any_action = true;
+		anyAction = true;
 	}
 
 	if (relationships.following) {
@@ -80,7 +77,7 @@ export default defineEventHandler(async (event: H3Event) => {
 				),
 			);
 
-		any_action = true;
+		anyAction = true;
 	}
 
 	if (relationships.friend) {
@@ -88,18 +85,15 @@ export default defineEventHandler(async (event: H3Event) => {
 			.delete(friendships)
 			.where(
 				and(
-					eq(
-						friendships.profileAId,
-						identity.profileId as string,
-					),
+					eq(friendships.profileAId, identity.profileId as string),
 					eq(friendships.profileBId, profile.id),
 				),
 			);
 
-		any_action = true;
+		anyAction = true;
 	}
 
-	if (!any_action) {
+	if (!anyAction) {
 		setResponseStatus(event, 204);
 
 		return {
@@ -109,7 +103,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	} else {
 		return {
 			status: "ok",
-			message: "Unfollowed user successfully",
+			message: wasRequesting
+				? "Follow request cancelled"
+				: "Unfollowed user successfully",
 		};
 	}
 });

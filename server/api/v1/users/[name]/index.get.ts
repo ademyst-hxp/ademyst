@@ -5,6 +5,11 @@ import { profiles } from "~~/server/db/schema/profiles";
 
 import { getIdentity } from "#server/utils/auth";
 import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
+import {
+	canAccess,
+	getPrivacySettings,
+	getRelationshipStatus,
+} from "~~/server/utils/helpers/privacy";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -34,9 +39,12 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const data = await retrieveCleanProfile(event, identity, profile);
+	const relationships = await getRelationshipStatus(event, identity, profile);
+	const privacy = await getPrivacySettings(event, profile);
 
 	return {
 		status: "ok",
 		profile: data,
+		canFollowDirectly: canAccess(privacy, relationships).profile,
 	};
 });

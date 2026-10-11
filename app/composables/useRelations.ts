@@ -1,6 +1,11 @@
 export const useRelations = () => {
 	const { $api } = useNuxtApp();
 
+	type RelationResponse = {
+		status: string;
+		message: string;
+	};
+
 	const error = useState<string | null>("relationsError", () => null);
 	const loading = useState<boolean>("relationsLoading", () => false);
 
@@ -12,11 +17,16 @@ export const useRelations = () => {
 		error.value = null;
 
 		try {
-			await $api(`/users/${username}/follow`, {
-				method: "POST",
-			});
+			const response = await $api<RelationResponse>(
+				`/users/${username}/follow`,
+				{
+					method: "POST",
+				},
+			);
 
 			if (callback) await callback();
+
+			return response;
 		} catch (err) {
 			error.value = err instanceof Error ? err.message : String(err);
 		} finally {
@@ -32,11 +42,16 @@ export const useRelations = () => {
 		error.value = null;
 
 		try {
-			await $api(`/users/${username}/unfollow`, {
-				method: "POST",
-			});
+			const response = await $api<RelationResponse>(
+				`/users/${username}/unfollow`,
+				{
+					method: "POST",
+				},
+			);
 
-			await unfriendUser(username, callback);
+			if (callback) await callback();
+
+			return response;
 		} catch (err) {
 			error.value = err instanceof Error ? err.message : String(err);
 		} finally {
@@ -132,6 +147,6 @@ export const useRelations = () => {
 		friendUser,
 		unfriendUser,
 		blockUser,
-		unblockUser
+		unblockUser,
 	};
 };
