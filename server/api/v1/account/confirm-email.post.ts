@@ -104,7 +104,7 @@ export default defineEventHandler(async (event) => {
 
 		await tx
 			.update(emailConfirmationTokens)
-			.set({ usedAt: new Date(), revoked: true })
+			.set({ usedAt: new Date() })
 			.where(eq(emailConfirmationTokens.id, tokenRow.id));
 
 		try {
