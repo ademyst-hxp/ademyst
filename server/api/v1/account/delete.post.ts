@@ -4,7 +4,6 @@ import { and, eq, isNull } from "drizzle-orm";
 import { useDb } from "#server/db";
 import {
 	accountDeletionTokens,
-	accountModificationHistory,
 	accounts,
 } from "#server/db/schema/accounts";
 
@@ -67,30 +66,8 @@ export default defineEventHandler(async (event) => {
 		}
 
 		await tx
-			.update(accountDeletionTokens)
-			.set({ usedAt: new Date(), revoked: true })
-			.where(eq(accountDeletionTokens.id, tokenRow.id));
-
-		await tx
 			.delete(accounts)
 			.where(eq(accounts.id, tokenRow.accountId));
-
-		try {
-			const ipAddress = getRequestIP(event) ?? null;
-			const userAgent = getHeader(event, "user-agent") ?? null;
-
-			const safeUserAgent = userAgent ?? "unknown";
-			const safeIp = ipAddress ?? "unknown";
-
-			await tx.insert(accountModificationHistory).values({
-				accountId: tokenRow.accountId,
-				action: "account_deletion",
-				ipAddress: safeIp,
-				userAgent: safeUserAgent,
-			});
-		} catch {
-			// Account deletion already succeeded; notification failures should not fail the request.
-		}
 	});
 
 	return { ok: true };
