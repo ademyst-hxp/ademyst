@@ -117,7 +117,7 @@ export const getLevelFromEntitlements = (
 					: a.levelId < 3
 						? a.levelId - b.levelId
 						: b.levelId - a.levelId,
-		)[0]?.levelId ?? 3;
+		)[0]?.levelId ?? 2;
 
 	return level;
 };
