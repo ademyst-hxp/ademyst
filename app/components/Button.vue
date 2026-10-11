@@ -128,6 +128,10 @@ const isLoading = ref<boolean>(false);
 const hasError = ref<boolean>(false);
 
 async function callback() {
+	if (props.disabled || props.submit || isLoading.value) {
+		return;
+	}
+
 	try {
 		isLoading.value = true;
 		hasError.value = false;
@@ -152,7 +156,7 @@ async function callback() {
 <template>
 	<button
 		:class="[_class, _stateclass]"
-		@click="callback"
+		@click="submit ? undefined : callback"
 		:disabled="props.disabled"
 		:type="props.submit ? 'submit' : 'button'"
 		tabindex="0"
