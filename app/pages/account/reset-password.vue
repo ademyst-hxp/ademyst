@@ -84,12 +84,62 @@ useHead({
 			>
 				<template #indications>
 					<p>Le mot de passe doit contenir :</p>
-					<ul class="list-disc list-inside">
-						<li>Au moins 8 caractères</li>
-						<li>Au moins une lettre majuscule</li>
-						<li>Au moins une lettre minuscule</li>
-						<li>Au moins un chiffre</li>
-						<li>Au moins un caractère spécial</li>
+					<ul>
+						<li class="flex items-center gap-2">
+							<div
+								class="inline-block w-2 h-2 rounded-full"
+								:class="
+									password.length >= 8
+										? 'bg-success'
+										: 'bg-danger'
+								"
+							></div>
+							Au moins 8 caractères
+						</li>
+						<li class="flex items-center gap-2">
+							<div
+								class="inline-block w-2 h-2 rounded-full"
+								:class="
+									password.match(/[A-Z]/)
+										? 'bg-success'
+										: 'bg-danger'
+								"
+							></div>
+							Au moins une lettre majuscule
+						</li>
+						<li class="flex items-center gap-2">
+							<div
+								class="inline-block w-2 h-2 rounded-full"
+								:class="
+									password.match(/[a-z]/)
+										? 'bg-success'
+										: 'bg-danger'
+								"
+							></div>
+							Au moins une lettre minuscule
+						</li>
+						<li class="flex items-center gap-2">
+							<div
+								class="inline-block w-2 h-2 rounded-full"
+								:class="
+									password.match(/[0-9]/)
+										? 'bg-success'
+										: 'bg-danger'
+								"
+							></div>
+							Au moins un chiffre
+						</li>
+						<li class="flex items-center gap-2">
+							<div
+								class="inline-block w-2 h-2 rounded-full"
+								:class="
+									password.match(/[^A-Za-z0-9]/)
+										? 'bg-success'
+										: 'bg-danger'
+								"
+							></div>
+							Au moins un caractère spécial
+						</li>
 					</ul>
 				</template>
 				<template #error>
