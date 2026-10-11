@@ -34,25 +34,30 @@ export default defineEventHandler(async (event) => {
 
 	const result = await db.transaction(async (tx) => {
 		const [tokenRow] = await tx
-			.select({
-				id: emailConfirmationTokens.id,
-				accountId: emailConfirmationTokens.accountId,
-				email: emailConfirmationTokens.email,
-			})
+			.select()
 			.from(emailConfirmationTokens)
-			.where(
-				and(
-					eq(emailConfirmationTokens.token, token),
-					isNull(emailConfirmationTokens.usedAt),
-					eq(emailConfirmationTokens.revoked, false),
-				),
-			)
+			.where(eq(emailConfirmationTokens.token, token))
 			.limit(1);
 
 		if (!tokenRow) {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Invalid or expired token",
+			});
+		}
+
+		if (tokenRow.revoked) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Token revoked",
+			});
+		}
+
+		if (tokenRow.usedAt) {
+			console.log("Token already used:", tokenRow);
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Token already used",
 			});
 		}
 
