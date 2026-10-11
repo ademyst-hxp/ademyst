@@ -2,11 +2,7 @@ import type { H3Event } from "h3";
 
 import { useDb } from "#server/db";
 import { and, or, eq, lt, isNull } from "drizzle-orm";
-import {
-	accounts,
-	sessions,
-	emailConfirmationTokens,
-} from "#server/db/schema/accounts";
+import { accounts } from "#server/db/schema/accounts";
 import { profiles, profileLinks } from "#server/db/schema/profiles";
 import { referrals, referralCodes } from "~~/server/db/schema/referrals";
 import {
@@ -15,10 +11,8 @@ import {
 } from "#server/db/schema/settings";
 
 import { generateHexId } from "#server/utils/ids";
-import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
 import { hashPassword } from "#server/utils/password";
 import { verifyBeamProfile } from "#server/utils/beam";
-import { sendEmailConfirmation } from "#server/utils/mail";
 
 import {
 	giveBeamBadge,
@@ -56,21 +50,6 @@ function normalizeCode(value: unknown): string | null {
 	return code;
 }
 
-async function buildConfirmationEmail(
-	email: string,
-	confirmationToken: string,
-	userAgent: string | null,
-	ipAddress: string | null,
-) {
-	await sendEmailConfirmation(
-		email,
-		`${process.env.APP_URL}/account/confirm-email?token=${confirmationToken}`,
-		new Date(),
-		userAgent ?? "unknown",
-		ipAddress ?? "unknown",
-	);
-}
-
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
@@ -81,8 +60,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	const referrer = normalizeCode(body?.referrer);
 
 	// The sudo token is mandatory and is used to retrieve the Beam profile.
-	const token =
-		typeof body?.token === "string" ? body.token.trim() : null;
+	const token = typeof body?.token === "string" ? body.token.trim() : null;
 
 	const termsOfServiceConsent = body?.termsOfServiceConsent === true;
 
@@ -145,9 +123,6 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const passwordHash = await hashPassword(password);
 	const profileId = generateHexId();
-
-	const ipAddress = getRequestIP(event) ?? null;
-	const userAgent = getHeader(event, "user-agent") ?? null;
 
 	const displayName = beamProfile.display_name || null;
 
@@ -216,30 +191,6 @@ export default defineEventHandler(async (event: H3Event) => {
 			resourceName: beamProfile.name,
 		});
 
-		const accessToken = await signAccessToken(
-			{
-				sub: account.id,
-				email: account.email,
-				profileId: profile.id,
-			},
-			{ subject: account.id },
-		);
-
-		const refreshToken = await signRefreshToken(
-			{
-				sub: account.id,
-				profileId: profile.id,
-			},
-			{ subject: account.id },
-		);
-
-		await tx.insert(sessions).values({
-			accountId: account.id,
-			token: refreshToken,
-			ipAddress,
-			userAgent,
-		});
-
 		/* Parrainage */
 
 		if (referrer) {
@@ -268,44 +219,10 @@ export default defineEventHandler(async (event: H3Event) => {
 			}
 		}
 
-		/* Confirmation de l'email */
-
-		const confirmationToken = generateHexId();
-
-		await tx.insert(emailConfirmationTokens).values({
-			accountId: account.id,
-			email: account.email,
-			token: confirmationToken,
-		});
-
-		await buildConfirmationEmail(
-			account.email,
-			confirmationToken,
-			userAgent,
-			ipAddress,
-		);
-
 		return {
 			account,
 			profile,
-			accessToken,
-			refreshToken,
 		};
-	});
-
-	setCookie(event, "refreshToken", result.refreshToken, {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
-		path: "/",
-		maxAge: 60 * 60 * 24 * 30,
-	});
-
-	setCookie(event, "accessToken", result.accessToken, {
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax",
-		path: "/",
-		maxAge: 60 * 15,
 	});
 
 	try {
@@ -327,7 +244,5 @@ export default defineEventHandler(async (event: H3Event) => {
 	return {
 		account: result.account,
 		profile: result.profile,
-		accessToken: result.accessToken,
-		refreshToken: result.refreshToken,
 	};
 });

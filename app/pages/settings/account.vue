@@ -3,6 +3,7 @@ import Box from "~/components/base/Box.vue";
 import Actions from "~/components/base/Actions.vue";
 
 import {
+	AtSymbolIcon,
 	UserIcon,
 	EyeSlashIcon,
 	ChevronLeftIcon,
@@ -63,6 +64,56 @@ const { data: account, refresh: refreshSettings } = await useAsyncData(
 	},
 );
 
+const confirmationError = ref<string | null>(null);
+const confirmationSent = ref(false);
+
+type ApiError = {
+	data?: { statusMessage?: string; message?: string };
+	response?: { _data?: { statusMessage?: string; message?: string } };
+	message?: string;
+};
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+	const requestError = error as ApiError;
+	const responseData = requestError.data ?? requestError.response?._data;
+
+	return (
+		responseData?.statusMessage ??
+		responseData?.message ??
+		requestError.message ??
+		fallback
+	);
+};
+
+const askEmailConfirmation = async () => {
+	if (!account.value?.email) {
+		confirmationError.value =
+			"Impossible d'envoyer l'e-mail de confirmation. Aucune adresse e-mail trouvée.";
+		return false;
+	}
+
+	confirmationError.value = null;
+
+	try {
+		await $api("/auth/ask-email-confirmation", {
+			method: "POST",
+			body: { email: account.value.email },
+		});
+
+		confirmationSent.value = true;
+		return true;
+	} catch (error) {
+		confirmationSent.value = false;
+		confirmationError.value = getApiErrorMessage(
+			error,
+			"Impossible d'envoyer l'e-mail de confirmation.",
+		);
+
+		console.error("Failed to ask for email confirmation:", error);
+		return false;
+	}
+};
+
 onMounted(async () => {
 	await refreshSettings();
 });
@@ -90,7 +141,12 @@ onMounted(async () => {
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 			<Box class="flex-0 -space-y-1 md:col-span-2" scale="sm">
 				<span class="text-2xl font-bold">{{ account?.email }}</span>
-				<span class="text-muted">Adresse e-mail</span>
+				<span class="text-muted"
+					>Adresse e-mail
+					<template v-if="!account?.confirmedAt"
+						>(non confirmée)</template
+					></span
+				>
 			</Box>
 			<Box class="flex-0 -space-y-1" scale="sm">
 				<p class="text-2xl font-bold">
@@ -141,12 +197,41 @@ onMounted(async () => {
 			/>
 		</div>
 	</section>
-	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold font-title">Historique de sécurité</h2>
-		<p class="text-muted text-center">Cette section arrive très bientôt.</p>
+	<section class="flex flex-col gap-4" v-if="!account?.confirmedAt">
+		<Box class="justify-center items-center">
+			<AtSymbolIcon
+				class="w-12 h-12 text-warning mx-auto md:w-16 md:h-16"
+			/>
+			<h2 class="text-xl font-semibold font-title text-center">
+				Votre adresse e-mail n'est pas confirmée
+			</h2>
+			<p class="text-muted text-center">
+				Vous devez confirmer votre adresse e-mail pour accéder à toutes
+				les fonctionnalités d'Ademyst.<br />
+				Veuillez vérifier votre boîte de réception pour le lien de
+				confirmation.
+			</p>
+			<p v-if="confirmationSent" class="text-success text-center">
+				Un e-mail de confirmation a été envoyé à {{ account?.email }}.
+				Veuillez vérifier votre boîte de réception.
+			</p>
+			<p v-if="confirmationError" class="text-danger text-center">
+				L'envoi de l'e-mail de confirmation a échoué, veuillez
+				réessayer.
+			</p>
+			<div class="flex gap-2">
+				<Button
+					label="Renvoyer le lien de confirmation"
+					variant="primary"
+					:handler="askEmailConfirmation"
+				/>
+			</div>
+		</Box>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold font-title">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title">
+			Vous cherchiez peut-être...
+		</h2>
 		<div class="flex flex-col gap-2">
 			<Actions
 				scale="sm"

@@ -14,3 +14,9 @@ export function generateHexId(length = MAX_HEX_ID_LENGTH): string {
 
 	return randomBytes(bytes).toString("hex").slice(0, length);
 }
+
+export function generateHexToken(length = 32): string {
+	const bytes = Math.ceil(length / 2);
+
+	return randomBytes(bytes).toString("hex").slice(0, length);
+}

@@ -17,7 +17,7 @@ const regex = {
 	email: /\S+@\S+\.\S+/,
 	password: /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/,
 	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-	// referrer: /^[A-Fa-f0-9]{6,10}$/,
+	referrer: /^[A-Fa-f0-9]{6,10}$/,
 };
 
 const referrer = useRoute().query.referrer as string | undefined;
@@ -29,7 +29,7 @@ const payload = ref<{
 	token: string;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
-	// referrer: string | null;
+	referrer: string | null;
 }>({
 	email: "",
 	password: "",
@@ -37,7 +37,7 @@ const payload = ref<{
 	token: "",
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
-	// referrer: referrer ?? null,
+	referrer: referrer ?? null,
 });
 
 const valid = computed(() => ({
@@ -52,28 +52,117 @@ const valid = computed(() => ({
 	privacyPolicyConsent: payload.value.privacyPolicyConsent,
 	token:
 		payload.value.token.length > 0 && regex.sudo.test(payload.value.token),
-	/*referrer:
-		payload.value.referrer !== null && regex.referrer.test(payload.value.referrer),*/
+	referrer:
+		payload.value.referrer !== null &&
+		regex.referrer.test(payload.value.referrer),
 }));
 
+const signupError = ref<string | null>(null);
+const referralError = ref<string | null>(null);
+const confirmationError = ref<string | null>(null);
+const confirmationSent = ref(false);
+
+type ApiError = {
+	data?: { statusMessage?: string; message?: string };
+	response?: { _data?: { statusMessage?: string; message?: string } };
+	message?: string;
+};
+
+const getApiErrorMessage = (error: unknown, fallback: string) => {
+	const requestError = error as ApiError;
+	const responseData = requestError.data ?? requestError.response?._data;
+
+	return (
+		responseData?.statusMessage ??
+		responseData?.message ??
+		requestError.message ??
+		fallback
+	);
+};
+
 const handleSignup = async () => {
+	signupError.value = null;
+
 	try {
+		const { referrer: _referrer, ...signupPayload } = payload.value;
+
 		await $fetch("/api/v1/auth/signup", {
 			method: "POST",
-			body: payload.value,
+			body: signupPayload,
 		});
-		// Rediriger ou afficher un message de succès
+
 		await login(payload.value.email, payload.value.password);
 
 		await refresh();
 
 		if (session.value) {
-			await navigateTo("/discover");
+			step.value = 2;
 		}
 	} catch (error) {
-		// Gérer les erreurs de connexion
+		signupError.value = getApiErrorMessage(
+			error,
+			"Impossible de créer le compte.",
+		);
+
 		console.error("Signup failed:", error);
 	}
+};
+
+const { $api } = useNuxtApp();
+
+const askEmailConfirmation = async () => {
+	confirmationError.value = null;
+
+	try {
+		await $api("/auth/ask-email-confirmation", {
+			method: "POST",
+			body: { email: payload.value.email },
+		});
+
+		confirmationSent.value = true;
+		return true;
+	} catch (error) {
+		confirmationSent.value = false;
+		confirmationError.value = getApiErrorMessage(
+			error,
+			"Impossible d'envoyer l'e-mail de confirmation.",
+		);
+
+		console.error("Failed to ask for email confirmation:", error);
+		return false;
+	}
+};
+
+const claimReferralLink = async () => {
+	referralError.value = null;
+
+	if (!payload.value.referrer) {
+		step.value = 3;
+		await askEmailConfirmation();
+		return;
+	}
+
+	try {
+		await $api(`/referrals/codes/${payload.value.referrer}/claim`, {
+			method: "POST",
+		});
+
+		await refresh();
+		step.value = 3;
+		await askEmailConfirmation();
+	} catch (error) {
+		referralError.value = getApiErrorMessage(
+			error,
+			"Impossible de réclamer ce code de parrainage.",
+		);
+		console.error("Failed to claim referral link:", error);
+	}
+};
+
+const skipReferral = async () => {
+	referralError.value = null;
+	step.value = 3;
+	await askEmailConfirmation();
 };
 
 definePageMeta({
@@ -117,18 +206,30 @@ useHead({
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg">
-		<h1 class="text-2xl text-center font-bold font-title">Créer un compte</h1>
-		<p v-if="session" class="flex justify-center items-center gap-2 text-center text-success">
+		<h1 class="text-2xl text-center font-bold font-title">
+			Créer un compte
+		</h1>
+		<p
+			v-if="session"
+			class="flex justify-center items-center gap-2 text-center text-success"
+		>
 			Connecté en tant que
 			<span class="flex items-center gap-1">
 				<Avatar
 					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
 					size="sm"
 				/>
-				{{ session.profile.name }}
-			</span>.
+				{{ session.profile.name }} </span
+			>.
 		</p>
-		<form v-if="step === 0" class="flex flex-col gap-6" @submit.prevent="handleSignup">
+		<form
+			v-if="step === 0"
+			class="flex flex-col gap-6"
+			@submit.prevent="step = 1"
+		>
+			<h2 class="text-xl font-semibold font-title">
+				Créer un compte Ademyst
+			</h2>
 			<Input
 				v-model="payload.email"
 				label="Adresse mail liée au compte"
@@ -225,6 +326,52 @@ useHead({
 					Les mots de passe ne correspondent pas.
 				</template>
 			</Input>
+			<div class="flex justify-center items-center gap-4 w-full">
+				<Button
+					label="Suivant"
+					size="medium"
+					submit
+					:disabled="
+						!(
+							valid.email &&
+							valid.password &&
+							valid.password_confirmation
+						)
+					"
+				/>
+			</div>
+		</form>
+		<form
+			v-if="step === 1"
+			class="flex flex-col gap-6"
+			@submit.prevent="handleSignup"
+		>
+			<h2 class="text-xl font-semibold font-title">
+				Lier mon compte Beam
+			</h2>
+			<p class="text-surface-text-muted">
+				Jusqu'au 25 octobre 2026, la possession d'un compte
+				<a
+					href="https://beam.ejnalo.me"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Beam
+				</a>
+				créé avant le 31 aouût 2026 est requise pour créer un compte
+				Ademyst. Pour trouver votre code Sudo, accédez aux paramètres
+				rubrique «
+				<Button
+					label="Transférer vers Beam 2027"
+					variant="link"
+					handler="@:https://beam.ejnalo.me/account/settings?section=transfer"
+					class="inline"
+				/>
+				» puis suivez les instructions.
+			</p>
+			<p v-if="signupError" class="text-center text-danger">
+				{{ signupError }}
+			</p>
 			<Input
 				v-model="payload.token"
 				label="Token de vérification (sudo)"
@@ -235,16 +382,6 @@ useHead({
 			>
 				<template #error> Le token sudo est invalide. </template>
 			</Input>
-			<!--Input
-				v-model="payload.referrer"
-				label="Code de parrainage"
-				type="text"
-				placeholder="XXXXXXXX"
-				:validate="regex.referrer"
-				required
-			>
-				<template #error> Le code de parrainage est invalide. </template>
-			</Input-->
 			<Input
 				v-model="payload.termsOfServiceConsent"
 				label="Accepter les conditions d'utilisation"
@@ -265,9 +402,26 @@ useHead({
 					Vous devez accepter la politique de confidentialité.
 				</template>
 			</Input>
+			<p class="text-surface-text-muted text-sm">
+				En vous inscrivant, vous acceptez nos
+				<Button
+					label="conditions d'utilisation"
+					variant="link"
+					handler="/legal/terms-of-service"
+					class="inline"
+				/>
+				et notre
+				<Button
+					label="politique de confidentialité"
+					variant="link"
+					handler="/legal/privacy-policy"
+					class="inline"
+				/>
+				.
+			</p>
 			<div class="flex justify-center items-center gap-4 w-full">
 				<Button
-					label="S'inscrire"
+					label="M'inscrire"
 					size="medium"
 					submit
 					:disabled="
@@ -277,12 +431,95 @@ useHead({
 							valid.password_confirmation &&
 							valid.termsOfServiceConsent &&
 							valid.privacyPolicyConsent &&
-							valid.token/* &&
-							valid.referrer*/
+							valid.token
 						)
 					"
 				/>
 			</div>
 		</form>
+		<form
+			v-if="step === 2"
+			class="flex flex-col gap-6"
+			@submit.prevent="claimReferralLink"
+		>
+			<h2 class="text-xl font-semibold font-title">
+				Parrainage (optionnel)
+			</h2>
+			<p class="text-surface-text-muted">
+				Si vous avez un code de parrainage, entrez-le ci-dessous pour
+				obtenir des récompenses. Sinon, vous pouvez ignorer cette étape.
+			</p>
+			<p v-if="referralError" class="text-center text-danger">
+				{{ referralError }}
+			</p>
+			<Input
+				v-model="payload.referrer"
+				label="Code de parrainage"
+				type="text"
+				placeholder="XXXXXXXX"
+				:validate="regex.referrer"
+			>
+				<template #error>
+					Le code de parrainage est invalide.
+				</template>
+			</Input>
+			<div class="flex justify-center items-center gap-4 w-full">
+				<Button
+					label="Valider"
+					size="medium"
+					submit
+					:disabled="!valid.referrer"
+				/>
+				<Button
+					label="Ignorer"
+					variant="secondary"
+					size="medium"
+					:handler="skipReferral"
+				/>
+			</div>
+		</form>
+		<div v-if="step === 3" class="flex flex-col gap-6">
+			<template v-if="confirmationSent">
+				<h2 class="text-xl font-bold font-title">
+					E-mail de confirmation envoyé
+				</h2>
+				<p class="text-surface-text-muted">
+					Un e-mail de confirmation a été envoyé à
+					{{ payload.email }}. Consultez votre boîte de réception pour
+					confirmer votre adresse et accéder à toutes les
+					fonctionnalités de votre compte.
+				</p>
+			</template>
+			<template v-else>
+				<h2 class="text-xl font-bold font-title">
+					L'e-mail de confirmation n'a pas pu être envoyé
+				</h2>
+				<p class="text-danger">
+					Une erreur s'est produite lors de l'envoi de l'e-mail de
+					confirmation. Veuillez réessayer.
+				</p>
+			</template>
+			<div class="flex justify-center items-center gap-2 w-full">
+				<Button
+					label="Renvoyer l'e-mail"
+					size="medium"
+					:handler="askEmailConfirmation"
+				/>
+				<Button
+					label="Modifier l'adresse e-mail"
+					variant="secondary"
+					size="medium"
+					handler="/auth/sudo?action=change-email"
+				/>
+			</div>
+			<div class="flex justify-center items-center gap-4 w-full">
+				<Button
+					:label="confirmationSent ? 'Compris' : 'Ignorer'"
+					variant="link"
+					size="medium"
+					handler="/discover"
+				/>
+			</div>
+		</div>
 	</Box>
 </template>

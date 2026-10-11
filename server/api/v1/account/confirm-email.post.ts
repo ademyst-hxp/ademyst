@@ -8,7 +8,10 @@ import {
 	emailConfirmationTokens,
 } from "#server/db/schema/accounts";
 
+import { profiles } from "#server/db/schema/profiles";
+
 import { referrals } from "~~/server/db/schema/referrals";
+import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -29,30 +32,50 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid payload",
+			data: {
+				ok: false,
+				email: null,
+			},
 		});
 	}
 
 	const result = await db.transaction(async (tx) => {
 		const [tokenRow] = await tx
-			.select({
-				id: emailConfirmationTokens.id,
-				accountId: emailConfirmationTokens.accountId,
-				email: emailConfirmationTokens.email,
-			})
+			.select()
 			.from(emailConfirmationTokens)
-			.where(
-				and(
-					eq(emailConfirmationTokens.token, token),
-					isNull(emailConfirmationTokens.usedAt),
-					eq(emailConfirmationTokens.revoked, false),
-				),
-			)
+			.where(eq(emailConfirmationTokens.token, token))
 			.limit(1);
 
 		if (!tokenRow) {
 			throw createError({
 				statusCode: 400,
-				statusMessage: "Invalid or expired token",
+				statusMessage: "Invalid token",
+				data: {
+					ok: false,
+					email: null,
+				},
+			});
+		}
+
+		if (tokenRow.revoked) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Token revoked",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
+			});
+		}
+
+		if (tokenRow.usedAt) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Token already used",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
 			});
 		}
 
@@ -66,6 +89,10 @@ export default defineEventHandler(async (event) => {
 			throw createError({
 				statusCode: 409,
 				statusMessage: "Email already in use",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
 			});
 		}
 
@@ -80,7 +107,7 @@ export default defineEventHandler(async (event) => {
 
 		await tx
 			.update(emailConfirmationTokens)
-			.set({ usedAt: new Date(), revoked: true })
+			.set({ usedAt: new Date() })
 			.where(eq(emailConfirmationTokens.id, tokenRow.id));
 
 		try {
@@ -98,6 +125,44 @@ export default defineEventHandler(async (event) => {
 			});
 		} catch {
 			// Email confirmation already succeeded; notification failures should not fail the request.
+		}
+
+		try {
+			const profileId = await tx
+				.select({ id: profiles.id })
+				.from(profiles)
+				.where(eq(profiles.accountId, tokenRow.accountId))
+				.limit(1)
+				.then((rows) => (rows.length ? rows[0]?.id : null));
+
+			if (!profileId) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to find profile",
+					data: {
+						ok: false,
+						email: tokenRow.email,
+					},
+				});
+			}
+
+			await tx.insert(levelsEntitlements).values({
+				levelId: 3,
+				profileId,
+				name: "Grade 'Membre'",
+				reason: "Adresse e-mail confirmée",
+				createdAt: new Date(),
+			});
+		} catch {
+			tx.rollback();
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to grant entitlements",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
+			});
 		}
 
 		const [myReferral] = await tx

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Account } from "~~/shared/models/accounts";
+
 import Icon from "~/assets/icon.svg";
 
 import {
@@ -22,6 +24,8 @@ import SwitchAccountMenu from "./SwitchAccountMenu.vue";
 const { refresh, logout, session } = useAuthSession();
 refresh();
 
+const { $api } = useNuxtApp();
+
 const { data: notifications, refresh: refreshNotifications } = useAsyncData(
 	"notifications-count",
 	async () => {
@@ -35,6 +39,25 @@ const { data: notifications, refresh: refreshNotifications } = useAsyncData(
 		return response;
 	},
 );
+
+// Vérification du mail (penser à changer le système par la suite)
+type AccountResponse = {
+	status: "ok";
+	data: Account;
+};
+
+const { data: account, refresh: refreshAccount } = await useAsyncData(
+	"settings-account",
+	async () => {
+		return (await $api<AccountResponse>(`/account`)).data;
+	},
+);
+
+const hasWarnings = computed(() => {
+	if (account.value) {
+		return account.value?.email && !account.value?.confirmedAt;
+	}
+});
 
 const isMenuOpen = ref(false);
 const isSwitchAccountMenuOpen = ref(false);
@@ -59,6 +82,10 @@ const path = computed(() => useRoute().path);
 				<div
 					v-if="notifications?.critical"
 					class="bg-danger rounded-full w-2 h-2 animate-pulse"
+				/>
+				<div
+					v-else-if="hasWarnings"
+					class="bg-warning rounded-full w-2 h-2 animate-pulse"
 				/>
 				<div
 					v-else-if="notifications?.total"
@@ -150,6 +177,10 @@ const path = computed(() => useRoute().path);
 				<div
 					v-if="notifications?.critical"
 					class="bg-danger rounded-full w-2 h-2 animate-pulse"
+				/>
+				<div
+					v-else-if="hasWarnings"
+					class="bg-warning rounded-full w-2 h-2 animate-pulse"
 				/>
 				<div
 					v-else-if="notifications?.total"
