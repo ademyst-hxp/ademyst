@@ -15,18 +15,10 @@ import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
 import SocialIcon from "@/components/profile/SocialIcon.vue";
 import BadgeInfo from "@/components/profile/BadgeInfo.vue";
 
-import type { Profile } from "~~/shared/models/profiles";
+import type { Profile, Relationship } from "~~/shared/models/profiles";
 import type { Post } from "~~/shared/models/interactions";
 import type { ProfileReport } from "~~/shared/models/reports";
 import type { Badge } from "~~/shared/models/shop";
-
-type Relationship = {
-	me: boolean;
-	following: boolean;
-	followed: boolean;
-	friend: boolean;
-	blocking: boolean;
-};
 
 type ProfileResponse = {
 	status: "ok";
@@ -110,6 +102,8 @@ const relationship = computed<Relationship>(
 	() =>
 		data.value?.profile.relationships ?? {
 			me: false,
+			requesting: false,
+			requested: false,
 			following: false,
 			followed: false,
 			friend: false,
@@ -247,6 +241,8 @@ const newReport = ref<ProfileReport>({
 		stats: { following: 0, followers: 0 },
 		relationships: {
 			me: false,
+			requesting: false,
+			requested: false,
 			following: false,
 			followed: false,
 			friend: false,
