@@ -99,17 +99,24 @@ const profile = computed(() => data.value?.profile ?? null);
 const stats = computed(
 	() => profile.value?.stats ?? { following: 0, followers: 0 },
 );
-const relationship = computed<Relationship>(
-	() =>
-		data.value?.profile.relationships ?? {
-			me: false,
-			requesting: false,
-			requested: false,
-			following: false,
-			followed: false,
-			friend: false,
-			blocking: false,
-		},
+const relationship = ref<Relationship>({
+	me: false,
+	requesting: false,
+	requested: false,
+	following: false,
+	followed: false,
+	friend: false,
+	blocking: false,
+});
+
+watch(
+	() => data.value?.profile.relationships,
+	(value) => {
+		if (value) {
+			relationship.value = { ...value };
+		}
+	},
+	{ immediate: true },
 );
 
 const canFollowDirectly = computed(() => data.value?.canFollowDirectly ?? true);
