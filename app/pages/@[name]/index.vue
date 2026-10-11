@@ -308,7 +308,7 @@ const profileMenuOptions = computed<
 			icon: ShareIcon,
 			handler: () => {
 				navigator.clipboard.writeText(
-					`https://beam.ejnalo.me/@${profile.value?.name}`,
+					`https://ademyst.ejnalo.me/@${profile.value?.name}`,
 				);
 				alert("Lien copié dans le presse-papiers !");
 			},
