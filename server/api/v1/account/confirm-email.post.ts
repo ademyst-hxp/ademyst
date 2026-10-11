@@ -8,7 +8,10 @@ import {
 	emailConfirmationTokens,
 } from "#server/db/schema/accounts";
 
+import { profiles } from "#server/db/schema/profiles";
+
 import { referrals } from "~~/server/db/schema/referrals";
+import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -122,6 +125,44 @@ export default defineEventHandler(async (event) => {
 			});
 		} catch {
 			// Email confirmation already succeeded; notification failures should not fail the request.
+		}
+
+		try {
+			const profileId = await tx
+				.select({ id: profiles.id })
+				.from(profiles)
+				.where(eq(profiles.accountId, tokenRow.accountId))
+				.limit(1)
+				.then((rows) => (rows.length ? rows[0]?.id : null));
+
+			if (!profileId) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to find profile",
+					data: {
+						ok: false,
+						email: tokenRow.email,
+					},
+				});
+			}
+
+			await tx.insert(levelsEntitlements).values({
+				levelId: 3,
+				profileId,
+				name: "Grade 'Membre'",
+				reason: "Adresse e-mail confirmée",
+				createdAt: new Date(),
+			});
+		} catch {
+			tx.rollback();
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to grant entitlements",
+				data: {
+					ok: false,
+					email: tokenRow.email,
+				},
+			});
 		}
 
 		const [myReferral] = await tx
