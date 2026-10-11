@@ -49,10 +49,15 @@ export default defineEventHandler(async (event) => {
 		rawProfiles,
 	);
 
+	const uniqueProfiles = resolvedProfiles.filter(
+		(profile, index, self) =>
+			index === self.findIndex((p) => p.id === profile.id),
+	);
+
 	return {
 		status: "ok",
-		users: resolvedProfiles,
+		users: uniqueProfiles,
 		next: offset + limit,
-		hasNext: rawProfiles.length === limit,
+		hasNext: uniqueProfiles.length === limit,
 	};
 });
