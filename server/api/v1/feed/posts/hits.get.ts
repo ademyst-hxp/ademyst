@@ -1,4 +1,4 @@
-import { eq, and, lt } from "drizzle-orm/sql/expressions/conditions";
+import { eq, and, gt } from "drizzle-orm/sql/expressions/conditions";
 import { desc } from "drizzle-orm/sql/expressions/select";
 
 import { useDb } from "#server/db";
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
 		.where(
 			and(
 				eq(posts.visibility, "everyone"),
-				lt(
+				gt(
 					posts.createdAt,
 					new Date(Date.now() - 1000 * 60 * 60 * 24 * 7),
 				),
