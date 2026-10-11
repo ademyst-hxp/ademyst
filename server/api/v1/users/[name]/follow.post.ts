@@ -48,6 +48,8 @@ export default defineEventHandler(async (event: H3Event) => {
 		? await getRelationshipStatus(event, identity, profile)
 		: {
 				me: false,
+				requesting: false,
+				requested: false,
 				following: false,
 				followed: false,
 				friend: false,
