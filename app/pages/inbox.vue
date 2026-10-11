@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import Actions from "~/components/base/Actions.vue";
+import WarningBox from "~/components/boxes/Warning.vue";
+
+import { AtSymbolIcon } from "@heroicons/vue/24/outline";
+
+import type { Account } from "~~/shared/models/accounts";
 
 import type {
 	AccountSanctionNotification,
@@ -152,6 +157,20 @@ const tab = ref<"all" | "interactions" | "relations" | "sanctions" | "reports">(
 
 /************************************/
 
+type AccountResponse = {
+	status: "ok";
+	data: Account;
+};
+
+const { data: account, refresh: refreshAccount } = await useAsyncData(
+	"settings-account",
+	async () => {
+		return (await $api<AccountResponse>(`/account`)).data;
+	},
+);
+
+/************************************/
+
 type Action = {
 	label: string;
 	icon: Component;
@@ -211,6 +230,22 @@ const groupedActions = computed(() => {
 		/>
 		<TabBar v-model="tab" :tabs />
 	</Teleport>
+
+	<WarningBox
+		v-if="account?.email && !account?.confirmedAt"
+		title="Adresse e-mail non confirmée"
+	>
+		<p>
+			Votre adresse e-mail n'est pas confirmée. Veuillez vérifier votre boîte
+			de réception pour le lien de confirmation.
+		</p>
+		<RouterLink
+			:to="`/settings/account`"
+			class="font-semibold hover:underline"
+		>
+			Paramètres de compte
+		</RouterLink>
+	</WarningBox>
 
 	<section v-if="tab === 'all'" class="flex flex-col gap-2">
 		<Actions v-for="group in groupedActions" scale="sm" :actions="group" />
