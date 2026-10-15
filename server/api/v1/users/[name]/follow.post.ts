@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { profiles } from "~~/server/db/schema/profiles";
 import { follows, requests } from "~~/server/db/schema/relations";
+import { followNotifications } from "~~/server/db/schema/inbox";
 
 import {
 	getRelationshipStatus,
@@ -104,6 +105,12 @@ export default defineEventHandler(async (event: H3Event) => {
 			followingId: profile.id,
 		});
 
+		await db.insert(followNotifications).values({
+			profileId: profile.id,
+			issuerId: identity.profileId as string,
+			type: "happened",
+		});
+
 		return {
 			status: "ok",
 			message: "Now following this user",
@@ -115,6 +122,12 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 
 		if (result) {
+			await db.insert(followNotifications).values({
+				profileId: profile.id,
+				issuerId: identity.profileId as string,
+				type: "request",
+			});
+
 			return {
 				status: "ok",
 				message: "Follow request sent",

@@ -13,7 +13,11 @@ import {
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 import { profiles } from "~~/server/db/schema/profiles";
-import { accountSanctionNotifications } from "~~/server/db/schema/inbox";
+import { posts } from "~~/server/db/schema/interactions";
+import {
+	accountSanctionNotifications,
+	postSanctionNotifications,
+} from "~~/server/db/schema/inbox";
 import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 
 export default defineEventHandler(async (event: H3Event) => {
@@ -39,12 +43,7 @@ export default defineEventHandler(async (event: H3Event) => {
 			report_id?: string;
 		};
 
-	const validTypes: SanctionType[] = [
-		"ban",
-		"mute",
-		"shadow_ban",
-		"warning",
-	];
+	const validTypes: SanctionType[] = ["ban", "mute", "shadow_ban", "warning"];
 
 	if (!type || !validTypes.includes(type)) {
 		throw createError({
@@ -222,11 +221,9 @@ export default defineEventHandler(async (event: H3Event) => {
 				reason: reason.trim(),
 				details,
 				expiresAt,
-				profileReportId:
-					report_type === "profile" ? report_id : null,
+				profileReportId: report_type === "profile" ? report_id : null,
 				postReportId: report_type === "post" ? report_id : null,
-				whisperReportId:
-					report_type === "whisper" ? report_id : null,
+				whisperReportId: report_type === "whisper" ? report_id : null,
 			})
 			.returning();
 
@@ -293,6 +290,34 @@ export default defineEventHandler(async (event: H3Event) => {
 			reason: createdSanction.reason,
 			details: createdSanction.details ?? "",
 		});
+
+		if (report_type === "post" && report_id) {
+			const [postReport] = await tx
+				.select({ reportedPostId: postReports.reportedPostId })
+				.from(postReports)
+				.where(eq(postReports.id, report_id))
+				.limit(1);
+
+			if (postReport) {
+				const [post] = await tx
+					.select({ id: posts.id, profileId: posts.profileId })
+					.from(posts)
+					.where(eq(posts.id, postReport.reportedPostId))
+					.limit(1);
+
+				if (post && post.profileId !== identity.profileId) {
+					await tx.insert(postSanctionNotifications).values({
+						profileId: post.profileId,
+						issuerId: identity.profileId,
+						postId: post.id,
+						sanctionId: createdSanction.id,
+						type: type === "warning" ? "flag" : "removal",
+						reason: createdSanction.reason,
+						details: createdSanction.details ?? "",
+					});
+				}
+			}
+		}
 
 		return createdSanction;
 	});

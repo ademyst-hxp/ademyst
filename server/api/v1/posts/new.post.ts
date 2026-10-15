@@ -3,6 +3,9 @@ import type { H3Event } from "h3";
 import { useDb } from "#server/db";
 
 import { posts } from "#server/db/schema/interactions";
+import { postNotifications } from "#server/db/schema/inbox";
+import { follows } from "#server/db/schema/relations";
+import { eq } from "drizzle-orm";
 
 import { generateHexId } from "#server/utils/ids";
 
@@ -99,6 +102,41 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusCode: 500,
 			statusMessage: "Failed to create post",
 		});
+	}
+
+	if (parentId && createdPost.profileId !== identity.profileId) {
+		const [parentPost] = await db
+			.select({ profileId: posts.profileId })
+			.from(posts)
+			.where(eq(posts.id, parentId))
+			.limit(1);
+
+		if (parentPost && parentPost.profileId !== identity.profileId) {
+			await db.insert(postNotifications).values({
+				profileId: parentPost.profileId,
+				issuerId: identity.profileId,
+				postId: createdPost.id,
+				type: "reply",
+			});
+		}
+	}
+
+	if (visibility !== "me" && visibility !== "friends") {
+		const followers = await db
+			.select({ profileId: follows.followerId })
+			.from(follows)
+			.where(eq(follows.followingId, identity.profileId));
+
+		if (followers.length > 0) {
+			await db.insert(postNotifications).values(
+				followers.map(({ profileId }) => ({
+					profileId,
+					issuerId: identity.profileId,
+					postId: createdPost.id,
+					type: "suggestion" as const,
+				})),
+			);
+		}
 	}
 
 	const post = await retrieveCleanPost(event, identity, createdPost);

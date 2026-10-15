@@ -4,6 +4,7 @@ import { useDb } from "#server/db";
 import { and, eq } from "drizzle-orm";
 
 import { whisperReactions } from "#server/db/schema/interactions";
+import { whisperNotifications } from "#server/db/schema/inbox";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
@@ -27,6 +28,16 @@ export default defineEventHandler(async (event) => {
 			and(
 				eq(whisperReactions.whisperId, whisperId),
 				eq(whisperReactions.profileId, identity.profileId),
+			),
+		);
+
+	await db
+		.delete(whisperNotifications)
+		.where(
+			and(
+				eq(whisperNotifications.whisperId, whisperId),
+				eq(whisperNotifications.issuerId, identity.profileId),
+				eq(whisperNotifications.type, "reaction"),
 			),
 		);
 
