@@ -130,7 +130,7 @@ const actions = computed(() => {
 		handler: copyLinkToClipboard,
 	});
 
-	if (session.value?.profile?.level ?? 0 > 6) {
+	if ((session.value?.profile?.level ?? 0) > 6) {
 		actions.push({
 			label: "Modérer la publication",
 			icon: ScaleIcon,

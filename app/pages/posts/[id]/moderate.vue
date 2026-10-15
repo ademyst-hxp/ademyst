@@ -53,7 +53,7 @@ definePageMeta({
 	title: "Modérer une publication | Ademyst",
 	description: "Modérez une publication sur Ademyst.",
 	layout: "default",
-	middleware: ["auth"],
+	middleware: ["auth", "moderation"],
 });
 
 useHead({
