@@ -2,7 +2,7 @@
 import type { WhisperNotification } from "#shared/models/inbox";
 import Box from "~/components/base/Box.vue";
 
-import WhisperIcon from "~/assets/icons/whispers-feather.svg";
+import WhisperIcon from "~/assets/whispers-feather.svg";
 
 const props = withDefaults(
 	defineProps<{
