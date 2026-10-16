@@ -26,23 +26,25 @@ export const accounts = pgTable("accounts", {
 
 export type Account = typeof accounts.$inferSelect;
 
-export const sessions = pgTable("sessions", {
-	id: uuid("id").defaultRandom().primaryKey(),
+export const sessions = pgTable(
+	"sessions",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
 
-	accountId: uuid("account_id")
-		.notNull()
-		.references(() => accounts.id, { onDelete: "cascade" }),
+		accountId: uuid("account_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
 
-	token: text("token").notNull().unique(),
+		token: text("token").notNull().unique(),
 
-	ipAddress: text("ip_address"),
-	userAgent: text("user_agent"),
+		ipAddress: text("ip_address"),
+		userAgent: text("user_agent"),
 
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull(),
-}, (table) => [
-	index("sessions_account_id_idx").on(table.accountId),
-]).enableRLS();
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => [index("sessions_account_id_idx").on(table.accountId)],
+).enableRLS();
 
 export type Session = typeof sessions.$inferSelect;
 
@@ -89,6 +91,29 @@ export const emailConfirmationTokens = pgTable("email_confirmation_tokens", {
 
 export type EmailConfirmationToken =
 	typeof emailConfirmationTokens.$inferSelect;
+
+export const emailChangeTokens = pgTable("email_change_tokens", {
+	id: uuid("id").defaultRandom().primaryKey(),
+
+	accountId: uuid("account_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+
+	token: text("token").notNull().unique(),
+
+	email: text("email").notNull(),
+
+	ipAddress: text("ip_address"),
+	userAgent: text("user_agent"),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+	usedAt: timestamp("used_at"),
+	revoked: boolean("revoked").default(false).notNull(),
+}).enableRLS();
+
+export type EmailChangeToken = typeof emailChangeTokens.$inferSelect;
 
 export const accountDeletionTokens = pgTable("account_deletion_tokens", {
 	id: uuid("id").defaultRandom().primaryKey(),
@@ -137,4 +162,5 @@ export const accountModificationHistory = pgTable(
 	},
 ).enableRLS();
 
-export type AccountModificationHistory = typeof accountModificationHistory.$inferSelect
+export type AccountModificationHistory =
+	typeof accountModificationHistory.$inferSelect;
