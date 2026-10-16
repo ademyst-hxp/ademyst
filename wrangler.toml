@@ -11,3 +11,7 @@ directory = ".output/public"
 [images]
 binding = "IMAGES"
 remote = true
+
+[previews.images]
+binding = "IMAGES"
+remote = true
