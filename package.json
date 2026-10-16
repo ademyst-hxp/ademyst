@@ -1,5 +1,6 @@
 {
 	"name": "www-v3",
+	"version": "3.0.0",
 	"type": "module",
 	"private": true,
 	"scripts": {
