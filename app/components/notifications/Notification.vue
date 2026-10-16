@@ -10,6 +10,8 @@ import type {
 
 import SanctionNotificationBox from "~/components/notifications/SanctionNotification.vue";
 import FollowNotificationBox from "~/components/notifications/FollowNotification.vue";
+import PostNotificationBox from "~/components/notifications/PostNotification.vue";
+import WhisperNotificationBox from "~/components/notifications/WhisperNotification.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -36,6 +38,16 @@ const props = withDefaults(
 	<FollowNotificationBox
 		v-else-if="'relationship' in data"
 		:data="data"
+		:scale="scale"
+	/>
+	<PostNotificationBox
+		v-else-if="'post' in data"
+		:data="data as PostNotification"
+		:scale="scale"
+	/>
+	<WhisperNotificationBox
+		v-else-if="'whisper' in data"
+		:data="data as WhisperNotification"
 		:scale="scale"
 	/>
 	<div v-else class="flex flex-col gap-2">
