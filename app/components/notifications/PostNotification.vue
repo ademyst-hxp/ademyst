@@ -90,7 +90,7 @@ const props = withDefaults(
 		</div>
 		<PostCard
 			:data="data.post"
-			class="w-full mt-2"
+			class="w-full -mx-2 mt-2"
 		/>
 	</Box>
 </template>
