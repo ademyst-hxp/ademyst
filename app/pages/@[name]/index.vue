@@ -447,6 +447,30 @@ const focusedBadge = ref<Badge | null>(null);
 				<span v-else class="text-muted text-lg font-semibold">
 					{{ `@${profile?.name ?? "ghost"}` }}
 				</span>
+
+				<div
+					v-if="profile?.pronouns || relationship?.followed"
+					class="flex items-center gap-2"
+				>
+					<span
+						v-if="profile?.pronouns"
+						class="text-muted text-sm font-medium"
+					>
+						{{ profile.pronouns }}
+					</span>
+					<span
+						v-if="profile?.pronouns && relationship?.followed"
+						class="text-muted text-sm font-medium"
+					>
+						•
+					</span>
+					<span
+						v-if="relationship?.followed"
+						class="bg-primary/10 text-primary rounded-full px-2 py-1 text-sm font-medium"
+					>
+						Vous suit
+					</span>
+				</div>
 			</div>
 		</section>
 
