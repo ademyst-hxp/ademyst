@@ -160,10 +160,11 @@ const rendered = computed(() => {
 			<div class="grow" />
 			<div
 				v-if="post.visibility === 'friends'"
-				class="flex items-center gap-1 bg-tertiary rounded-full px-2 py-1 text-sm text-white font-semibold"
+				class="cursor-pointer flex items-center gap-1 bg-tertiary rounded-full px-3 py-2 text-sm text-white font-semibold"
+				tabindex="0"
 				@click="isFriendOnlyPopupOpen = true"
 			>
-				<HeartIcon class="h-5 w-5" />
+				<HeartSolidIcon class="h-5 w-5" />
 			</div>
 			<span
 				class="text-surface-text-muted"
@@ -181,9 +182,9 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div v-if="post.parentId" class="flex items-center gap-2 px-2 -mb-2">
-			<ChatBubbleLeftRightIcon class="h-6 w-6" />
-			<p class="text-sm text-surface-text-muted">
+		<div v-if="post.parentId" class="flex items-center gap-2 text-surface-text-muted px-2 -mb-2">
+			<ChatBubbleLeftRightIcon class="h-4 w-4" />
+			<p class="text-sm">
 				En réponse à
 				<RouterLink
 					:to="`/posts/${post.parentId}`"
