@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-import Actions from "~/components/base/Actions.vue";
-
-import Avatar from "~/components/profile/Avatar.vue";
+import { CheckBadgeIcon, ChevronLeftIcon, KeyIcon, ShieldCheckIcon, XMarkIcon } from "@heroicons/vue/24/outline";
 import SocialIcon from "~/components/profile/SocialIcon.vue";
 
-import {
-	XMarkIcon,
-	ChevronLeftIcon,
-	KeyIcon,
-	ShieldCheckIcon,
-	CheckBadgeIcon,
-} from "@heroicons/vue/24/outline";
+import Actions from "~/components/base/Actions.vue";
+import Box from "~/components/base/Box.vue";
+import Avatar from "~/components/profile/Avatar.vue";
 
 const { session, refresh } = useAuthSession();
 await refresh();

@@ -1,7 +1,6 @@
 import { useDb } from "#server/db";
+import { profileLinks, profiles } from "~~/server/db/schema/profiles";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
-
-import { profiles, profileLinks } from "~~/server/db/schema/profiles";
 
 import { getIdentity } from "#server/utils/auth";
 import { verifyBeamProfile } from "#server/utils/beam";

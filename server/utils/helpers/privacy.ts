@@ -1,11 +1,11 @@
-import { and, eq, or, inArray } from "drizzle-orm";
-
 import { useDb } from "#server/db";
-import type { H3Event } from "h3";
-
-import { blocks, requests, follows, friendships } from "#server/db/schema/relations";
 import { Profile, profiles } from "#server/db/schema/profiles";
-import { privacySettings, PrivacySettings } from "#server/db/schema/settings";
+import { blocks, follows, friendships, requests } from "#server/db/schema/relations";
+import { privacySettings } from "#server/db/schema/settings";
+import { PrivacySettings } from "#server/db/schema/settings";
+import { and, eq, inArray, or } from "drizzle-orm";
+
+import type { H3Event } from "h3";
 
 import { Identity } from "../auth";
 

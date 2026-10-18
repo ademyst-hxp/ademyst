@@ -1,7 +1,7 @@
-import { createError, defineEventHandler, readMultipartFormData } from "h3";
-
-import { processAvatar } from "~~/server/utils/helpers/files";
 import { useDrive } from "~~/server/utils/drive";
+import { processAvatar } from "~~/server/utils/helpers/files";
+
+import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
 export default defineEventHandler(async (event) => {
 	const identity = await requireAuth(event);

@@ -1,13 +1,10 @@
-import postgres from "postgres";
+import { badges_families, badges, levels } from "../../server/db/schema/shop";
+import type { Badge as DbBadge } from "../../server/db/schema/shop";
+import type { BadgeFamily as DbBadgeFamily } from "../../server/db/schema/shop";
+import type { Level as DbLevel } from "../../server/db/schema/shop";
 import { drizzle } from "drizzle-orm/postgres-js";
 
-import type {
-	Badge as DbBadge,
-	BadgeFamily as DbBadgeFamily,
-	Level as DbLevel,
-} from "../../server/db/schema/shop";
-
-import { levels, badges, badges_families } from "../../server/db/schema/shop";
+import postgres from "postgres";
 
 const databaseUrl = process.env.DATABASE_URL;
 console.log("Seeding database with URL:", databaseUrl);

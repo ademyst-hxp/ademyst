@@ -1,5 +1,4 @@
 import { useDb } from "~~/server/db";
-
 import { profileReports } from "~~/server/db/schema/reports";
 
 import { retrieveSeveralCleanProfileReports } from "~~/server/utils/converters/reports";

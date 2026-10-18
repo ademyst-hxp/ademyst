@@ -1,24 +1,17 @@
 <script setup lang="ts">
+import type { Post } from "~~/shared/models/interactions";
+import type { Profile } from "~~/shared/models/profiles";
+import type { Relationship } from "~~/shared/models/profiles";
+import type { ProfileReport } from "~~/shared/models/reports";
+import type { Badge } from "~~/shared/models/shop";
+
+import SocialIcon from "@/components/profile/SocialIcon.vue";
+import { AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
-import {
-	FlagIcon,
-	ScaleIcon,
-	HeartIcon,
-	UserMinusIcon,
-	EllipsisVerticalIcon,
-	ShareIcon,
-	AtSymbolIcon,
-} from "@heroicons/vue/24/outline";
 
 import PostView from "@/components/interactions/Post.vue";
 import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
-import SocialIcon from "@/components/profile/SocialIcon.vue";
 import BadgeInfo from "@/components/profile/BadgeInfo.vue";
-
-import type { Profile, Relationship } from "~~/shared/models/profiles";
-import type { Post } from "~~/shared/models/interactions";
-import type { ProfileReport } from "~~/shared/models/reports";
-import type { Badge } from "~~/shared/models/shop";
 
 type ProfileResponse = {
 	status: "ok";

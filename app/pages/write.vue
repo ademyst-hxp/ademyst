@@ -1,16 +1,10 @@
 <script setup lang="ts">
+import type { Post } from "~~/shared/models/interactions";
+
+import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
-
-import {
-	GlobeAltIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-} from "@heroicons/vue/24/outline";
-
-import type { Post } from "~~/shared/models/interactions";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();

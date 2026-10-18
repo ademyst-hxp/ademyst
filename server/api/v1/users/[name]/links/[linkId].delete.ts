@@ -1,9 +1,6 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
+import { profileLinks, profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm";
-
-import { profiles, profileLinks } from "~~/server/db/schema/profiles";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

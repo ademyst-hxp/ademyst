@@ -1,37 +1,24 @@
 <script setup lang="ts">
-import Actions from "~/components/base/Actions.vue";
-import WarningBox from "~/components/boxes/Warning.vue";
-
-import { AtSymbolIcon } from "@heroicons/vue/24/outline";
+import { getNotificationAction, getNotificationType, makeNotificationGroups } from "~/utils/notifications";
 
 import type { Account } from "~~/shared/models/accounts";
-
-import type {
-	AccountSanctionNotification,
-	PostSanctionNotification,
-	ReportNotification,
-	PostNotification,
-	WhisperNotification,
-	FollowNotification,
-} from "~~/shared/models/inbox";
-
+import type { AccountSanctionNotification } from "~~/shared/models/inbox";
+import type { FollowNotification } from "~~/shared/models/inbox";
+import type { PostNotification } from "~~/shared/models/inbox";
+import type { PostSanctionNotification } from "~~/shared/models/inbox";
+import type { ReportNotification } from "~~/shared/models/inbox";
+import type { WhisperNotification } from "~~/shared/models/inbox";
+import type { Post } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
 import type { Profile } from "~~/shared/models/profiles";
+import type { PostReport } from "~~/shared/models/reports";
+import type { ProfileReport } from "~~/shared/models/reports";
+import type { WhisperReport } from "~~/shared/models/reports";
 import type { Sanction } from "~~/shared/models/sanctions";
-import type {
-	ProfileReport,
-	PostReport,
-	WhisperReport,
-} from "~~/shared/models/reports";
 
-import type { Post, Whisper } from "~~/shared/models/interactions";
-
+import Actions from "~/components/base/Actions.vue";
+import WarningBox from "~/components/boxes/Warning.vue";
 import NotificationBox from "~/components/notifications/Notification.vue";
-
-import {
-	getNotificationType,
-	makeNotificationGroups,
-	getNotificationAction,
-} from "~/utils/notifications";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();

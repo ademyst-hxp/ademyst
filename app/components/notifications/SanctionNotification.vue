@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import type {
-	AccountSanctionNotification,
-	PostSanctionNotification,
-} from "#shared/models/inbox";
-
-import Box from "~/components/base/Box.vue";
-
-import PostCard from "~/components/cards/PostCard.vue";
-import SanctionCard from "~/components/cards/SanctionCard.vue";
+import type { AccountSanctionNotification } from "#shared/models/inbox";
+import type { PostSanctionNotification } from "#shared/models/inbox";
 
 import { ScaleIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
+import PostCard from "~/components/cards/PostCard.vue";
+import SanctionCard from "~/components/cards/SanctionCard.vue";
 
 const props = withDefaults(
 	defineProps<{

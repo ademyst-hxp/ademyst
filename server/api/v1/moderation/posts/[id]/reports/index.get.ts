@@ -1,12 +1,11 @@
-import { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
-import { eq } from "drizzle-orm";
 import { postReports } from "~~/server/db/schema/reports";
-
-import { normalizeId } from "~~/server/utils/normalizers/ids";
+import { eq } from "drizzle-orm";
 
 import { requireAuth } from "~~/server/utils/middleware/auth";
+import { normalizeId } from "~~/server/utils/normalizers/ids";
+
+import { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

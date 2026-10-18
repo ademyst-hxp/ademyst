@@ -1,5 +1,6 @@
-import { FetchError } from "ofetch";
 import type { StoredSession } from "~/composables/useAuthSession";
+
+import { FetchError } from "ofetch";
 
 export default defineNuxtPlugin(() => {
 	const accessToken = useCookie<string | null>("accessToken");

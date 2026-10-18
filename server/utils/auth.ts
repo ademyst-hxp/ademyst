@@ -1,14 +1,13 @@
-import { eq, and } from "drizzle-orm";
-
 import { useDb } from "../db";
-import type { H3Event } from "h3";
+import { Account } from "../db/schema/accounts";
+import { accounts, sessions } from "../db/schema/accounts";
+import { levelsEntitlements } from "../db/schema/entitlements";
+import { type LevelEntitlement } from "../db/schema/entitlements";
+import { Profile } from "../db/schema/profiles";
+import { profiles } from "../db/schema/profiles";
+import { and, eq } from "drizzle-orm";
 
-import { profiles, Profile } from "../db/schema/profiles";
-import { accounts, Account, sessions } from "../db/schema/accounts";
-import {
-	levelsEntitlements,
-	type LevelEntitlement,
-} from "../db/schema/entitlements";
+import type { H3Event } from "h3";
 
 export interface Identity {
 	profileId: string;

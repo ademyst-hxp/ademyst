@@ -1,15 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-	pgTable,
-	text,
-	timestamp,
-	pgEnum,
-	foreignKey,
-	check,
-	varchar,
-	uuid,
-	index,
-} from "drizzle-orm/pg-core";
+import { check, foreignKey, index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
 

@@ -1,15 +1,8 @@
-import type { H3Event } from "h3";
 import { useDb } from "#server/db";
-import { eq, count } from "drizzle-orm";
+import { accountSanctionNotifications, followNotifications, postNotifications, postSanctionNotifications, reportNotifications, whisperNotifications } from "#server/db/schema/inbox";
+import { eq } from "drizzle-orm";
 
-import {
-	accountSanctionNotifications,
-	postSanctionNotifications,
-	reportNotifications,
-	postNotifications,
-	whisperNotifications,
-	followNotifications,
-} from "#server/db/schema/inbox";
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

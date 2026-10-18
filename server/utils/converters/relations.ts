@@ -1,18 +1,16 @@
-import type {
-	Follow as DbFollow,
-	Friendship as DbFriendship,
-	ContentSubscription as DbContentSubscription,
-	Request as DbRequest,
-	Block as DbBlock,
-} from "~~/server/db/schema/relations";
-import type {
-	Follow,
-	Friendship,
-	ContentSubscription,
-	Request,
-	Block,
-} from "~~/shared/models/relations";
+import type { Block as DbBlock } from "~~/server/db/schema/relations";
+import type { ContentSubscription as DbContentSubscription } from "~~/server/db/schema/relations";
+import type { Follow as DbFollow } from "~~/server/db/schema/relations";
+import type { Friendship as DbFriendship } from "~~/server/db/schema/relations";
+import type { Request as DbRequest } from "~~/server/db/schema/relations";
+
 import type { Profile } from "~~/shared/models/profiles";
+import type { Block } from "~~/shared/models/relations";
+import type { ContentSubscription } from "~~/shared/models/relations";
+import type { Follow } from "~~/shared/models/relations";
+import type { Friendship } from "~~/shared/models/relations";
+import type { Request } from "~~/shared/models/relations";
+
 
 export function convertFollow(
 	follow: DbFollow,

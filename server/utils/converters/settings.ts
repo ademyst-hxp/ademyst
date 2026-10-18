@@ -1,13 +1,10 @@
-import type {
-	AppearanceSettings as DbAppearanceSettings,
-	PrivacySettings as DbPrivacySettings,
-	NotificationSettings as DbNotificationSettings,
-} from "~~/server/db/schema/settings";
-import type {
-	AppearanceSettings,
-	PrivacySettings,
-	NotificationSettings,
-} from "~~/shared/models/settings";
+import type { AppearanceSettings as DbAppearanceSettings } from "~~/server/db/schema/settings";
+import type { NotificationSettings as DbNotificationSettings } from "~~/server/db/schema/settings";
+import type { PrivacySettings as DbPrivacySettings } from "~~/server/db/schema/settings";
+
+import type { AppearanceSettings } from "~~/shared/models/settings";
+import type { NotificationSettings } from "~~/shared/models/settings";
+import type { PrivacySettings } from "~~/shared/models/settings";
 
 export function convertAppearanceSettings(
 	setting: DbAppearanceSettings,

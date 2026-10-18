@@ -1,5 +1,6 @@
 import type { PostFlagType } from "~~/shared/models/interactions";
 
+
 export const calculateRatingScore = (
 	date: Date | string,
 	content: string,

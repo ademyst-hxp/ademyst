@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { Profile } from "~~/shared/models/profiles";
 
-import ProfileRow from "./ProfileRow.vue";
-
 import { PlusIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
+
+import ProfileRow from "./ProfileRow.vue";
 
 const { $api } = useNuxtApp();
 const { session } = useAuthSession();

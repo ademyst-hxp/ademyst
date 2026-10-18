@@ -1,16 +1,12 @@
 <script setup lang="ts">
+import type { Referral } from "~~/shared/models/referrals";
+import type { ReferralCode } from "~~/shared/models/referrals";
+
+import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@heroicons/vue/24/outline";
+
 import Box from "~/components/base/Box.vue";
-import ProfileRow from "~/components/profile/ProfileRow.vue";
-
-import {
-	UsersIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "@heroicons/vue/24/outline";
-
 import Info from "~/components/boxes/Info.vue";
-
-import type { Referral, ReferralCode } from "~~/shared/models/referrals";
+import ProfileRow from "~/components/profile/ProfileRow.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();

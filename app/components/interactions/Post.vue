@@ -1,32 +1,15 @@
 <script setup lang="ts">
-import type { Post, PostFlag } from "~~/shared/models/interactions";
+import { convertToLitteralDuration } from "~/utils/date";
+
+import type { Post } from "~~/shared/models/interactions";
+
+import { BookmarkIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChatBubbleOvalLeftEllipsisIcon, ClipboardDocumentIcon, FlagIcon, HeartIcon, PaperAirplaneIcon, PencilIcon, ScaleIcon, TrashIcon } from "@heroicons/vue/24/outline";
+import { EllipsisVerticalIcon, HeartIcon as HeartSolidIcon } from "@heroicons/vue/24/solid";
 
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
-
-import ProfileRow from "../profile/ProfileRow.vue";
-
-import { convertToLitteralDuration } from "~/utils/date";
-
-import {
-	EllipsisVerticalIcon,
-	HeartIcon as HeartSolidIcon,
-} from "@heroicons/vue/24/solid";
-import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
-	HeartIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-	ChatBubbleLeftRightIcon,
-	PaperAirplaneIcon,
-	ClipboardDocumentIcon,
-	ScaleIcon,
-	ChartBarIcon,
-	BookmarkIcon,
-} from "@heroicons/vue/24/outline";
-import PostCard from "../cards/PostCard.vue";
 import Warning from "../boxes/Warning.vue";
+import ProfileRow from "../profile/ProfileRow.vue";
 
 const props = withDefaults(
 	defineProps<{

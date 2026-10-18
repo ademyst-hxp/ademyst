@@ -1,7 +1,7 @@
 import { useDb } from "~~/server/db";
-import { eq, and } from "drizzle-orm";
-
 import { posts, postsFlags } from "~~/server/db/schema/interactions";
+import { and, eq } from "drizzle-orm";
+
 import type { PostFlag } from "~~/shared/models/interactions";
 
 type PostFlagType = Exclude<PostFlag["type"], "reported">;

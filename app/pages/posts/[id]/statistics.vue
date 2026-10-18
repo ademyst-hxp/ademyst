@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { ExclamationCircleIcon } from "@heroicons/vue/24/outline";
+import { ratingScoreDetails } from "~~/shared/utils/interactions";
 
 import type { Post } from "~~/shared/models/interactions";
 import type { PostReport } from "~~/shared/models/reports";
 
-import PostBox from "~/components/interactions/Post.vue";
+import { ExclamationCircleIcon } from "@heroicons/vue/24/outline";
 
 import Box from "~/components/base/Box.vue";
 import Table from "~/components/base/Table.vue";
-
 import InfoBox from "~/components/boxes/Info.vue";
-
-import { ratingScoreDetails } from "~~/shared/utils/interactions";
+import PostBox from "~/components/interactions/Post.vue";
 
 const error = ref<string | null>(null);
 
@@ -183,7 +181,7 @@ const getGradeLabel = (level: number | null): string => {
 		case 7:
 			return "Modérateur(trice)";
 		case 8:
-			return "Équipe Ademyst";
+			return "�0quipe Ademyst";
 		case 9:
 			return "Fondateur";
 		default:

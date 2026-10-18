@@ -1,8 +1,13 @@
-import type { Post, Whisper } from "./interactions";
-import type { Follow, Request } from "./relations";
+import type { Post } from "./interactions";
+import type { Whisper } from "./interactions";
 import type { Profile } from "./profiles";
+import type { Follow } from "./relations";
+import type { Request } from "./relations";
+import type { PostReport } from "./reports";
+import type { ProfileReport } from "./reports";
+import type { WhisperReport } from "./reports";
 import type { Sanction } from "./sanctions";
-import type { ProfileReport, PostReport, WhisperReport } from "./reports";
+
 
 // 5 types de notifications : interactions, relations, sanctions, signalements, autres
 export type InteractionNotificationType =

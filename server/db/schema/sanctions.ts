@@ -1,7 +1,7 @@
-import { pgTable, uuid, timestamp, text, pgEnum } from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
-import { profileReports, postReports, whisperReports } from "./reports";
+import { postReports, profileReports, whisperReports } from "./reports";
 
 export const sanctionTypeEnum = pgEnum("sanction_type", [
 	"ban", // niveau 0

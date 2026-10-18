@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WhisperNotification } from "#shared/models/inbox";
+
 import Box from "~/components/base/Box.vue";
 
 import WhisperIcon from "~/assets/whispers-feather.svg";

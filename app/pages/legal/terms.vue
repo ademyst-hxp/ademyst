@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-	DocumentTextIcon,
-	EnvelopeIcon,
-	ExclamationTriangleIcon,
-} from "@heroicons/vue/24/outline";
+import { DocumentTextIcon, EnvelopeIcon, ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 
 definePageMeta({
 	title: "Ademyst: Conditions d'utilisation",

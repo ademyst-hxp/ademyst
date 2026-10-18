@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import type {
-	AccountSanctionNotification,
-	PostSanctionNotification,
-	ReportNotification,
-	PostNotification,
-	WhisperNotification,
-	FollowNotification,
-} from "#shared/models/inbox";
+import { getNotificationType } from "~/utils/notifications";
 
-import SanctionNotificationBox from "~/components/notifications/SanctionNotification.vue";
+import type { AccountSanctionNotification, FollowNotification, PostNotification, PostSanctionNotification, WhisperNotification } from "#shared/models/inbox";
+import type { ReportNotification } from "#shared/models/inbox";
+
 import FollowNotificationBox from "~/components/notifications/FollowNotification.vue";
 import PostNotificationBox from "~/components/notifications/PostNotification.vue";
+import SanctionNotificationBox from "~/components/notifications/SanctionNotification.vue";
 import WhisperNotificationBox from "~/components/notifications/WhisperNotification.vue";
-
-import { getNotificationType } from "~/utils/notifications";
 
 const props = withDefaults(
 	defineProps<{

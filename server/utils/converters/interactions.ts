@@ -1,52 +1,26 @@
+import { useDb } from "#server/db";
+import { attachments } from "~~/server/db/schema/drive";
+import { postReactions, posts, postsFlags } from "~~/server/db/schema/interactions";
+import { type Post as DbPost } from "~~/server/db/schema/interactions";
+import { type PostFlag as DbPostFlag } from "~~/server/db/schema/interactions";
+import { type PostReaction as DbPostReaction } from "~~/server/db/schema/interactions";
+import { type Whisper as DbWhisper } from "~~/server/db/schema/interactions";
+import { type WhisperReaction as DbWhisperReaction } from "~~/server/db/schema/interactions";
+import { profiles } from "~~/server/db/schema/profiles";
+import { postReports } from "~~/server/db/schema/reports";
 import { and, count, eq, inArray, or } from "drizzle-orm";
 
-import type { H3Event } from "h3";
-
-import { useDb } from "#server/db";
-
-import {
-	type Post as DbPost,
-	type PostReaction as DbPostReaction,
-	type PostFlag as DbPostFlag,
-	type Whisper as DbWhisper,
-	type WhisperReaction as DbWhisperReaction,
-	postReactions,
-	postsFlags,
-	posts,
-	whispers,
-} from "~~/server/db/schema/interactions";
-
-import { postReports } from "~~/server/db/schema/reports";
-
-import { profiles } from "~~/server/db/schema/profiles";
-
-import { attachments } from "~~/server/db/schema/drive";
-
-import type {
-	Post,
-	PostFlag,
-	PostReaction,
-	PostReactionType,
-	Whisper,
-	WhisperReaction,
-} from "~~/shared/models/interactions";
-
-import type { Profile } from "~~/shared/models/profiles";
-
-import {
-	retrieveCleanProfile,
-	retrieveSeveralCleanProfiles,
-} from "~~/server/utils/converters/profiles";
-
-import {
-	getRelationshipStatus,
-	getPrivacySettings,
-	getSeveralRelationshipStatus,
-	getSeveralPrivacySettings,
-	canAccessEntity,
-} from "~~/server/utils/helpers/privacy";
-
+import { retrieveCleanProfile, retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
+import { canAccessEntity, getPrivacySettings, getRelationshipStatus, getSeveralPrivacySettings, getSeveralRelationshipStatus } from "~~/server/utils/helpers/privacy";
 import { calculateRatingScore } from "~~/shared/utils/interactions";
+
+import type { Post } from "~~/shared/models/interactions";
+import type { PostFlag, PostReactionType } from "~~/shared/models/interactions";
+import type { PostReaction } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
+import type { WhisperReaction } from "~~/shared/models/interactions";
+import type { Profile } from "~~/shared/models/profiles";
+import type { H3Event } from "h3";
 
 function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
 	const map = new Map<K, T[]>();

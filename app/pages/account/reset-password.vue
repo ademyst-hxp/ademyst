@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtSymbolIcon, KeyIcon, HomeIcon } from "@heroicons/vue/24/solid";
+import { HomeIcon, KeyIcon } from "@heroicons/vue/24/solid";
 
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";

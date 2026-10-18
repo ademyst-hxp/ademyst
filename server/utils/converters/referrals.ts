@@ -1,26 +1,16 @@
+import { useDb } from "#server/db";
+import { profiles } from "~~/server/db/schema/profiles";
+import { referralCodes, referrals } from "~~/server/db/schema/referrals";
+import { type Referral as DbReferral } from "~~/server/db/schema/referrals";
+import { type ReferralCode as DbReferralCode } from "~~/server/db/schema/referrals";
 import { count, eq, inArray } from "drizzle-orm";
 
-import type { H3Event } from "h3";
-
-import { useDb } from "#server/db";
-
-import {
-	type Referral as DbReferral,
-	type ReferralCode as DbReferralCode,
-	referralCodes,
-	referrals,
-} from "~~/server/db/schema/referrals";
-
-import { profiles } from "~~/server/db/schema/profiles";
-
-import type { Referral, ReferralCode } from "~~/shared/models/referrals";
+import { retrieveCleanProfile, retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
 
 import type { Profile } from "~~/shared/models/profiles";
-
-import {
-	retrieveCleanProfile,
-	retrieveSeveralCleanProfiles,
-} from "~~/server/utils/converters/profiles";
+import type { Referral } from "~~/shared/models/referrals";
+import type { ReferralCode } from "~~/shared/models/referrals";
+import type { H3Event } from "h3";
 
 function convertReferralCode(
 	referralCode: DbReferralCode,

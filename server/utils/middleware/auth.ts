@@ -1,6 +1,6 @@
-import type { H3Event } from "h3";
-
 import { getIdentity, getUser } from "~~/server/utils/auth";
+
+import type { H3Event } from "h3";
 
 export const requireAuth = async (
 	event: H3Event,

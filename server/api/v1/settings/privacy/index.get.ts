@@ -1,12 +1,12 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { privacySettings } from "#server/db/schema/settings";
 import { eq } from "drizzle-orm";
 
-import { privacySettings } from "#server/db/schema/settings";
-import type { PrivacySettings, Visibility } from "#shared/models/settings";
-
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import type { PrivacySettings } from "#shared/models/settings";
+import type { Visibility } from "#shared/models/settings";
+import type { H3Event } from "h3";
 
 function generateDefaultPrivacySettings(): PrivacySettings {
 	return {

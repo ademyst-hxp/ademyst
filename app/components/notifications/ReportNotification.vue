@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ReportNotification } from "#shared/models/inbox";
-import Box from "~/components/base/Box.vue";
 
 import { ScaleIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
 
 const props = withDefaults(
 	defineProps<{

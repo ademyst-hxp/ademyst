@@ -1,5 +1,4 @@
 import { useDb } from "~~/server/db";
-
 import { whisperReports } from "~~/server/db/schema/reports";
 
 import { retrieveSeveralCleanWhisperReports } from "~~/server/utils/converters/reports";

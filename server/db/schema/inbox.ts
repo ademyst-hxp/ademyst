@@ -1,20 +1,9 @@
-import { sql } from "drizzle-orm";
-import {
-	check,
-	pgTable,
-	text,
-	timestamp,
-	pgEnum,
-	foreignKey,
-	varchar,
-	boolean,
-	uuid,
-} from "drizzle-orm/pg-core";
+import { boolean, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { profiles } from "./profiles";
 import { posts, whispers } from "./interactions";
+import { profiles } from "./profiles";
+import { postReports, profileReports, whisperReports } from "./reports";
 import { sanctions } from "./sanctions";
-import { profileReports, postReports, whisperReports } from "./reports";
 
 /*
  * INTERACTIONS (posts, whispers)

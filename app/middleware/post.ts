@@ -1,5 +1,6 @@
 import type { Post } from "~~/shared/models/interactions";
 
+
 type PostsResponse = {
 	posts?: Array<Post | Promise<Post>>;
 };

@@ -1,19 +1,8 @@
 <script setup lang="ts">
-import type { Post, PostFlag } from "~~/shared/models/interactions";
+import type { Post } from "~~/shared/models/interactions";
 
 import Card from "../base/Card.vue";
-
 import ProfileRow from "../profile/ProfileRow.vue";
-
-import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
-	HeartIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-	PaperAirplaneIcon,
-	BookmarkIcon,
-} from "@heroicons/vue/24/outline";
 
 const props = defineProps<{
 	data: Post;

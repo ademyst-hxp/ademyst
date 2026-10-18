@@ -1,10 +1,10 @@
-import { randomBytes } from "node:crypto";
-
-import { eq } from "drizzle-orm";
-
 import { useDb } from "#server/db";
 import { accounts, passwordResetTokens } from "#server/db/schema/accounts";
+import { eq } from "drizzle-orm";
+
 import { sendResetPasswordEmail } from "#server/utils/mail";
+
+import { randomBytes } from "node:crypto";
 
 const TOKEN_BYTES = 32;
 

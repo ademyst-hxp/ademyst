@@ -1,5 +1,6 @@
 import type { Profile } from "~~/shared/models/profiles";
 
+
 type ProfileResponse = {
 	data?: Profile;
 };

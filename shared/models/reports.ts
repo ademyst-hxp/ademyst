@@ -1,6 +1,8 @@
 import type { Account } from "./accounts";
-import type { Post, Whisper } from "./interactions";
+import type { Post } from "./interactions";
+import type { Whisper } from "./interactions";
 import type { Profile } from "./profiles";
+
 
 export type ReportStatus = "pending" | "reviewed" | "rejected";
 

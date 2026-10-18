@@ -1,13 +1,11 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
+import { posts } from "~~/server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
-import { posts } from "~~/server/db/schema/interactions";
-
 import { retrieveSeveralCleanPosts } from "#server/utils/converters/interactions";
-
 import { normalizeId } from "#server/utils/normalizers/ids";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

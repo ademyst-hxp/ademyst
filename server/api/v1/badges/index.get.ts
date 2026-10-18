@@ -1,5 +1,4 @@
 import { useDb } from "~~/server/db";
-
 import { badges } from "~~/server/db/schema/shop";
 
 import { retrieveSeveralCleanBadges } from "~~/server/utils/converters/shop";

@@ -1,14 +1,12 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { profiles } from "~~/server/db/schema/profiles";
+import { friendships, requests } from "~~/server/db/schema/relations";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { profiles } from "~~/server/db/schema/profiles";
-import { requests, friendships } from "~~/server/db/schema/relations";
-
 import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
-
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

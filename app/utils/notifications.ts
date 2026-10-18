@@ -1,28 +1,13 @@
-import type {
-	AccountSanctionNotification,
-	PostSanctionNotification,
-	ReportNotification,
-	FollowNotification,
-	PostNotification,
-	WhisperNotification,
-} from "~~/shared/models/inbox";
-
-import {
-	HeartIcon,
-	AtSymbolIcon,
-	ChatBubbleLeftRightIcon,
-	ClockIcon,
-	UserPlusIcon,
-	ScaleIcon,
-} from "@heroicons/vue/24/outline";
-import type { Post, Whisper } from "~~/shared/models/interactions";
+import type { AccountSanctionNotification, FollowNotification, PostNotification, PostSanctionNotification, ReportNotification, WhisperNotification } from "~~/shared/models/inbox";
+import type { Post } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
 import type { Profile } from "~~/shared/models/profiles";
+import type { PostReport } from "~~/shared/models/reports";
+import type { ProfileReport } from "~~/shared/models/reports";
+import type { WhisperReport } from "~~/shared/models/reports";
 import type { Sanction } from "~~/shared/models/sanctions";
-import type {
-	ProfileReport,
-	PostReport,
-	WhisperReport,
-} from "~~/shared/models/reports";
+
+import { AtSymbolIcon, ChatBubbleLeftRightIcon, ClockIcon, HeartIcon, ScaleIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
 
 type Notification =
 	| AccountSanctionNotification

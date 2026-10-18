@@ -1,13 +1,12 @@
-import { createError } from "h3";
-
 import { useDb } from "#server/db";
-import { and, eq } from "drizzle-orm";
-
-import { whisperReactions } from "#server/db/schema/interactions";
 import { whisperNotifications } from "#server/db/schema/inbox";
+import { whisperReactions } from "#server/db/schema/interactions";
+import { and, eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import { createError } from "h3";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

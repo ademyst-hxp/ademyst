@@ -1,16 +1,15 @@
-import { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
+import { badges_families } from "~~/server/db/schema/shop";
+import type { Badge as DbBadge } from "~~/server/db/schema/shop";
+import type { BadgeFamily as DbBadgeFamily } from "~~/server/db/schema/shop";
+import type { Level as DbLevel } from "~~/server/db/schema/shop";
 import { eq, inArray } from "drizzle-orm";
 
-import { badges_families } from "~~/server/db/schema/shop";
+import type { Badge } from "~~/shared/models/shop";
+import type { BadgeFamily } from "~~/shared/models/shop";
+import type { Level } from "~~/shared/models/shop";
 
-import type {
-	BadgeFamily as DbBadgeFamily,
-	Badge as DbBadge,
-	Level as DbLevel,
-} from "~~/server/db/schema/shop";
-import type { BadgeFamily, Badge, Level } from "~~/shared/models/shop";
+import { H3Event } from "h3";
 
 export async function retrieveCleanBadgeFamily(
 	event: H3Event,

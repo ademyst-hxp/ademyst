@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { FollowNotification } from "#shared/models/inbox";
-import Box from "~/components/base/Box.vue";
 
 import { ClockIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
 
 const props = withDefaults(
 	defineProps<{

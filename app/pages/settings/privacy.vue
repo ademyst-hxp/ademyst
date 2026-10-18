@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
+import { defaultPrivacySettings } from "~~/shared/models/settings";
+import { type PrivacySettings } from "~~/shared/models/settings";
+
+import { ChevronLeftIcon, EyeSlashIcon, GiftIcon, GlobeAltIcon, HeartIcon, IdentificationIcon, KeyIcon, UserGroupIcon, UserIcon } from "@heroicons/vue/24/outline";
+
 import Actions from "~/components/base/Actions.vue";
-
-import {
-	UserIcon,
-	IdentificationIcon,
-	GiftIcon,
-	KeyIcon,
-	ChevronRightIcon,
-	GlobeAltIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-	ChevronLeftIcon,
-} from "@heroicons/vue/24/outline";
-
-import {
-	type PrivacySettings,
-	defaultPrivacySettings,
-} from "~~/shared/models/settings";
 import Info from "~/components/boxes/Info.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();

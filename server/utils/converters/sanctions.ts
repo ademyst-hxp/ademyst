@@ -1,20 +1,13 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
-import { eq, desc, inArray } from "drizzle-orm";
-import { convertAccount } from "~~/server/utils/converters/accounts";
+import { accounts } from "~~/server/db/schema/accounts";
+import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
 import type { Sanction as DbSanction } from "~~/server/db/schema/sanctions";
+import { eq, inArray } from "drizzle-orm";
+
+import { convertAccount } from "~~/server/utils/converters/accounts";
 
 import type { Sanction } from "~~/shared/models/sanctions";
-import type { Account } from "~~/shared/models/accounts";
-
-import { getUser } from "~~/server/utils/auth";
-import { accounts } from "~~/server/db/schema/accounts";
-import {
-	postReports,
-	profileReports,
-	whisperReports,
-} from "~~/server/db/schema/reports";
+import type { H3Event } from "h3";
 
 export async function retrieveCleanSanction(
 	event: H3Event,

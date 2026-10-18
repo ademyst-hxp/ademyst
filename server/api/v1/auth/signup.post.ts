@@ -1,24 +1,17 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
-import { and, or, eq, lt, isNull } from "drizzle-orm";
 import { accounts } from "#server/db/schema/accounts";
-import { profiles, profileLinks } from "#server/db/schema/profiles";
-import { referrals, referralCodes } from "~~/server/db/schema/referrals";
-import {
-	appearanceSettings,
-	privacySettings,
-} from "#server/db/schema/settings";
+import { profileLinks, profiles } from "#server/db/schema/profiles";
+import { appearanceSettings, privacySettings } from "#server/db/schema/settings";
+import { referralCodes, referrals } from "~~/server/db/schema/referrals";
+import { and, eq, isNull, lt, or } from "drizzle-orm";
 
+import { verifyBeamProfile } from "#server/utils/beam";
 import { generateHexId } from "#server/utils/ids";
 import { hashPassword } from "#server/utils/password";
-import { verifyBeamProfile } from "#server/utils/beam";
 
-import {
-	giveBeamBadge,
-	giveReferralBadge,
-	giveSignupBadges,
-} from "#server/jobs/signup";
+import type { H3Event } from "h3";
+
+import { giveBeamBadge, giveReferralBadge, giveSignupBadges } from "#server/jobs/signup";
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;

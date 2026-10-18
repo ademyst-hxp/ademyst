@@ -1,13 +1,13 @@
-import { createError, type H3Event } from "h3";
-
 import { useDb } from "#server/db";
-import { and, eq } from "drizzle-orm";
-
-import { postReactions, posts } from "#server/db/schema/interactions";
 import { postNotifications } from "#server/db/schema/inbox";
+import { postReactions, posts } from "#server/db/schema/interactions";
+import { and, eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import { createError } from "h3";
+import { type H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

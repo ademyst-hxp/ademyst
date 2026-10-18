@@ -1,15 +1,10 @@
-import { eq } from "drizzle-orm/sql/expressions/conditions";
-
 import { useDb } from "#server/db";
 import { profiles } from "~~/server/db/schema/profiles";
+import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { getIdentity } from "#server/utils/auth";
 import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
-import {
-	canAccess,
-	getPrivacySettings,
-	getRelationshipStatus,
-} from "~~/server/utils/helpers/privacy";
+import { canAccess, getPrivacySettings, getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

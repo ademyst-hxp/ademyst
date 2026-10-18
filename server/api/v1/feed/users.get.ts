@@ -1,12 +1,10 @@
-import { eq, inArray, desc } from "drizzle-orm";
-
 import { useDb } from "#server/db";
-
 import { profiles } from "#server/db/schema/profiles";
 import { follows } from "~~/server/db/schema/relations";
+import { desc, eq, inArray } from "drizzle-orm";
 
-import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanProfiles } from "#server/utils/converters/profiles";
+import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

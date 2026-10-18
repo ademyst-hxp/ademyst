@@ -1,11 +1,10 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 
-import { profiles } from "~~/server/db/schema/profiles";
-
 import { useDrive } from "~~/server/utils/drive";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-	ShieldCheckIcon,
-	EnvelopeIcon,
-	ServerStackIcon,
-	LockClosedIcon,
-} from "@heroicons/vue/24/outline";
+import { EnvelopeIcon, LockClosedIcon, ServerStackIcon, ShieldCheckIcon } from "@heroicons/vue/24/outline";
 
 definePageMeta({
 	title: "Ademyst: Confidentialité",

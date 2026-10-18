@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import {
-	HandThumbUpIcon,
-	TrashIcon,
-	ScaleIcon,
-	ShieldCheckIcon,
-	ArrowPathIcon,
-} from "@heroicons/vue/24/outline";
-
 import type { ProfileReport } from "~~/shared/models/reports";
+
+import { ArrowPathIcon, HandThumbUpIcon, ScaleIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/vue/24/outline";
 
 import Box from "../base/Box.vue";
 

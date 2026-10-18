@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { AtSymbolIcon, KeyIcon, HomeIcon } from "@heroicons/vue/24/solid";
+import { AtSymbolIcon, HomeIcon, KeyIcon } from "@heroicons/vue/24/solid";
 
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
 import Input from "~/components/Input.vue";
-
 import Avatar from "~/components/profile/Avatar.vue";
 
 const { error, login, refresh, session } = useAuthSession();

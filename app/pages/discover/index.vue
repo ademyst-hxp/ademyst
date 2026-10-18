@@ -1,33 +1,17 @@
 <script setup lang="ts">
-import WhisperBox from "~/components/interactions/Whisper.vue";
-import ProfileBox from "~/components/profile/ProfileBox.vue";
-import PostBox from "~/components/interactions/Post.vue";
-
-import {
-	ArrowLeftIcon,
-	ArrowRightIcon,
-	PlusCircleIcon,
-	UserIcon,
-	PaperAirplaneIcon,
-	NoSymbolIcon,
-	ChatBubbleBottomCenterTextIcon,
-	ArrowPathIcon,
-	ClockIcon,
-} from "@heroicons/vue/24/outline";
-
-import {
-	GlobeAltIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-} from "@heroicons/vue/24/outline";
-
-import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
+import type { FeedTab } from "~/composables/useFeed";
 
 import type { Whisper } from "~~/shared/models/interactions";
-import type { FeedTab } from "~/composables/useFeed";
+
+import { ArrowPathIcon, ChatBubbleBottomCenterTextIcon, ClockIcon, NoSymbolIcon, PaperAirplaneIcon, PlusCircleIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+
 import Popup from "~/components/base/Popup.vue";
+import PostBox from "~/components/interactions/Post.vue";
+import WhisperBox from "~/components/interactions/Whisper.vue";
+import ProfileBox from "~/components/profile/ProfileBox.vue";
+
+import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 
 const { $api } = useNuxtApp();
 

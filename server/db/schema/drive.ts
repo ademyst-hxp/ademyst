@@ -1,18 +1,7 @@
-import { sql } from "drizzle-orm";
-import {
-	check,
-	pgTable,
-	text,
-	timestamp,
-	pgEnum,
-	foreignKey,
-	varchar,
-	uuid,
-	index,
-} from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { profiles } from "./profiles";
 import { posts, whispers } from "./interactions";
+import { profiles } from "./profiles";
 
 export const attachmentVisibilityEnum = pgEnum("attachment_visibility", [
 	"outside",

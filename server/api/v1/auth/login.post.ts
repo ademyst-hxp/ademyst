@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
-
 import { useDb } from "#server/db";
 import { accounts, sessions } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
+import { eq } from "drizzle-orm";
+
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
 import { verifyPassword } from "#server/utils/password";
 

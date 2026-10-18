@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-import Actions from "~/components/base/Actions.vue";
-
-import BadgeInfo from "~/components/profile/BadgeInfo.vue";
-
-import {
-	UserIcon,
-	ChevronRightIcon,
-	ChevronLeftIcon,
-	InformationCircleIcon,
-	XMarkIcon,
-	SparklesIcon,
-} from "@heroicons/vue/24/outline";
-
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
 import type { Badge } from "~~/shared/models/shop";
+
+import { ChevronLeftIcon, InformationCircleIcon, SparklesIcon, UserIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+
+import Actions from "~/components/base/Actions.vue";
+import Box from "~/components/base/Box.vue";
+import BadgeInfo from "~/components/profile/BadgeInfo.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();

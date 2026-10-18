@@ -1,11 +1,10 @@
-import { eq, and, gt } from "drizzle-orm/sql/expressions/conditions";
-import { desc } from "drizzle-orm/sql/expressions/select";
-
 import { useDb } from "#server/db";
 import { posts } from "#server/db/schema/interactions";
+import { and, eq, gt } from "drizzle-orm/sql/expressions/conditions";
+import { desc } from "drizzle-orm/sql/expressions/select";
 
-import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanPosts } from "#server/utils/converters/interactions";
+import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

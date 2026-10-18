@@ -1,7 +1,6 @@
 import { useDb } from "~~/server/db";
-import { eq } from "drizzle-orm";
-
 import { badgesEntitlements } from "~~/server/db/schema/entitlements";
+import { eq } from "drizzle-orm";
 
 import { retrieveCleanBadgeEntitlement } from "~~/server/utils/converters/entitlements";
 

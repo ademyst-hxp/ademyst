@@ -1,12 +1,12 @@
-import { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { appearanceSettings } from "#server/db/schema/settings";
 import { eq } from "drizzle-orm";
 
-import { appearanceSettings } from "#server/db/schema/settings";
+import { requireAuth } from "~~/server/utils/middleware/auth";
+
 import type { AppearanceSettings } from "#shared/models/settings";
 
-import { requireAuth } from "~~/server/utils/middleware/auth";
+import { H3Event } from "h3";
 
 interface UpdateAppearanceSettingsRequest {
 	theme?: string;

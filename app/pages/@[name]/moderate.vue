@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
-
-import type { Profile } from "~~/shared/models/profiles";
 import type { Post } from "~~/shared/models/interactions";
-import type { Sanction } from "~~/shared/models/sanctions";
+import type { Profile } from "~~/shared/models/profiles";
 import type { ProfileReport } from "~~/shared/models/reports";
+import type { Sanction } from "~~/shared/models/sanctions";
 import type { Badge } from "~~/shared/models/shop";
 
-import SanctionView from "~/components/moderation/Sanction.vue";
-import ProfileReportView from "~/components/moderation/ProfileReport.vue";
+import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
+
 import Box from "~/components/base/Box.vue";
+import ProfileReportView from "~/components/moderation/ProfileReport.vue";
+import SanctionView from "~/components/moderation/Sanction.vue";
 import BadgeInfo from "~/components/profile/BadgeInfo.vue";
 
 type ProfileResponse = {
@@ -106,7 +106,7 @@ const levelLabel = computed(() => {
 		case 8:
 			return "Haut Gradé";
 		case 9:
-			return "Équipe Ademyst";
+			return "�0quipe Ademyst";
 		default:
 			return "Inconnu";
 	}

@@ -1,12 +1,11 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { notificationSettings } from "#server/db/schema/settings";
 import { eq } from "drizzle-orm";
 
-import { notificationSettings } from "#server/db/schema/settings";
-import type { NotificationSettings } from "#shared/models/settings";
-
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import type { NotificationSettings } from "#shared/models/settings";
+import type { H3Event } from "h3";
 
 interface UpdateNotificationSettingsRequest {
 	securityAlertsEmail?: boolean;

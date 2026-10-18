@@ -1,13 +1,12 @@
-import { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
-import { eq } from "drizzle-orm";
 import { profileReports } from "~~/server/db/schema/reports";
+import { eq } from "drizzle-orm";
 
+import { retrieveSeveralCleanProfileReports } from "~~/server/utils/converters/reports";
+import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
-import { requireAuth } from "~~/server/utils/middleware/auth";
-import { retrieveSeveralCleanProfileReports } from "~~/server/utils/converters/reports";
+import { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

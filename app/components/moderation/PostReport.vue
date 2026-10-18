@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import {
-	HandThumbUpIcon,
-	TrashIcon,
-	ScaleIcon,
-	ShieldCheckIcon,
-	ArrowPathIcon,
-} from "@heroicons/vue/24/outline";
-
 import type { PostReport } from "~~/shared/models/reports";
 
-import Box from "../base/Box.vue";
+import { ArrowPathIcon, HandThumbUpIcon, ScaleIcon, ShieldCheckIcon, TrashIcon } from "@heroicons/vue/24/outline";
 
+import Box from "../base/Box.vue";
 import PostCard from "../cards/PostCard.vue";
 
 const props = withDefaults(

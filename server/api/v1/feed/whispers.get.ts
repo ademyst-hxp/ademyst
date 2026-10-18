@@ -1,10 +1,9 @@
-import { desc, gt } from "drizzle-orm";
-
 import { useDb } from "#server/db";
 import { whispers } from "#server/db/schema/interactions";
+import { desc, gt } from "drizzle-orm";
 
-import { requireAuth } from "#server/utils/middleware/auth";
 import { retrieveSeveralCleanWhispers } from "#server/utils/converters/interactions";
+import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

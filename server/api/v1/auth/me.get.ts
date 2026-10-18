@@ -1,7 +1,6 @@
-import { eq } from "drizzle-orm";
-
 import { useDb } from "#server/db";
 import { profiles } from "#server/db/schema/profiles";
+import { eq } from "drizzle-orm";
 
 import { requireAuth } from "#server/utils/middleware/auth";
 

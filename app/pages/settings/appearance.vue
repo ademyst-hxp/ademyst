@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import {
-	type AppearanceSettings,
-	defaultAppearanceSettings,
-} from "~~/shared/models/settings";
+import { defaultAppearanceSettings } from "~~/shared/models/settings";
+import { type AppearanceSettings } from "~~/shared/models/settings";
 
 import { ChevronLeftIcon } from "@heroicons/vue/24/outline";
 

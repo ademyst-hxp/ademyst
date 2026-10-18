@@ -1,20 +1,7 @@
 <script setup lang="ts">
-import type { Post, PostFlag } from "~~/shared/models/interactions";
-
-import Card from "../base/Card.vue";
 import type { Sanction } from "~~/shared/models/sanctions";
 
-import ProfileRow from "../profile/ProfileRow.vue";
-
-import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
-	HeartIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-	PaperAirplaneIcon,
-	BookmarkIcon,
-} from "@heroicons/vue/24/outline";
+import Card from "../base/Card.vue";
 
 const props = defineProps<{
 	data: Sanction;

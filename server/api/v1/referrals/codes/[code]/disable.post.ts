@@ -1,13 +1,10 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { referralCodes } from "~~/server/db/schema/referrals";
 import { eq } from "drizzle-orm";
-
-import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 
 import { retrieveCleanReferralCode } from "~~/server/utils/converters/referrals";
 
-import { giveReferralBadge } from "~~/server/jobs/signup";
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
