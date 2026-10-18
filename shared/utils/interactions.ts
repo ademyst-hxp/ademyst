@@ -1,14 +1,32 @@
 export const calculateRatingScore = (
-	date: Date,
+	date: Date | string,
 	content: string,
 	level: number,
 	stats: {
 		reactions: Record<string, number>;
 		answers: number;
 	},
-	
-): number => {
-	const ageInDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+): number => ratingScoreDetails(date, content, level, stats).score;
+
+export const ratingScoreDetails = (
+	date: Date | string,
+	content: string,
+	level: number,
+	stats: {
+		reactions: Record<string, number>;
+		answers: number;
+	},
+): {
+	score: number;
+	dateMultiplier: number;
+	lengthMultiplier: number;
+	ethosMultiplier: number;
+	reactionScore: number;
+	repostScore: number;
+} => {
+	const dateValue = date instanceof Date ? date : new Date(date);
+	const ageInDays =
+		(Date.now() - dateValue.getTime()) / (1000 * 60 * 60 * 24);
 
 	// Décroissance progressive : ~100% aujourd'hui,
 	// ~50% après 7 jours, mais ne tombe jamais à zéro.
@@ -17,11 +35,14 @@ export const calculateRatingScore = (
 	// Un post très court est pénalisé, mais jamais shadow.
 	const lengthMultiplier = 0.25 + 0.75 * Math.min(1, content.length / 300);
 
-	const ethosMultiplier = [4, 6, 7, 8].includes(level)
-		? 1.4
-		: [5, 9].includes(level)
-			? 5.5
-			: 1;
+	const ethosMultiplier =
+		level < 3
+			? 0
+			: [4, 6, 7, 8].includes(level)
+				? 1.4
+				: [5, 9].includes(level)
+					? 5.5
+					: 1;
 
 	// Rendements décroissants sur les likes/réponses.
 	const likes = stats.reactions.like || 0;
@@ -39,5 +60,12 @@ export const calculateRatingScore = (
 		lengthMultiplier *
 		10;
 
-	return Math.round(score * 100) / 100;
+	return {
+		score: Math.round(score * 100) / 100,
+		dateMultiplier,
+		lengthMultiplier,
+		ethosMultiplier,
+		reactionScore,
+		repostScore,
+	};
 };

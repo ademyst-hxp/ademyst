@@ -22,6 +22,7 @@ import {
 	PaperAirplaneIcon,
 	ClipboardDocumentIcon,
 	ScaleIcon,
+	ChartBarIcon,
 	BookmarkIcon,
 } from "@heroicons/vue/24/outline";
 import PostCard from "../cards/PostCard.vue";
@@ -131,6 +132,16 @@ const actions = computed(() => {
 		icon: PaperAirplaneIcon,
 		handler: copyLinkToClipboard,
 	});
+
+	if (props.data.profile?.id == session.value?.profile?.id || (session.value?.profile?.level ?? 0) > 6) {
+		actions.push({
+			label: "Statistiques de la publication",
+			icon: ChartBarIcon,
+			handler: () => {
+				navigateTo("/posts/" + props.data.id + "/statistics");
+			},
+		});
+	}
 
 	if ((session.value?.profile?.level ?? 0) > 6) {
 		actions.push({
