@@ -181,9 +181,9 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div v-if="post.parentId" class="flex items-center gap-2">
+		<div v-if="post.parentId" class="flex items-center gap-2 px-2 -mb-2">
 			<ChatBubbleLeftRightIcon class="h-6 w-6" />
-			<p class="text-lg">
+			<p class="text-sm text-surface-text-muted">
 				En réponse à
 				<RouterLink
 					:to="`/posts/${post.parentId}`"
