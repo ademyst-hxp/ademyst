@@ -145,7 +145,7 @@ const path = computed(() => useRoute().path);
 				to="/write"
 				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
 			>
-				�0crire
+				Écrire
 			</RouterLink>
 
 			<div class="grow" />
