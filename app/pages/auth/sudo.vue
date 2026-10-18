@@ -72,6 +72,45 @@ const handleLogin = async () => {
 	}
 };
 
+const handleEmailChange = async () => {
+	try {
+		const sudoResponse = await $api<{
+			action: string;
+			token: string;
+		}>("/auth/sudo", {
+			method: "POST",
+			body: {
+				email: email.value,
+				password: password.value,
+				action: "change-email",
+			},
+		});
+
+		if (sudoResponse.action !== "change-email") {
+			throw new Error("Unexpected action returned from sudo endpoint");
+		}
+
+		const response = await $api<{
+			ok: boolean;
+			email: string | null;
+		}>("/account/change-email", {
+			method: "POST",
+			body: {
+				token: sudoResponse.token,
+				email: newEmail.value,
+			},
+		});
+
+		if (!response.ok) {
+			throw new Error(
+				"Failed to change email. Please check the provided information.",
+			);
+		}
+	} catch (error) {
+		console.error("Error during email change:", error);
+	}
+};
+
 definePageMeta({
 	title: "Sudo | Ademyst",
 	description:
@@ -228,7 +267,7 @@ const step = ref(0);
 				<Button
 					label="Confirmer"
 					size="medium"
-					:handler="handleLogin"
+					:handler="handleEmailChange"
 				/>
 			</div>
 		</form>
