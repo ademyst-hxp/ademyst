@@ -2,7 +2,12 @@ import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { useDb } from "#server/db";
-import { emailConfirmationTokens, accounts, accountModificationHistory } from "#server/db/schema/accounts";
+import {
+	emailConfirmationTokens,
+	accounts,
+	accountModificationHistory,
+	emailChangeTokens,
+} from "#server/db/schema/accounts";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -61,11 +66,11 @@ export default defineEventHandler(async (event) => {
 	await db.transaction(async (tx) => {
 		const [tokenRow] = await tx
 			.select()
-			.from(emailConfirmationTokens)
+			.from(emailChangeTokens)
 			.where(
 				and(
-					eq(emailConfirmationTokens.token, token),
-					eq(emailConfirmationTokens.revoked, false),
+					eq(emailChangeTokens.token, token),
+					eq(emailChangeTokens.revoked, false),
 				),
 			)
 			.limit(1);
@@ -106,11 +111,11 @@ export default defineEventHandler(async (event) => {
 			.where(eq(accounts.id, tokenRow.accountId));
 
 		await tx
-			.update(emailConfirmationTokens)
+			.update(emailChangeTokens)
 			.set({
 				usedAt: new Date(),
 			})
-			.where(eq(emailConfirmationTokens.id, tokenRow.id));
+			.where(eq(emailChangeTokens.id, tokenRow.id));
 
 		// Log this to the account modification history
 		const safeIp = getRequestIP(event) ?? null;
