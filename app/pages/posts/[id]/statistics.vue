@@ -112,6 +112,7 @@ const details = computed(() => {
 			dateMultiplier: 1,
 			lengthMultiplier: 1,
 			ethosMultiplier: 1,
+			flagMultiplier: 1,
 			reactionScore: 0,
 			repostScore: 0,
 		};
@@ -121,6 +122,7 @@ const details = computed(() => {
 		post.value.content,
 		post.value.profile.level,
 		post.value.stats,
+		post.value.flags
 	);
 });
 
@@ -258,6 +260,13 @@ const getGradeLabel = (level: number | null): string => {
 				</template>
 				<template #body>
 					<tr>
+						<th class="col-span-2">Longueur</th>
+						<td>{{ post?.content.length ?? 0 }} caractères</td>
+						<td>
+							{{ getCoeffPenalty(details.lengthMultiplier) }}
+						</td>
+					</tr>
+					<tr>
 						<th>J'aime</th>
 						<td>{{ post?.stats.reactions.like ?? 0 }}</td>
 						<td>
@@ -295,10 +304,17 @@ const getGradeLabel = (level: number | null): string => {
 						</td>
 					</tr>
 					<tr>
-						<th class="col-span-2">Longueur</th>
-						<td>{{ post?.content.length ?? 0 }} caractères</td>
+						<th class="col-span-2">Flags</th>
 						<td>
-							{{ getCoeffPenalty(details.lengthMultiplier) }}
+							{{
+								Object.entries(post?.flags ?? {})
+									.filter(([_, value]) => value)
+									.map(([key]) => key)
+									.join(", ") || "Aucun"
+							}}
+						</td>
+						<td>
+							{{ getCoeffPenalty(details.flagMultiplier) }}
 						</td>
 					</tr>
 				</template>
@@ -337,7 +353,7 @@ const getGradeLabel = (level: number | null): string => {
 					<th>Contenu généré par IA</th>
 					<td
 						v-if="post?.flags.AI"
-						class="flex items-center gap-0.5 text-danger!"
+						class="flex items-center gap-0.5 text-warning!"
 					>
 						<ExclamationCircleIcon class="h-5 w-5" />
 						Oui
@@ -348,7 +364,7 @@ const getGradeLabel = (level: number | null): string => {
 					<th>Contenu humoristique</th>
 					<td
 						v-if="post?.flags.joke"
-						class="flex items-center gap-0.5 text-warning!"
+						class="flex items-center gap-0.5 text-info!"
 					>
 						<ExclamationCircleIcon class="h-5 w-5" />
 						Oui

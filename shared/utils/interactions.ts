@@ -1,3 +1,5 @@
+import type { PostFlagType } from "~~/shared/models/interactions";
+
 export const calculateRatingScore = (
 	date: Date | string,
 	content: string,
@@ -6,7 +8,10 @@ export const calculateRatingScore = (
 		reactions: Record<string, number>;
 		answers: number;
 	},
-): number => ratingScoreDetails(date, content, level, stats).score;
+	flags: {
+		[flag in PostFlagType]: boolean;
+	},
+): number => ratingScoreDetails(date, content, level, stats, flags).score;
 
 export const ratingScoreDetails = (
 	date: Date | string,
@@ -16,12 +21,16 @@ export const ratingScoreDetails = (
 		reactions: Record<string, number>;
 		answers: number;
 	},
+	flags: {
+		[flag in PostFlagType]: boolean;
+	},
 ): {
 	score: number;
 	dateMultiplier: number;
 	lengthMultiplier: number;
 	ethosMultiplier: number;
 	reactionScore: number;
+	flagMultiplier: number;
 	repostScore: number;
 } => {
 	const dateValue = date instanceof Date ? date : new Date(date);
@@ -53,11 +62,23 @@ export const ratingScoreDetails = (
 
 	const approvalScore = reactionScore + repostScore;
 
+	// Flags négatifs : si un post est signalé pour des raisons graves, il est fortement pénalisé.
+	let flagMultiplier = 1;
+
+	if (flags.AI || flags.suspicious || flags.suicide || flags.reported) {
+		flagMultiplier = 0.25;
+	}
+
+	if (flags.NFE || flags.misinformation || flags.spam) {
+		flagMultiplier = 0;
+	}
+
 	const score =
 		Math.sqrt(approvalScore) *
 		ethosMultiplier *
 		dateMultiplier *
 		lengthMultiplier *
+		flagMultiplier *
 		10;
 
 	return {
@@ -65,6 +86,7 @@ export const ratingScoreDetails = (
 		dateMultiplier,
 		lengthMultiplier,
 		ethosMultiplier,
+		flagMultiplier,
 		reactionScore,
 		repostScore,
 	};

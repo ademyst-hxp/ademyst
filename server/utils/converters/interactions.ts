@@ -205,6 +205,17 @@ export async function retrieveCleanPost(
 					reactions: computedReactions,
 					answers,
 				},
+				{
+					...flags.reduce(
+						(acc, flag) => {
+							acc[flag.type] = true;
+							return acc;
+						},
+						{} as Record<PostFlag["type"], boolean>,
+					),
+
+					reported: pendingReports.length > 3,
+				},
 			),
 		},
 
@@ -421,6 +432,16 @@ export async function retrieveSeveralCleanPosts(
 					{
 						reactions: computedReactions,
 						answers,
+					},
+					{
+						...flags.reduce(
+							(acc, flag) => {
+								acc[flag.type] = true;
+
+								return acc;
+							},
+							{} as Record<PostFlag["type"], boolean>,
+						),
 					},
 				),
 			},
