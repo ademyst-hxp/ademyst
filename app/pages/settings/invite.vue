@@ -1,16 +1,12 @@
 <script setup lang="ts">
+import type { Referral } from "~~/shared/models/referrals";
+import type { ReferralCode } from "~~/shared/models/referrals";
+
+import { ChevronLeftIcon, ChevronRightIcon, UsersIcon } from "@heroicons/vue/24/outline";
+
 import Box from "~/components/base/Box.vue";
-import ProfileRow from "~/components/profile/ProfileRow.vue";
-
-import {
-	UsersIcon,
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "@heroicons/vue/24/outline";
-
 import Info from "~/components/boxes/Info.vue";
-
-import type { Referral, ReferralCode } from "~~/shared/models/referrals";
+import ProfileRow from "~/components/profile/ProfileRow.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();
@@ -237,7 +233,9 @@ useHead({
 			class="items-center justify-center"
 		>
 			<p>
-				{{ (referralCodeIndex % (myReferralCodes?.length ?? 1)) + 1 }}/{{ myReferralCodes?.length ?? 1 }}
+				{{
+					(referralCodeIndex % (myReferralCodes?.length ?? 1)) + 1
+				}}/{{ myReferralCodes?.length ?? 1 }}
 			</p>
 			<div class="flex items-center gap-0.5">
 				<ChevronLeftIcon
@@ -246,7 +244,8 @@ useHead({
 					tabindex="0"
 				/>
 				<div
-					v-for="letter in focusedReferralCode?.code.toUpperCase() || []"
+					v-for="letter in focusedReferralCode?.code.toUpperCase() ||
+					[]"
 					class="bg-black/5 text-xl font-semibold font-title rounded-lg px-2"
 				>
 					{{ letter }}

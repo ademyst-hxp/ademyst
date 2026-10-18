@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-	BuildingOffice2Icon,
-	EnvelopeIcon,
-} from "@heroicons/vue/24/outline";
+import { BuildingOffice2Icon, EnvelopeIcon } from "@heroicons/vue/24/outline";
 
 definePageMeta({
 	title: "Ademyst: Mentions légales",
@@ -35,7 +32,9 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center font-title">Mentions légales</h1>
+		<h1 class="text-3xl font-bold text-center font-title">
+			Mentions légales
+		</h1>
 	</Teleport>
 
 	<header
@@ -132,10 +131,7 @@ useHead({
 			<p>
 				Les traitements de données personnelles effectués dans le cadre
 				d'Ademyst sont décrits dans la
-				<a
-					href="/legal/privacy"
-					class="text-secondary hover:underline"
-				>
+				<a href="/legal/privacy" class="text-secondary hover:underline">
 					Politique de confidentialité </a
 				>.
 			</p>

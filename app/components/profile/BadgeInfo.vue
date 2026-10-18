@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { Badge } from "~~/shared/models/shop";
 
-import Popup from "~/components/base/Popup.vue";
 import Box from "~/components/base/Box.vue";
-
+import Popup from "~/components/base/Popup.vue";
 import RarityLabel from "~/components/shop/RarityLabel.vue";
 
 const props = defineProps<{
@@ -27,7 +26,9 @@ const close = () => {
 				class="h-16 w-16"
 			/>
 			<div class="flex flex-col">
-				<h2 class="flex justify-start items-center gap-2 text-2xl font-semibold font-title">
+				<h2
+					class="flex justify-start items-center gap-2 text-2xl font-semibold font-title"
+				>
 					{{ props.badge.name }}
 					<RarityLabel :rarity="props.badge.rarity" />
 				</h2>

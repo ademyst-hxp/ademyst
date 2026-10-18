@@ -1,13 +1,12 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
-import { and, eq } from "drizzle-orm";
-
-import { whisperReactions, whispers } from "#server/db/schema/interactions";
 import { whisperNotifications } from "#server/db/schema/inbox";
+import { whisperReactions, whispers } from "#server/db/schema/interactions";
+import { and, eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

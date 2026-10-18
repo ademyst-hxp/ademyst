@@ -1,33 +1,17 @@
 <script setup lang="ts">
-import WhisperBox from "~/components/interactions/Whisper.vue";
-import ProfileBox from "~/components/profile/ProfileBox.vue";
-import PostBox from "~/components/interactions/Post.vue";
-
-import {
-	ArrowLeftIcon,
-	ArrowRightIcon,
-	PlusCircleIcon,
-	UserIcon,
-	PaperAirplaneIcon,
-	NoSymbolIcon,
-	ChatBubbleBottomCenterTextIcon,
-	ArrowPathIcon,
-	ClockIcon,
-} from "@heroicons/vue/24/outline";
-
-import {
-	GlobeAltIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-} from "@heroicons/vue/24/outline";
-
-import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
+import type { FeedTab } from "~/composables/useFeed";
 
 import type { Whisper } from "~~/shared/models/interactions";
-import type { FeedTab } from "~/composables/useFeed";
+
+import { ArrowPathIcon, ChatBubbleBottomCenterTextIcon, ClockIcon, NoSymbolIcon, PaperAirplaneIcon, PlusCircleIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+
 import Popup from "~/components/base/Popup.vue";
+import PostBox from "~/components/interactions/Post.vue";
+import WhisperBox from "~/components/interactions/Whisper.vue";
+import ProfileBox from "~/components/profile/ProfileBox.vue";
+
+import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 
 const { $api } = useNuxtApp();
 
@@ -235,7 +219,9 @@ watch(
 				class="flex flex-col items-center gap-2 text-center py-8"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
-				<h2 class="text-2xl font-bold font-title px-8">Une petite pause ?</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Une petite pause ?
+				</h2>
 				<p class="text-muted px-8">
 					Vous avez parcouru {{ index + 1 }} publications depuis
 					l'ouverture de cette page.
@@ -245,7 +231,9 @@ watch(
 				v-else-if="(index + 1) % 13 === 0"
 				class="flex flex-col gap-2 py-4"
 			>
-				<h2 class="text-2xl font-bold font-title px-8">Profils à suivre</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
 				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
 					<ProfileBox
 						v-for="user in users"
@@ -279,7 +267,9 @@ watch(
 				class="flex flex-col items-center gap-2 text-center py-8"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
-				<h2 class="text-2xl font-bold font-title px-8">Une petite pause ?</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Une petite pause ?
+				</h2>
 				<p class="text-muted px-8">
 					Vous avez parcouru {{ index + 1 }} publications depuis
 					l'ouverture de cette page.
@@ -289,7 +279,9 @@ watch(
 				v-else-if="(index + 1) % 9 === 0"
 				class="flex flex-col gap-2 py-4"
 			>
-				<h2 class="text-2xl font-bold font-title px-8">Profils à suivre</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
 				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
 					<ProfileBox
 						v-for="user in users"

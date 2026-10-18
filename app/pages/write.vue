@@ -1,16 +1,10 @@
 <script setup lang="ts">
+import type { Post } from "~~/shared/models/interactions";
+
+import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
-
-import {
-	GlobeAltIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-} from "@heroicons/vue/24/outline";
-
-import type { Post } from "~~/shared/models/interactions";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
@@ -173,7 +167,9 @@ const handlePublish = async () => {
 </script>
 <template>
 	<Teleport to="#header">
-		<h1 class="text-2xl font-bold font-title text-center">Écrire une publication</h1>
+		<h1 class="text-2xl font-bold font-title text-center">
+			Écrire une publication
+		</h1>
 		<div class="flex flex-col gap-2">
 			<Input
 				v-model="isPrev"

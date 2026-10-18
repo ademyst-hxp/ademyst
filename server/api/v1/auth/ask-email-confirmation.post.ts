@@ -1,12 +1,8 @@
-import { createError, readBody } from "h3";
-import { and, eq, isNull } from "drizzle-orm";
-
 import { useDb } from "#server/db";
-import {
-	accountModificationHistory,
-	accounts,
-	emailConfirmationTokens,
-} from "#server/db/schema/accounts";
+import { accounts, emailConfirmationTokens } from "#server/db/schema/accounts";
+import { eq } from "drizzle-orm";
+
+import { createError, readBody } from "h3";
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;

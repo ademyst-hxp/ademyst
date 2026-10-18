@@ -1,17 +1,11 @@
-import { createError, readBody } from "h3";
-import { and, eq, isNull } from "drizzle-orm";
-
 import { useDb } from "#server/db";
-import {
-	accountModificationHistory,
-	accounts,
-	emailConfirmationTokens,
-} from "#server/db/schema/accounts";
-
+import { accountModificationHistory, accounts, emailConfirmationTokens } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
-
-import { referrals } from "~~/server/db/schema/referrals";
 import { levelsEntitlements } from "~~/server/db/schema/entitlements";
+import { referrals } from "~~/server/db/schema/referrals";
+import { eq } from "drizzle-orm";
+
+import { createError, readBody } from "h3";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;

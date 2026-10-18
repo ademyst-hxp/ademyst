@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-	DocumentTextIcon,
-	EnvelopeIcon,
-	ExclamationTriangleIcon,
-} from "@heroicons/vue/24/outline";
+import { DocumentTextIcon, EnvelopeIcon, ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 
 definePageMeta({
 	title: "Ademyst: Conditions d'utilisation",
@@ -37,7 +33,9 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center font-title">Conditions d'utilisation</h1>
+		<h1 class="text-3xl font-bold text-center font-title">
+			Conditions d'utilisation
+		</h1>
 	</Teleport>
 
 	<section class="flex flex-col gap-6">

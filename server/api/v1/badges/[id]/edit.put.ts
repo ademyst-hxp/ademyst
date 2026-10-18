@@ -1,7 +1,6 @@
-import { eq } from "drizzle-orm/sql/expressions/conditions";
-
 import { useDb } from "#server/db";
 import { badges } from "~~/server/db/schema/shop";
+import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import type { ItemRarity } from "~~/shared/models/shop";
 

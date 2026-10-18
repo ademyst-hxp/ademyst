@@ -1,6 +1,7 @@
 import type { Attachment } from "./drive";
 import type { Profile } from "./profiles";
 
+
 export type PostVisibility =
 	| "outside"
 	| "everyone"

@@ -1,13 +1,10 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
-import { eq } from "drizzle-orm";
-
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
+import { eq } from "drizzle-orm";
 
 import { retrieveCleanReferralCode } from "~~/server/utils/converters/referrals";
 
-import { giveReferralBadge } from "~~/server/jobs/signup";
+import type { H3Event } from "h3";
 
 function normalizeCode(value: unknown): string | null {
 	if (typeof value !== "string") return null;

@@ -1,19 +1,15 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
-import { whispers } from "#server/db/schema/interactions";
 import { whisperNotifications } from "#server/db/schema/inbox";
+import { whispers } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
 import { eq } from "drizzle-orm";
+
 import { generateHexId } from "#server/utils/ids";
-
-import {
-	normalizeOptionalText,
-	normalizeVisibility,
-} from "~~/server/utils/normalizers/interactions";
-
 import { retrieveCleanWhisper } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

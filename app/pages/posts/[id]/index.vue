@@ -1,16 +1,10 @@
 <script setup lang="ts">
+import type { Post } from "~~/shared/models/interactions";
+
+import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
-
-import {
-	GlobeAltIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-} from "@heroicons/vue/24/outline";
-
-import type { Post } from "~~/shared/models/interactions";
 
 const error = ref<string | null>(null);
 
@@ -169,7 +163,9 @@ const handlePublish = async () => {
 	<Teleport to="#header">
 		<PostBox v-if="post" :data="post" />
 		<template v-else-if="!postPending">
-			<h1 class="text-2xl font-bold font-title">Publication introuvable</h1>
+			<h1 class="text-2xl font-bold font-title">
+				Publication introuvable
+			</h1>
 			<p>La publication que vous recherchez n'existe pas.</p>
 		</template>
 	</Teleport>

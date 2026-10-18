@@ -1,28 +1,14 @@
 import { useDb } from "~~/server/db";
-
+import { reportNotifications } from "~~/server/db/schema/inbox";
+import { profiles } from "~~/server/db/schema/profiles";
+import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
 import { eq } from "drizzle-orm";
 
-import {
-	profileReports,
-	postReports,
-	whisperReports,
-} from "~~/server/db/schema/reports";
+import { retrieveCleanPostReport, retrieveCleanProfileReport, retrieveCleanWhisperReport } from "~~/server/utils/converters/reports";
 
-import { profiles } from "~~/server/db/schema/profiles";
-
-import { reportNotifications } from "~~/server/db/schema/inbox";
-
-import type {
-	ProfileReport,
-	PostReport,
-	WhisperReport,
-} from "~~/shared/models/reports";
-
-import {
-	retrieveCleanProfileReport,
-	retrieveCleanPostReport,
-	retrieveCleanWhisperReport,
-} from "~~/server/utils/converters/reports";
+import type { PostReport } from "~~/shared/models/reports";
+import type { ProfileReport } from "~~/shared/models/reports";
+import type { WhisperReport } from "~~/shared/models/reports";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);

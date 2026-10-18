@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
 import { ChevronRightIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
 
 const props = withDefaults(
 	defineProps<{

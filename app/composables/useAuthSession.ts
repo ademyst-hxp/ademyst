@@ -1,5 +1,7 @@
-import type { Profile } from "~~/shared/models/profiles";
 import type { JwtPayload } from "~~/server/utils/jwt";
+
+import type { Profile } from "~~/shared/models/profiles";
+
 
 export interface StoredSession {
 	id: string;

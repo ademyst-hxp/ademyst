@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import type { PostNotification } from "#shared/models/inbox";
-import Box from "~/components/base/Box.vue";
-import PostCard from "../cards/PostCard.vue";
 
-import {
-	HeartIcon,
-	FireIcon,
-	AtSymbolIcon,
-	ScaleIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-} from "@heroicons/vue/24/outline";
+import { AtSymbolIcon, ChatBubbleOvalLeftEllipsisIcon, FireIcon, HeartIcon, ScaleIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
+
+import PostCard from "../cards/PostCard.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -88,9 +84,6 @@ const props = withDefaults(
 				class="bg-info rounded-full w-3 h-3 ml-auto"
 			></div>
 		</div>
-		<PostCard
-			:data="data.post"
-			class="w-full -mx-2 mt-2"
-		/>
+		<PostCard :data="data.post" class="w-full -mx-2 mt-2" />
 	</Box>
 </template>

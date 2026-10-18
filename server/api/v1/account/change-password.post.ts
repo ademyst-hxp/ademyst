@@ -1,11 +1,10 @@
-import { randomBytes } from "node:crypto";
-
+import { useDb } from "#server/db";
+import { accountModificationHistory, accounts, passwordResetTokens } from "#server/db/schema/accounts";
 import { and, eq, isNull } from "drizzle-orm";
 
-import { useDb } from "#server/db";
-import { accounts, passwordResetTokens, accountModificationHistory } from "#server/db/schema/accounts";
-
 import { hashPassword } from "#server/utils/password";
+
+import { randomBytes } from "node:crypto";
 
 const TOKEN_BYTES = 32;
 

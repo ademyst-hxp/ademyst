@@ -1,24 +1,17 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
+import { levelsEntitlements } from "~~/server/db/schema/entitlements";
+import { accountSanctionNotifications, postSanctionNotifications } from "~~/server/db/schema/inbox";
+import { posts } from "~~/server/db/schema/interactions";
+import { profiles } from "~~/server/db/schema/profiles";
+import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
+import { sanctions } from "~~/server/db/schema/sanctions";
+import { SanctionType } from "~~/server/db/schema/sanctions";
 import { and, eq, lt } from "drizzle-orm";
-
-import { sanctions, SanctionType } from "~~/server/db/schema/sanctions";
-import {
-	profileReports,
-	postReports,
-	whisperReports,
-} from "~~/server/db/schema/reports";
 
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId } from "~~/server/utils/normalizers/ids";
-import { profiles } from "~~/server/db/schema/profiles";
-import { posts } from "~~/server/db/schema/interactions";
-import {
-	accountSanctionNotifications,
-	postSanctionNotifications,
-} from "~~/server/db/schema/inbox";
-import { levelsEntitlements } from "~~/server/db/schema/entitlements";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

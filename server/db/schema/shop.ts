@@ -1,11 +1,4 @@
-import {
-	pgTable,
-	text,
-	timestamp,
-	pgEnum,
-	varchar,
-	integer,
-} from "drizzle-orm/pg-core";
+import { integer, pgEnum, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const itemRarityEnum = pgEnum("item_rarity", [
 	"common",

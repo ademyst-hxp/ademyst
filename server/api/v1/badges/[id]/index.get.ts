@@ -1,7 +1,6 @@
 import { useDb } from "~~/server/db";
-import { eq } from "drizzle-orm";
-
 import { badges } from "~~/server/db/schema/shop";
+import { eq } from "drizzle-orm";
 
 import { retrieveCleanBadge } from "~~/server/utils/converters/shop";
 

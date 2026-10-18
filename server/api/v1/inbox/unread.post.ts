@@ -1,15 +1,8 @@
-import type { H3Event } from "h3";
 import { useDb } from "#server/db";
-import { and, eq, gt, count } from "drizzle-orm";
+import { accountSanctionNotifications, followNotifications, postNotifications, postSanctionNotifications, reportNotifications, whisperNotifications } from "#server/db/schema/inbox";
+import { and, count, eq, gt } from "drizzle-orm";
 
-import {
-	accountSanctionNotifications,
-	postSanctionNotifications,
-	reportNotifications,
-	postNotifications,
-	whisperNotifications,
-	followNotifications,
-} from "#server/db/schema/inbox";
+import type { H3Event } from "h3";
 
 const validatePayload = (payload: any): { after?: Date } => {
 	if (typeof payload !== "object" || payload === null) {

@@ -1,31 +1,15 @@
 <script setup lang="ts">
-import type { Post, PostFlag } from "~~/shared/models/interactions";
+import { convertToLitteralDuration } from "~/utils/date";
+
+import type { Post } from "~~/shared/models/interactions";
+
+import { BookmarkIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChatBubbleOvalLeftEllipsisIcon, ClipboardDocumentIcon, FlagIcon, HeartIcon, PaperAirplaneIcon, PencilIcon, ScaleIcon, TrashIcon } from "@heroicons/vue/24/outline";
+import { EllipsisVerticalIcon, HeartIcon as HeartSolidIcon } from "@heroicons/vue/24/solid";
 
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
-
-import ProfileRow from "../profile/ProfileRow.vue";
-
-import { convertToLitteralDuration } from "~/utils/date";
-
-import {
-	EllipsisVerticalIcon,
-	HeartIcon as HeartSolidIcon,
-} from "@heroicons/vue/24/solid";
-import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
-	HeartIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-	ChatBubbleLeftRightIcon,
-	PaperAirplaneIcon,
-	ClipboardDocumentIcon,
-	ScaleIcon,
-	BookmarkIcon,
-} from "@heroicons/vue/24/outline";
-import PostCard from "../cards/PostCard.vue";
 import Warning from "../boxes/Warning.vue";
+import ProfileRow from "../profile/ProfileRow.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -48,7 +32,9 @@ const { data: parentPost } = useAsyncData(
 	"post-" + post.value.parentId,
 	async () => {
 		if (post.value.parentId) {
-			const response = await $api<{ data: Post }>("/posts/" + post.value.parentId);
+			const response = await $api<{ data: Post }>(
+				"/posts/" + post.value.parentId,
+			);
 			return response.data;
 		}
 		return null;
@@ -131,6 +117,19 @@ const actions = computed(() => {
 		icon: PaperAirplaneIcon,
 		handler: copyLinkToClipboard,
 	});
+
+	if (
+		props.data.profile?.id == session.value?.profile?.id ||
+		(session.value?.profile?.level ?? 0) > 6
+	) {
+		actions.push({
+			label: "Statistiques de la publication",
+			icon: ChartBarIcon,
+			handler: () => {
+				navigateTo("/posts/" + props.data.id + "/statistics");
+			},
+		});
+	}
 
 	if ((session.value?.profile?.level ?? 0) > 6) {
 		actions.push({

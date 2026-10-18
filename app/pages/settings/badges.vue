@@ -1,20 +1,12 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-import Actions from "~/components/base/Actions.vue";
-
-import BadgeInfo from "~/components/profile/BadgeInfo.vue";
-
-import {
-	UserIcon,
-	ChevronRightIcon,
-	ChevronLeftIcon,
-	InformationCircleIcon,
-	XMarkIcon,
-	SparklesIcon,
-} from "@heroicons/vue/24/outline";
-
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
 import type { Badge } from "~~/shared/models/shop";
+
+import { ChevronLeftIcon, InformationCircleIcon, SparklesIcon, UserIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+
+import Actions from "~/components/base/Actions.vue";
+import Box from "~/components/base/Box.vue";
+import BadgeInfo from "~/components/profile/BadgeInfo.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();
@@ -214,7 +206,9 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			class="flex flex-col gap-2"
 			v-if="levelBadges && levelBadges.length > 0"
 		>
-			<h3 class="text-lg font-semibold font-title px-8">Badges de grade</h3>
+			<h3 class="text-lg font-semibold font-title px-8">
+				Badges de grade
+			</h3>
 			<Actions
 				scale="sm"
 				:actions="
@@ -233,7 +227,9 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			class="flex flex-col gap-2"
 			v-if="certificationBadges && certificationBadges.length > 0"
 		>
-			<h3 class="text-lg font-semibold font-title px-8">Certifications</h3>
+			<h3 class="text-lg font-semibold font-title px-8">
+				Certifications
+			</h3>
 			<Actions
 				scale="sm"
 				:actions="
@@ -277,7 +273,9 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 		</div>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold font-title px-8">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title px-8">
+			Vous cherchiez peut-être...
+		</h2>
 		<Actions
 			scale="sm"
 			layout="horizontal"

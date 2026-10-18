@@ -1,19 +1,16 @@
-import { createError, readBody, type H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { posts } from "#server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
-import { posts } from "#server/db/schema/interactions";
 import { normalizeId } from "#server/utils/normalizers/ids";
-import {
-	normalizeOptionalText,
-	normalizeVisibility,
-} from "~~/server/utils/normalizers/interactions";
-
 import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
 
 import { PostVisibility } from "~~/shared/models/interactions";
+
+import { createError, readBody } from "h3";
+import { type H3Event } from "h3";
 
 const validatePayload = (
 	payload: any,

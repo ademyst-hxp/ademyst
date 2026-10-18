@@ -1,14 +1,13 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
-import { eq, and } from "drizzle-orm";
-
+import { profiles } from "~~/server/db/schema/profiles";
 import { sanctions } from "~~/server/db/schema/sanctions";
+import { and, eq } from "drizzle-orm";
 
+import { retrieveCleanSanction } from "~~/server/utils/converters/sanctions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId } from "~~/server/utils/normalizers/ids";
-import { profiles } from "~~/server/db/schema/profiles";
-import { retrieveCleanSanction } from "~~/server/utils/converters/sanctions";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

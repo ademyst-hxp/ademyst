@@ -1,17 +1,8 @@
-import {
-	pgTable,
-	uuid,
-	timestamp,
-	text,
-	pgEnum,
-	varchar,
-	index,
-} from "drizzle-orm/pg-core";
+import { index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
-
-import { profiles } from "./profiles";
 import { posts, whispers } from "./interactions";
+import { profiles } from "./profiles";
 
 export const reportStatusEnum = pgEnum("report_status", [
 	"pending",

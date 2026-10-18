@@ -1,14 +1,12 @@
-import { createError, readBody, type H3Event } from "h3";
-
 import { useDb } from "#server/db";
 import { postReports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
-import {
-	normalizeOptionalText,
-	normalizeRequiredText,
-} from "~~/server/utils/normalizers/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+import { normalizeOptionalText, normalizeRequiredText } from "~~/server/utils/normalizers/interactions";
+
+import { createError, readBody } from "h3";
+import { type H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

@@ -1,22 +1,16 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
-
-import { posts } from "#server/db/schema/interactions";
 import { postNotifications } from "#server/db/schema/inbox";
+import { posts } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
 import { eq } from "drizzle-orm";
 
 import { generateHexId } from "#server/utils/ids";
-
 import { normalizeId } from "#server/utils/normalizers/ids";
-import {
-	normalizeOptionalText,
-	normalizeVisibility,
-} from "~~/server/utils/normalizers/interactions";
-
 import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
+import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
+
+import type { H3Event } from "h3";
 
 const validatePayload = (
 	payload: any,

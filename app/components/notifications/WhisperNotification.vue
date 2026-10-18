@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { WhisperNotification } from "#shared/models/inbox";
+
 import Box from "~/components/base/Box.vue";
 
 import WhisperIcon from "~/assets/whispers-feather.svg";
@@ -75,6 +76,9 @@ const props = withDefaults(
 				Votre pensée a fait l'objet d'une sanction.
 			</h4>
 		</template>
-		<div v-if="!data.read" class="bg-info rounded-full w-3 h-3 ml-auto"></div>
+		<div
+			v-if="!data.read"
+			class="bg-info rounded-full w-3 h-3 ml-auto"
+		></div>
 	</Box>
 </template>

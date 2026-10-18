@@ -1,11 +1,12 @@
-import postgres from "postgres";
+import * as accountsSchema from "~~/server/db/schema/accounts";
+import * as interactionsSchema from "~~/server/db/schema/interactions";
+import * as profilesSchema from "~~/server/db/schema/profiles";
+import * as relationsSchema from "~~/server/db/schema/relations";
 import { drizzle } from "drizzle-orm/postgres-js";
+
 import type { H3Event } from "h3";
 
-import * as accountsSchema from "~~/server/db/schema/accounts";
-import * as profilesSchema from "~~/server/db/schema/profiles";
-import * as interactionsSchema from "~~/server/db/schema/interactions";
-import * as relationsSchema from "~~/server/db/schema/relations";
+import postgres from "postgres";
 
 const schema = {
 	...accountsSchema,

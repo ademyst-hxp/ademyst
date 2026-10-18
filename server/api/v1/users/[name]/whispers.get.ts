@@ -1,16 +1,14 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { whispers } from "~~/server/db/schema/interactions";
+import { profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 import { desc } from "drizzle-orm/sql/expressions/select";
 
-import { profiles } from "~~/server/db/schema/profiles";
-import { whispers } from "~~/server/db/schema/interactions";
-
-import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
-
 import { getIdentity } from "#server/utils/auth";
 import { retrieveCleanWhisper } from "~~/server/utils/converters/interactions";
+import { getRelationshipStatus } from "~~/server/utils/helpers/privacy";
+
+import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);

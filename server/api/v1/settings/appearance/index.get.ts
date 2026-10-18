@@ -1,12 +1,11 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "#server/db";
+import { appearanceSettings } from "#server/db/schema/settings";
 import { eq } from "drizzle-orm";
 
-import { appearanceSettings } from "#server/db/schema/settings";
-import type { AppearanceSettings } from "#shared/models/settings";
-
 import { requireAuth } from "~~/server/utils/middleware/auth";
+
+import type { AppearanceSettings } from "#shared/models/settings";
+import type { H3Event } from "h3";
 
 function generateDefaultAppearanceSettings(): AppearanceSettings {
 	return {

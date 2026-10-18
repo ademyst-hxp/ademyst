@@ -1,13 +1,12 @@
-import { H3Event } from "h3";
-import { useDb, type DbTransaction } from "../db";
-import { count, eq, and } from "drizzle-orm";
-
-import { profiles } from "../db/schema/profiles";
-
-import type { BadgeEntitlement as DbBadgeEntitlement } from "../db/schema/entitlements";
+import { type DbTransaction } from "../db";
+import { useDb } from "../db";
 import { badgesEntitlements } from "../db/schema/entitlements";
-
+import type { BadgeEntitlement as DbBadgeEntitlement } from "../db/schema/entitlements";
+import { profiles } from "../db/schema/profiles";
 import { referralCodes, referrals } from "../db/schema/referrals";
+import { and, count, eq } from "drizzle-orm";
+
+import { H3Event } from "h3";
 
 const EARLY_BIRD_MAX_DATE = new Date("2026-10-31T23:59:59.999Z");
 const BEAM_BADGE_MAX_DATE = new Date(

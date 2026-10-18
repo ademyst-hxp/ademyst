@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { FollowNotification } from "#shared/models/inbox";
-import Box from "~/components/base/Box.vue";
 
 import { ClockIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
+
+import Box from "~/components/base/Box.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -55,6 +56,9 @@ const props = withDefaults(
 				a commencé à vous suivre
 			</h4>
 		</template>
-		<div v-if="!data.read" class="bg-info rounded-full w-3 h-3 ml-auto"></div>
+		<div
+			v-if="!data.read"
+			class="bg-info rounded-full w-3 h-3 ml-auto"
+		></div>
 	</Box>
 </template>

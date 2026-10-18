@@ -1,15 +1,10 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-import Actions from "~/components/base/Actions.vue";
-
-import {
-	AtSymbolIcon,
-	UserIcon,
-	EyeSlashIcon,
-	ChevronLeftIcon,
-} from "@heroicons/vue/24/outline";
-
 import { type Account } from "~~/shared/models/accounts";
+
+import { AtSymbolIcon, ChevronLeftIcon, EyeSlashIcon, UserIcon } from "@heroicons/vue/24/outline";
+
+import Actions from "~/components/base/Actions.vue";
+import Box from "~/components/base/Box.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();

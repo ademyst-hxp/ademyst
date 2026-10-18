@@ -1,7 +1,7 @@
 import { useDb } from "~~/server/db";
+import { posts, postsFlags } from "~~/server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
-import { posts, postsFlags } from "~~/server/db/schema/interactions";
 import type { PostFlag } from "~~/shared/models/interactions";
 
 export default defineEventHandler(async (event) => {

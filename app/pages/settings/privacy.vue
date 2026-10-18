@@ -1,24 +1,10 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
+import { defaultPrivacySettings } from "~~/shared/models/settings";
+import { type PrivacySettings } from "~~/shared/models/settings";
+
+import { ChevronLeftIcon, EyeSlashIcon, GiftIcon, GlobeAltIcon, HeartIcon, IdentificationIcon, KeyIcon, UserGroupIcon, UserIcon } from "@heroicons/vue/24/outline";
+
 import Actions from "~/components/base/Actions.vue";
-
-import {
-	UserIcon,
-	IdentificationIcon,
-	GiftIcon,
-	KeyIcon,
-	ChevronRightIcon,
-	GlobeAltIcon,
-	UserGroupIcon,
-	HeartIcon,
-	EyeSlashIcon,
-	ChevronLeftIcon,
-} from "@heroicons/vue/24/outline";
-
-import {
-	type PrivacySettings,
-	defaultPrivacySettings,
-} from "~~/shared/models/settings";
 import Info from "~/components/boxes/Info.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
@@ -139,7 +125,9 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 				class="justify-self-start"
 			/>
 			<h1 class="justify-self-center text-2xl font-bold font-title">
-				Confidentialité<template class="max-md:hidden"> & Vie privée</template>
+				Confidentialité<template class="max-md:hidden">
+					& Vie privée</template
+				>
 			</h1>
 		</nav>
 	</Teleport>
@@ -219,7 +207,9 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">
-		<h2 class="text-xl font-semibold font-title">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title">
+			Vous cherchiez peut-être...
+		</h2>
 		<div class="flex flex-col gap-2">
 			<Actions
 				scale="sm"

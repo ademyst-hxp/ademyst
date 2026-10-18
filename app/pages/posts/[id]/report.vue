@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import PostBox from "~/components/interactions/Post.vue";
-import PostReportBox from "~/components/moderation/PostReport.vue";
+import type { Post } from "~~/shared/models/interactions";
+import type { PostReport } from "~~/shared/models/reports";
 
 import { FlagIcon } from "@heroicons/vue/24/outline";
 
-import type { Post } from "~~/shared/models/interactions";
-import type { PostReport } from "~~/shared/models/reports";
+import PostBox from "~/components/interactions/Post.vue";
+import PostReportBox from "~/components/moderation/PostReport.vue";
 
 const error = ref<string | null>(null);
 
@@ -167,7 +167,9 @@ const submitReport = async () => {
 	<Teleport to="#header">
 		<PostBox v-if="post" :data="post" />
 		<template v-else-if="!postPending">
-			<h1 class="text-2xl font-bold font-title">Publication introuvable</h1>
+			<h1 class="text-2xl font-bold font-title">
+				Publication introuvable
+			</h1>
 			<p>La publication que vous recherchez n'existe pas.</p>
 		</template>
 	</Teleport>

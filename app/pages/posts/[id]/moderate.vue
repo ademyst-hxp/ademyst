@@ -1,19 +1,10 @@
 <script setup lang="ts">
-import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
-import { FlagIcon } from "@heroicons/vue/24/outline";
-
-import type { Profile } from "~~/shared/models/profiles";
-import type { Sanction } from "~~/shared/models/sanctions";
 import type { Post } from "~~/shared/models/interactions";
-import type { ProfileReport } from "~~/shared/models/reports";
 import type { PostReport } from "~~/shared/models/reports";
 
-import PostBox from "~/components/interactions/Post.vue";
-import PostReportBox from "~/components/moderation/PostReport.vue";
-
-import SanctionView from "~/components/moderation/Sanction.vue";
-import PostReportView from "~/components/moderation/PostReport.vue";
 import Box from "~/components/base/Box.vue";
+import PostBox from "~/components/interactions/Post.vue";
+import PostReportView from "~/components/moderation/PostReport.vue";
 
 const error = ref<string | null>(null);
 

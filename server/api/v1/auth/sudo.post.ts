@@ -1,16 +1,11 @@
-import { randomBytes } from "node:crypto";
-
-import { createError, getHeader, getRequestIP, readBody } from "h3";
+import { useDb } from "#server/db";
+import { accountDeletionTokens, accounts, emailChangeTokens, passwordResetTokens } from "#server/db/schema/accounts";
 import { eq } from "drizzle-orm";
 
-import { useDb } from "#server/db";
-import {
-	accountDeletionTokens,
-	accounts,
-	emailChangeTokens,
-	passwordResetTokens,
-} from "#server/db/schema/accounts";
 import { verifyPassword } from "#server/utils/password";
+
+import { createError, getHeader, getRequestIP, readBody } from "h3";
+import { randomBytes } from "node:crypto";
 
 const TOKEN_BYTES = 32;
 

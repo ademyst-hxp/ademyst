@@ -34,7 +34,9 @@ const router = useRouter();
 	<Popup>
 		<slot />
 		<Box class="items-center w-full max-h-full sm:w-lg">
-			<h2 class="text-xl font-semibold text-surface-text font-title sm:text-3xl">
+			<h2
+				class="text-xl font-semibold text-surface-text font-title sm:text-3xl"
+			>
 				{{ title || "Choisir" }}
 			</h2>
 			<p v-if="description" class="text-surface-text text-center w-full">

@@ -1,5 +1,6 @@
 import type { Profile } from "./profiles";
 
+
 export type ReferralCode = {
 	id: string;
 	author: Profile;

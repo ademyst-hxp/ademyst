@@ -73,22 +73,27 @@ useHead({
 		/>
 	</section-->
 	<Box>
-		<h2 class="text-xl font-semibold font-title">Procéder à la suppression</h2>
-		<p v-if="session" class="flex justify-start items-center gap-2 text-danger">
+		<h2 class="text-xl font-semibold font-title">
+			Procéder à la suppression
+		</h2>
+		<p
+			v-if="session"
+			class="flex justify-start items-center gap-2 text-danger"
+		>
 			Connecté en tant que
 			<span class="flex items-center gap-1">
 				<Avatar
 					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
 					size="sm"
 				/>
-				{{ session.profile.name }}
-			</span>.
+				{{ session.profile.name }} </span
+			>.
 		</p>
 		<p class="text-surface-text-muted text-sm">
 			<b>Cette action est irréversible.</b> Toutes vos données seront
 			supprimées de nos serveurs et vous ne pourrez plus accéder à votre
-			compte. Si vous êtes sûr.e de vouloir continuer, cliquez sur le bouton
-			ci-dessous pour procéder à la suppression de votre compte.
+			compte. Si vous êtes sûr.e de vouloir continuer, cliquez sur le
+			bouton ci-dessous pour procéder à la suppression de votre compte.
 		</p>
 		<Button
 			label="Supprimer mon compte"

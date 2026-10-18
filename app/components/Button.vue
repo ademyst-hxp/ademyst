@@ -1,30 +1,34 @@
 <script setup lang="ts">
 import { EllipsisHorizontalIcon } from "@heroicons/vue/24/outline";
 
-const props = withDefaults(defineProps<{
-	label?: string;
-	icon?: Component;
-	handler?: string | (() => void) | (() => Promise<void>);
-	variant?:
-		| "primary"
-		| "secondary"
-		| "white"
-		| "danger"
-		| "success"
-		| "warning"
-		| "link";
-	size?: "small" | "medium" | "large";
-	disabled?: boolean;
-	submit?: boolean;
-}>(), {
-	variant: "primary",
-	size: "medium",
-	disabled: false,
-	submit: false,
-	handler: () => {},
-});
+const props = withDefaults(
+	defineProps<{
+		label?: string;
+		icon?: Component;
+		handler?: string | (() => void) | (() => Promise<void>);
+		variant?:
+			| "primary"
+			| "secondary"
+			| "white"
+			| "danger"
+			| "success"
+			| "warning"
+			| "link";
+		size?: "small" | "medium" | "large";
+		disabled?: boolean;
+		submit?: boolean;
+	}>(),
+	{
+		variant: "primary",
+		size: "medium",
+		disabled: false,
+		submit: false,
+		handler: () => {},
+	},
+);
 
-let _class = "flex items-center text-medium font-medium transition-colors duration-200";
+let _class =
+	"flex items-center text-medium font-medium transition-colors duration-200";
 let _iconclass = "";
 
 switch (props.size) {
@@ -66,7 +70,10 @@ switch (props.size) {
 		break;
 	case "medium":
 	default:
-		_class += props.variant === "link" ? "" : " gap-1.5 rounded-tr-2xl rounded-tl-lg rounded-bl-2xl rounded-br-lg";
+		_class +=
+			props.variant === "link"
+				? ""
+				: " gap-1.5 rounded-tr-2xl rounded-tl-lg rounded-bl-2xl rounded-br-lg";
 
 		if (props.variant != "link") {
 			if (props.icon && props.label) {
@@ -84,13 +91,15 @@ switch (props.size) {
 switch (props.variant) {
 	case undefined:
 	case "primary":
-		_class += " bg-gradient-to-tr from-primary to-secondary text-white hover:from-secondary hover:to-primary";
+		_class +=
+			" bg-gradient-to-tr from-primary to-secondary text-white hover:from-secondary hover:to-primary";
 		break;
 	case "secondary":
 		_class += " bg-muted-background text-muted";
 		break;
 	case "white":
-		_class += " bg-white/10 text-white border-2 border-white/20 hover:bg-white/15";
+		_class +=
+			" bg-white/10 text-white border-2 border-white/20 hover:bg-white/15";
 		break;
 	case "danger":
 		_class += " bg-danger text-white hover:bg-danger-darkened";
@@ -126,7 +135,6 @@ const _stateclass = computed(() => {
 
 const isLoading = ref<boolean>(false);
 const hasError = ref<boolean>(false);
-
 
 async function callback(event: MouseEvent) {
 	event.preventDefault();

@@ -1,13 +1,11 @@
-import type {
-	Account as DbAccount,
-	Session as DbSession,
-	AccountModificationHistory as DbAccountModificationHistory,
-} from "~~/server/db/schema/accounts";
-import type {
-	Account,
-	Session,
-	AccountModificationHistory,
-} from "~~/shared/models/accounts";
+import type { Account as DbAccount } from "~~/server/db/schema/accounts";
+import type { AccountModificationHistory as DbAccountModificationHistory } from "~~/server/db/schema/accounts";
+import type { Session as DbSession } from "~~/server/db/schema/accounts";
+
+import type { Account } from "~~/shared/models/accounts";
+import type { AccountModificationHistory } from "~~/shared/models/accounts";
+import type { Session } from "~~/shared/models/accounts";
+
 
 export function convertAccount(account: DbAccount): Account {
 	return {

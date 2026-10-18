@@ -1,21 +1,9 @@
 <script setup lang="ts">
 import type { Account } from "~~/shared/models/accounts";
 
+import { ArrowRightEndOnRectangleIcon, ArrowsRightLeftIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline";
 import Icon from "~/assets/icon.svg";
-
-import {
-	FireIcon,
-	PaperAirplaneIcon,
-	BellIcon,
-	Cog6ToothIcon as Cog6ToothSolidIcon,
-} from "@heroicons/vue/24/outline";
-
-import {
-	UserIcon,
-	Cog6ToothIcon,
-	ArrowsRightLeftIcon,
-	ArrowRightEndOnRectangleIcon,
-} from "@heroicons/vue/24/outline";
 
 import Menu from "../Menu.vue";
 import Avatar from "../profile/Avatar.vue";

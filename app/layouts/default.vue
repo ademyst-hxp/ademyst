@@ -30,7 +30,10 @@ import Navbar from "~/components/layout/Navbar.vue";
 				class="right-sidebar sticky top-26 h-[calc(100dvh-7.5rem)] max-w-full"
 			/>
 
-			<footer id="footer" class="footer flex flex-col gap-2 max-w-full h-fit">
+			<footer
+				id="footer"
+				class="footer flex flex-col gap-2 max-w-full h-fit"
+			>
 				<ul
 					class="flex flex-wrap justify-center gap-4 text-sm text-surface-text-muted text-center"
 				>

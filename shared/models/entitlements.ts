@@ -1,4 +1,6 @@
-import type { Badge, Level } from "./shop";
+import type { Badge } from "./shop";
+import type { Level } from "./shop";
+
 
 export type BadgeEntitlement = {
 	id: string;

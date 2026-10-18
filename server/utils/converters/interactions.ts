@@ -1,52 +1,26 @@
+import { useDb } from "#server/db";
+import { attachments } from "~~/server/db/schema/drive";
+import { postReactions, posts, postsFlags } from "~~/server/db/schema/interactions";
+import { type Post as DbPost } from "~~/server/db/schema/interactions";
+import { type PostFlag as DbPostFlag } from "~~/server/db/schema/interactions";
+import { type PostReaction as DbPostReaction } from "~~/server/db/schema/interactions";
+import { type Whisper as DbWhisper } from "~~/server/db/schema/interactions";
+import { type WhisperReaction as DbWhisperReaction } from "~~/server/db/schema/interactions";
+import { profiles } from "~~/server/db/schema/profiles";
+import { postReports } from "~~/server/db/schema/reports";
 import { and, count, eq, inArray, or } from "drizzle-orm";
 
-import type { H3Event } from "h3";
-
-import { useDb } from "#server/db";
-
-import {
-	type Post as DbPost,
-	type PostReaction as DbPostReaction,
-	type PostFlag as DbPostFlag,
-	type Whisper as DbWhisper,
-	type WhisperReaction as DbWhisperReaction,
-	postReactions,
-	postsFlags,
-	posts,
-	whispers,
-} from "~~/server/db/schema/interactions";
-
-import { postReports } from "~~/server/db/schema/reports";
-
-import { profiles } from "~~/server/db/schema/profiles";
-
-import { attachments } from "~~/server/db/schema/drive";
-
-import type {
-	Post,
-	PostFlag,
-	PostReaction,
-	PostReactionType,
-	Whisper,
-	WhisperReaction,
-} from "~~/shared/models/interactions";
-
-import type { Profile } from "~~/shared/models/profiles";
-
-import {
-	retrieveCleanProfile,
-	retrieveSeveralCleanProfiles,
-} from "~~/server/utils/converters/profiles";
-
-import {
-	getRelationshipStatus,
-	getPrivacySettings,
-	getSeveralRelationshipStatus,
-	getSeveralPrivacySettings,
-	canAccessEntity,
-} from "~~/server/utils/helpers/privacy";
-
+import { retrieveCleanProfile, retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
+import { canAccessEntity, getPrivacySettings, getRelationshipStatus, getSeveralPrivacySettings, getSeveralRelationshipStatus } from "~~/server/utils/helpers/privacy";
 import { calculateRatingScore } from "~~/shared/utils/interactions";
+
+import type { Post } from "~~/shared/models/interactions";
+import type { PostFlag, PostReactionType } from "~~/shared/models/interactions";
+import type { PostReaction } from "~~/shared/models/interactions";
+import type { Whisper } from "~~/shared/models/interactions";
+import type { WhisperReaction } from "~~/shared/models/interactions";
+import type { Profile } from "~~/shared/models/profiles";
+import type { H3Event } from "h3";
 
 function groupBy<T, K>(items: T[], key: (item: T) => K): Map<K, T[]> {
 	const map = new Map<K, T[]>();
@@ -82,11 +56,7 @@ export async function retrieveCleanPost(
 
 	const profile = await retrieveCleanProfile(event, identity, author);
 
-	const relationships = await getRelationshipStatus(
-		event,
-		identity,
-		author,
-	);
+	const relationships = await getRelationshipStatus(event, identity, author);
 
 	const privacy = await getPrivacySettings(event, author);
 
@@ -96,62 +66,63 @@ export async function retrieveCleanPost(
 		post.visibility,
 	);
 
-	const [files, reactionCounts, myLikes, flags, answers, reports] = await Promise.all([
-		access
-			? db
-					.select()
-					.from(attachments)
-					.where(eq(attachments.postId, post.id))
-			: Promise.resolve([]),
+	const [files, reactionCounts, myLikes, flags, answers, reports] =
+		await Promise.all([
+			access
+				? db
+						.select()
+						.from(attachments)
+						.where(eq(attachments.postId, post.id))
+				: Promise.resolve([]),
 
-		db
-			.select({
-				reaction: postReactions.reaction,
-				count: count(),
-			})
-			.from(postReactions)
-			.where(eq(postReactions.postId, post.id))
-			.groupBy(postReactions.reaction),
+			db
+				.select({
+					reaction: postReactions.reaction,
+					count: count(),
+				})
+				.from(postReactions)
+				.where(eq(postReactions.postId, post.id))
+				.groupBy(postReactions.reaction),
 
-		identity
-			? db
-					.select({ id: postReactions.id })
-					.from(postReactions)
-					.where(
-						and(
-							eq(postReactions.postId, post.id),
-							eq(postReactions.profileId, identity.profileId),
-							eq(postReactions.reaction, "like"),
+			identity
+				? db
+						.select({ id: postReactions.id })
+						.from(postReactions)
+						.where(
+							and(
+								eq(postReactions.postId, post.id),
+								eq(postReactions.profileId, identity.profileId),
+								eq(postReactions.reaction, "like"),
+							),
+						)
+						.limit(1)
+				: Promise.resolve([]),
+
+			db.select().from(postsFlags).where(eq(postsFlags.postId, post.id)),
+
+			db
+				.select({
+					count: count(),
+				})
+				.from(posts)
+				.where(eq(posts.parentId, post.id))
+				.then(([row]) => row?.count ?? 0),
+
+			db
+				.select()
+				.from(postReports)
+				.where(
+					and(
+						eq(postReports.reportedPostId, post.id),
+						or(
+							identity
+								? eq(postReports.reporterId, identity.accountId)
+								: undefined,
+							eq(postReports.status, "pending"),
 						),
-					)
-					.limit(1)
-			: Promise.resolve([]),
-
-		db.select().from(postsFlags).where(eq(postsFlags.postId, post.id)),
-
-		db
-			.select({
-				count: count(),
-			})
-			.from(posts)
-			.where(eq(posts.parentId, post.id))
-			.then(([row]) => row?.count ?? 0),
-
-		db
-			.select()
-			.from(postReports)
-			.where(
-				and(
-					eq(postReports.reportedPostId, post.id),
-					or(
-						identity
-							? eq(postReports.reporterId, identity.accountId)
-							: undefined,
-						eq(postReports.status, "pending"),
 					),
 				),
-			),
-	]);
+		]);
 
 	const shouldTruncate = !access;
 
@@ -204,6 +175,17 @@ export async function retrieveCleanPost(
 				{
 					reactions: computedReactions,
 					answers,
+				},
+				{
+					...flags.reduce(
+						(acc, flag) => {
+							acc[flag.type] = true;
+							return acc;
+						},
+						{} as Record<PostFlag["type"], boolean>,
+					),
+
+					reported: pendingReports.length > 3,
 				},
 			),
 		},
@@ -289,10 +271,7 @@ export async function retrieveSeveralCleanPosts(
 					)
 			: Promise.resolve([]),
 
-		db
-			.select()
-			.from(postsFlags)
-			.where(inArray(postsFlags.postId, postIds)),
+		db.select().from(postsFlags).where(inArray(postsFlags.postId, postIds)),
 
 		db
 			.select({
@@ -334,10 +313,7 @@ export async function retrieveSeveralCleanPosts(
 
 	const flagsMap = groupBy(allFlags, (flag) => flag.postId);
 
-	const reportsMap = groupBy(
-		allReports,
-		(report) => report.reportedPostId,
-	);
+	const reportsMap = groupBy(allReports, (report) => report.reportedPostId);
 
 	const answersMap = new Map(
 		answerCounts.map((row) => [row.parentId!, row.count]),
@@ -354,11 +330,7 @@ export async function retrieveSeveralCleanPosts(
 
 		const privacy = allPrivacy[author.id]!;
 
-		const access = canAccessEntity(
-			privacy,
-			relationship,
-			post.visibility,
-		);
+		const access = canAccessEntity(privacy, relationship, post.visibility);
 
 		const reactions = reactionsMap.get(post.id) ?? [];
 
@@ -422,6 +394,16 @@ export async function retrieveSeveralCleanPosts(
 						reactions: computedReactions,
 						answers,
 					},
+					{
+						...flags.reduce(
+							(acc, flag) => {
+								acc[flag.type] = true;
+
+								return acc;
+							},
+							{} as Record<PostFlag["type"], boolean>,
+						),
+					},
 				),
 			},
 
@@ -461,11 +443,7 @@ export async function retrieveCleanWhisper(
 
 	const profile = await retrieveCleanProfile(event, identity, author);
 
-	const relationships = await getRelationshipStatus(
-		event,
-		identity,
-		author,
-	);
+	const relationships = await getRelationshipStatus(event, identity, author);
 
 	const privacy = await getPrivacySettings(event, author);
 
@@ -538,24 +516,21 @@ export async function retrieveSeveralCleanWhispers(
 		getSeveralPrivacySettings(event, dbAuthors),
 	]);
 
-	const [authorsList, dbImages] =
-		await Promise.all([
-			retrieveSeveralCleanProfiles(event, identity, dbAuthors, {
-				relationships: allRelationships,
-				privacy: allPrivacy,
-			}),
+	const [authorsList, dbImages] = await Promise.all([
+		retrieveSeveralCleanProfiles(event, identity, dbAuthors, {
+			relationships: allRelationships,
+			privacy: allPrivacy,
+		}),
 
-			imageIds.length > 0
-				? db
-						.select()
-						.from(attachments)
-						.where(inArray(attachments.id, imageIds))
-				: Promise.resolve([]),
-		]);
+		imageIds.length > 0
+			? db
+					.select()
+					.from(attachments)
+					.where(inArray(attachments.id, imageIds))
+			: Promise.resolve([]),
+	]);
 
-	const authors = new Map(
-		authorsList.map((author) => [author.id, author]),
-	);
+	const authors = new Map(authorsList.map((author) => [author.id, author]));
 
 	const images = new Map(dbImages.map((image) => [image.id, image]));
 

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { UserPlusIcon } from "@heroicons/vue/24/outline";
+
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
-
 import Avatar from "../profile/Avatar.vue";
 
 const { sessions, activeSession, switchSession } = useAuthSession();
@@ -20,7 +20,7 @@ const handleSwitchSession = async (sessionId: string) => {
 	close();
 
 	if (nextSession) {
-		await navigateTo('/discover');
+		await navigateTo("/discover");
 	}
 };
 
@@ -48,7 +48,9 @@ const handleAddAccount = async () => {
 					]"
 					@click="handleSwitchSession(session.id)"
 				>
-					<Avatar :src="`/api/v1/users/${session.profile.name}/avatar.webp`" />
+					<Avatar
+						:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
+					/>
 					{{ session.profile.displayName || session.profile.name }}
 				</div>
 				<div

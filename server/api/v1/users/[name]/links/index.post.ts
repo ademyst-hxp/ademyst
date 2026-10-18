@@ -1,9 +1,9 @@
-import type { H3Event } from "h3";
-
 import { useDb } from "~~/server/db";
+import { profileLinks, profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm";
 
-import { profiles, profileLinks } from "~~/server/db/schema/profiles";
+import type { H3Event } from "h3";
+
 import { domains } from "~~/shared/consts/links";
 
 type LinkPayload = {

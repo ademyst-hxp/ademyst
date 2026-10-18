@@ -8,8 +8,7 @@ const root = computed<{
 	rootClass: string;
 	rootStyle: Record<string, any>;
 }>(() => {
-	let rootClass =
-		"flex flex-col backdrop-blur-lg text-widget-text border";
+	let rootClass = "flex flex-col backdrop-blur-lg text-widget-text border";
 
 	switch (props.scale) {
 		case "sm":

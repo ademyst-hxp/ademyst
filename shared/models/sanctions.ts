@@ -1,5 +1,8 @@
 import type { Account } from "./accounts";
-import type { ProfileReport, PostReport, WhisperReport } from "./reports";
+import type { PostReport } from "./reports";
+import type { ProfileReport } from "./reports";
+import type { WhisperReport } from "./reports";
+
 
 export type SanctionType = "ban" | "mute" | "shadow_ban" | "warning";
 

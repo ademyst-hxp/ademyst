@@ -1,35 +1,16 @@
-import { and, eq, count, inArray } from "drizzle-orm";
-
 import { useDb } from "#server/db";
-import type { H3Event } from "h3";
-
-import type { Profile as PartialProfile } from "~~/server/db/schema/profiles";
-
 import { profileLinks } from "#server/db/schema/profiles";
-
 import { follows } from "#server/db/schema/relations";
-
+import { badgesEntitlements, levelsEntitlements } from "~~/server/db/schema/entitlements";
+import type { Profile as PartialProfile } from "~~/server/db/schema/profiles";
 import { badges } from "~~/server/db/schema/shop";
+import { and, count, eq, inArray } from "drizzle-orm";
 
-import {
-	badgesEntitlements,
-	levelsEntitlements,
-} from "~~/server/db/schema/entitlements";
+import { retrieveCleanBadge, retrieveSeveralCleanBadges } from "~~/server/utils/converters/shop";
+import { canAccess, getPrivacySettings, getRelationshipStatus, getSeveralPrivacySettings, getSeveralRelationshipStatus } from "~~/server/utils/helpers/privacy";
 
 import type { Profile } from "~~/shared/models/profiles";
-
-import {
-	retrieveCleanBadge,
-	retrieveSeveralCleanBadges,
-} from "~~/server/utils/converters/shop";
-
-import {
-	getRelationshipStatus,
-	getSeveralRelationshipStatus,
-	getPrivacySettings,
-	getSeveralPrivacySettings,
-	canAccess,
-} from "~~/server/utils/helpers/privacy";
+import type { H3Event } from "h3";
 
 import { getLevelFromEntitlements } from "../auth";
 

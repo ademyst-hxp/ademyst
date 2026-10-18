@@ -1,20 +1,8 @@
 <script setup lang="ts">
-import Box from "~/components/base/Box.vue";
-import Actions from "~/components/base/Actions.vue";
-import Menu from "~/components/Menu.vue";
+import { BellSnoozeIcon, CheckBadgeIcon, ChevronRightIcon, EyeIcon, GlobeAltIcon, KeyIcon, LightBulbIcon, ShareIcon, ShieldCheckIcon, UserIcon } from "@heroicons/vue/24/outline";
 
-import {
-	UserIcon,
-	CheckBadgeIcon,
-	GlobeAltIcon,
-	KeyIcon,
-	ShieldCheckIcon,
-	BellSnoozeIcon,
-	EyeIcon,
-	ShareIcon,
-	ChevronRightIcon,
-	LightBulbIcon,
-} from "@heroicons/vue/24/outline";
+import Actions from "~/components/base/Actions.vue";
+import Box from "~/components/base/Box.vue";
 
 const { session, refresh } = useAuthSession();
 await refresh();

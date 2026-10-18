@@ -1,15 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-	check,
-	pgTable,
-	text,
-	timestamp,
-	varchar,
-	date,
-	uuid,
-	integer,
-	index,
-} from "drizzle-orm/pg-core";
+import { check, date, index, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { accounts } from "./accounts";
 import { badges, levels } from "./shop";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AtSymbolIcon, KeyIcon, HomeIcon } from "@heroicons/vue/24/solid";
+import { HomeIcon, KeyIcon } from "@heroicons/vue/24/solid";
 
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
@@ -155,11 +155,7 @@ useHead({
 				>
 			</div>
 			<div class="flex justify-center items-center gap-4 w-full">
-				<Button
-					label="Changer le mot de passe"
-					size="medium"
-					submit
-				/>
+				<Button label="Changer le mot de passe" size="medium" submit />
 			</div>
 		</form>
 	</Box>

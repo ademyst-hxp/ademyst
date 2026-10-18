@@ -1,27 +1,15 @@
-import type { H3Event } from "h3";
 import { useDb } from "~~/server/db";
+import type { BadgeEntitlement as DbBadgeEntitlement } from "~~/server/db/schema/entitlements";
+import type { LevelEntitlement as DbLevelEntitlement } from "~~/server/db/schema/entitlements";
+import { badges, levels } from "~~/server/db/schema/shop";
 import { eq, inArray } from "drizzle-orm";
 
-import type {
-	BadgeEntitlement as DbBadgeEntitlement,
-	LevelEntitlement as DbLevelEntitlement,
-} from "~~/server/db/schema/entitlements";
-
-import { levels, badges } from "~~/server/db/schema/shop";
-
+import type { BadgeEntitlement } from "~~/shared/models/entitlements";
+import type { LevelEntitlement } from "~~/shared/models/entitlements";
 import type { Badge, Level } from "~~/shared/models/shop";
+import type { H3Event } from "h3";
 
-import type {
-	BadgeEntitlement,
-	LevelEntitlement,
-} from "~~/shared/models/entitlements";
-
-import {
-	retrieveCleanBadge,
-	retrieveCleanLevel,
-	retrieveSeveralCleanBadges,
-	retrieveSeveralCleanLevels,
-} from "./shop";
+import { retrieveCleanBadge, retrieveCleanLevel, retrieveSeveralCleanBadges, retrieveSeveralCleanLevels } from "./shop";
 
 export async function retrieveCleanBadgeEntitlement(
 	event: H3Event,

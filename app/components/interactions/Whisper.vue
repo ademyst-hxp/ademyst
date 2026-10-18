@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import WhisperIcon from "~/assets/whispers.svg";
-
 import type { Whisper } from "~~/shared/models/interactions";
 
 import Box from "../base/Box.vue";
 import Avatar from "../profile/Avatar.vue";
+import WhisperIcon from "~/assets/whispers.svg";
 
 const props = defineProps<{
 	data: Whisper;

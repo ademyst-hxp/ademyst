@@ -1,20 +1,7 @@
 <script setup lang="ts">
-import type { Post, PostFlag } from "~~/shared/models/interactions";
-
-import Card from "../base/Card.vue";
 import type { Sanction } from "~~/shared/models/sanctions";
 
-import ProfileRow from "../profile/ProfileRow.vue";
-
-import {
-	FlagIcon,
-	TrashIcon,
-	PencilIcon,
-	HeartIcon,
-	ChatBubbleOvalLeftEllipsisIcon,
-	PaperAirplaneIcon,
-	BookmarkIcon,
-} from "@heroicons/vue/24/outline";
+import Card from "../base/Card.vue";
 
 const props = defineProps<{
 	data: Sanction;
@@ -38,7 +25,9 @@ const label = computed(() => {
 <template>
 	<Card :key="'sanction-' + data.id" class="shrink-0">
 		<div class="flex flex-col justify-center -space-y-1">
-			<h3 class="text-xl font-bold font-title">{{ label }} - {{ data.reason }}</h3>
+			<h3 class="text-xl font-bold font-title">
+				{{ label }} - {{ data.reason }}
+			</h3>
 			<span class="text-muted text-sm">
 				{{
 					new Date(data.createdAt).toLocaleString("fr-FR", {

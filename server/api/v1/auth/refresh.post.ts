@@ -1,14 +1,10 @@
-import { getCookie, setCookie, readBody } from "h3";
-import { eq } from "drizzle-orm";
-
 import { useDb } from "#server/db";
 import { sessions } from "#server/db/schema/accounts";
+import { eq } from "drizzle-orm";
 
-import {
-	verifyRefreshToken,
-	signRefreshToken,
-	signAccessToken,
-} from "#server/utils/jwt";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from "#server/utils/jwt";
+
+import { getCookie, readBody, setCookie } from "h3";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
