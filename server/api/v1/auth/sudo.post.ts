@@ -120,9 +120,6 @@ export default defineEventHandler(async (event) => {
 				userAgent,
 			});
 
-			// On l'expose pas, direct envoyé ds le mail
-			token = undefined
-
 			break;
 		case "delete-account":
 			await db.insert(accountDeletionTokens).values({
