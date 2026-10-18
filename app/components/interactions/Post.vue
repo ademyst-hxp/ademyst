@@ -159,9 +159,9 @@ const rendered = computed(() => {
 			<ProfileRow :data="post.profile" />
 			<div class="grow" />
 			<div
-				@click=""
 				v-if="post.visibility === 'friends'"
 				class="flex items-center gap-1 bg-tertiary rounded-full px-2 py-1 text-sm text-white font-semibold"
+				@click="isFriendOnlyPopupOpen = true"
 			>
 				<HeartIcon class="h-5 w-5" />
 			</div>
