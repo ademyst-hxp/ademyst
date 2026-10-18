@@ -182,7 +182,10 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div v-if="post.parentId" class="flex items-center gap-2 text-surface-text-muted px-2 -mb-2">
+		<div
+			v-if="post.parentId"
+			class="flex items-center gap-1 text-surface-text-muted px-2 -mb-2"
+		>
 			<ChatBubbleLeftRightIcon class="h-4 w-4" />
 			<p class="text-sm">
 				En réponse à
