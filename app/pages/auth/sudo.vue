@@ -153,7 +153,11 @@ const step = ref(0);
 			handler="/"
 		/>
 	</div>
-	<Box class="w-full md:max-w-lg" v-if="step == 0" @submit.prevent="handleLogin">
+	<Box
+		class="w-full md:max-w-lg"
+		v-if="step == 0"
+		@submit.prevent="handleLogin"
+	>
 		<h1 class="text-2xl text-center font-bold font-title">Mode Sudo</h1>
 		<p
 			v-if="session"
@@ -223,17 +227,14 @@ const step = ref(0);
 						}
 					"
 				/>
-				<Button
-					v-else
-					label="Confirmer"
-					size="medium"
-					submit
-				/>
+				<Button v-else label="Confirmer" size="medium" submit />
 			</div>
 		</form>
 	</Box>
 	<Box class="w-full md:max-w-lg" v-if="step == 1">
-		<h1 class="text-2xl text-center font-bold font-title">Changer d'adresse e-mail</h1>
+		<h1 class="text-2xl text-center font-bold font-title">
+			Changer d'adresse e-mail
+		</h1>
 		<p
 			v-if="session"
 			class="flex items-center gap-2 text-center text-success"

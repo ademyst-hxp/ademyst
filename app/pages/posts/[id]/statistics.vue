@@ -122,7 +122,7 @@ const details = computed(() => {
 		post.value.content,
 		post.value.profile.level,
 		post.value.stats,
-		post.value.flags
+		post.value.flags,
 	);
 });
 

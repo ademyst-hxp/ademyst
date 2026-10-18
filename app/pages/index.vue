@@ -51,7 +51,9 @@ useHead({
 			class="flex flex-col justify-center items-start gap-8 bg-linear-to-tr from-white/10 to-white/5 border-2 border-white/15 rounded-tl-[64px] rounded-br-[64px] rounded-bl-3xl rounded-tr-3xl h-full sm:items-center max-md:p-8"
 		>
 			<Icon class="max-sm:max-h-8 sm:h-16" />
-			<h1 class="text-2xl font-bold font-title sm:text-center sm:text-4xl sm:max-w-xl">
+			<h1
+				class="text-2xl font-bold font-title sm:text-center sm:text-4xl sm:max-w-xl"
+			>
 				Bienvenue sur Ademyst
 			</h1>
 			<p class="text-lg sm:text-center sm:text-xl sm:max-w-xl">

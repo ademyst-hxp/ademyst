@@ -24,4 +24,4 @@ export const convertToLitteralDuration = (start: Date, end: Date): string => {
 	} else {
 		return "À l'instant";
 	}
-}
+};

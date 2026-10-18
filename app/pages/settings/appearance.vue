@@ -4,9 +4,7 @@ import {
 	defaultAppearanceSettings,
 } from "~~/shared/models/settings";
 
-import {
-	ChevronLeftIcon,
-} from "@heroicons/vue/24/outline";
+import { ChevronLeftIcon } from "@heroicons/vue/24/outline";
 
 const { session, refresh: refreshSession } = useAuthSession();
 await refreshSession();
@@ -88,11 +86,13 @@ interface UpdateAppearanceSettingsRequest {
 }
 
 const payload = ref<UpdateAppearanceSettingsRequest>({
-	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as "light" | "dark" | "system",
-	highContrast: (settings.value?.highContrast || defaultAppearanceSettings.highContrast),
-	fontSize: (settings.value?.fontSize || defaultAppearanceSettings.fontSize),
-	density: (settings.value?.uiDensity || defaultAppearanceSettings.uiDensity),
-	alter: (settings.value?.alter || defaultAppearanceSettings.alter),
+	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as
+		"light" | "dark" | "system",
+	highContrast:
+		settings.value?.highContrast || defaultAppearanceSettings.highContrast,
+	fontSize: settings.value?.fontSize || defaultAppearanceSettings.fontSize,
+	density: settings.value?.uiDensity || defaultAppearanceSettings.uiDensity,
+	alter: settings.value?.alter || defaultAppearanceSettings.alter,
 });
 
 const saveSettings = async () => {
@@ -115,7 +115,9 @@ const saveSettings = async () => {
 </script>
 <template>
 	<Teleport to="#header">
-		<nav class="grid grid-cols-[auto_1fr_auto] items-center justify-center gap-4">
+		<nav
+			class="grid grid-cols-[auto_1fr_auto] items-center justify-center gap-4"
+		>
 			<Button
 				label="Retour"
 				variant="link"
@@ -123,7 +125,9 @@ const saveSettings = async () => {
 				:handler="() => navigateTo('/settings')"
 				class="justify-self-start"
 			/>
-			<h1 class="justify-self-center text-2xl font-bold font-title">Apparence & Accessibilité</h1>
+			<h1 class="justify-self-center text-2xl font-bold font-title">
+				Apparence & Accessibilité
+			</h1>
 		</nav>
 	</Teleport>
 

@@ -60,6 +60,9 @@ const reportTypeMap: Record<string, string> = {
 				Nous avons reçu votre signalement
 			</h4>
 		</div>
-		<div v-if="!data.read" class="bg-info rounded-full w-3 h-3 ml-auto"></div>
+		<div
+			v-if="!data.read"
+			class="bg-info rounded-full w-3 h-3 ml-auto"
+		></div>
 	</Box>
 </template>

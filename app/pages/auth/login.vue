@@ -61,16 +61,21 @@ useHead({
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg">
-		<h1 class="text-2xl text-center font-bold font-title">Heureux de vous revoir !</h1>
-		<p v-if="session" class="flex justify-center items-center gap-2 text-center text-success">
+		<h1 class="text-2xl text-center font-bold font-title">
+			Heureux de vous revoir !
+		</h1>
+		<p
+			v-if="session"
+			class="flex justify-center items-center gap-2 text-center text-success"
+		>
 			Connecté en tant que
 			<span class="flex items-center gap-1">
 				<Avatar
 					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
 					size="sm"
 				/>
-				{{ session.profile.name }}
-			</span>.
+				{{ session.profile.name }} </span
+			>.
 		</p>
 		<form class="flex flex-col gap-6" @submit.prevent="handleLogin">
 			<Input
@@ -113,11 +118,7 @@ useHead({
 				/>
 			</div>
 			<div class="flex justify-center items-center gap-4 w-full">
-				<Button
-					label="Se connecter"
-					size="medium"
-					submit
-				/>
+				<Button label="Se connecter" size="medium" submit />
 			</div>
 		</form>
 	</Box>

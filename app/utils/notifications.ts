@@ -112,7 +112,7 @@ export const getNotificationAction: any = (
 
 			switch (postNotif.type) {
 				case "mention":
-					label = `${postNotif.issuer.displayName || `@${postNotif.issuer.name}` || '@ghost'} vous a mentionné dans une publication.`;
+					label = `${postNotif.issuer.displayName || `@${postNotif.issuer.name}` || "@ghost"} vous a mentionné dans une publication.`;
 					icon = AtSymbolIcon;
 					handler = () => handlers.onPostClick(postNotif.post);
 					break;

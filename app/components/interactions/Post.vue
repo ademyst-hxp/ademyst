@@ -49,7 +49,9 @@ const { data: parentPost } = useAsyncData(
 	"post-" + post.value.parentId,
 	async () => {
 		if (post.value.parentId) {
-			const response = await $api<{ data: Post }>("/posts/" + post.value.parentId);
+			const response = await $api<{ data: Post }>(
+				"/posts/" + post.value.parentId,
+			);
 			return response.data;
 		}
 		return null;
@@ -133,7 +135,10 @@ const actions = computed(() => {
 		handler: copyLinkToClipboard,
 	});
 
-	if (props.data.profile?.id == session.value?.profile?.id || (session.value?.profile?.level ?? 0) > 6) {
+	if (
+		props.data.profile?.id == session.value?.profile?.id ||
+		(session.value?.profile?.level ?? 0) > 6
+	) {
 		actions.push({
 			label: "Statistiques de la publication",
 			icon: ChartBarIcon,

@@ -40,7 +40,9 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center font-title">Confidentialité</h1>
+		<h1 class="text-3xl font-bold text-center font-title">
+			Confidentialité
+		</h1>
 	</Teleport>
 
 	<header
@@ -51,7 +53,9 @@ useHead({
 			<span class="font-semibold">Ademyst</span>
 		</div>
 
-		<h2 class="text-3xl font-bold font-title">Politique de confidentialité</h2>
+		<h2 class="text-3xl font-bold font-title">
+			Politique de confidentialité
+		</h2>
 
 		<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
 	</header>

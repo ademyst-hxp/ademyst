@@ -60,7 +60,9 @@ useHead({
 		/>
 	</div>
 	<Box class="w-full md:max-w-lg">
-		<h1 class="text-2xl text-center font-bold font-title">Mot de passe oublié ?</h1>
+		<h1 class="text-2xl text-center font-bold font-title">
+			Mot de passe oublié ?
+		</h1>
 		<p>
 			Entrez votre adresse e-mail et nous vous enverrons un lien pour
 			réinitialiser votre mot de passe.
@@ -98,11 +100,7 @@ useHead({
 					variant="link"
 					:handler="$router.back"
 				/>
-				<Button
-					label="Envoyer l'email"
-					size="medium"
-					submit
-				/>
+				<Button label="Envoyer l'email" size="medium" submit />
 			</div>
 		</form>
 	</Box>

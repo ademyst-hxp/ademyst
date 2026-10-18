@@ -88,9 +88,6 @@ const props = withDefaults(
 				class="bg-info rounded-full w-3 h-3 ml-auto"
 			></div>
 		</div>
-		<PostCard
-			:data="data.post"
-			class="w-full -mx-2 mt-2"
-		/>
+		<PostCard :data="data.post" class="w-full -mx-2 mt-2" />
 	</Box>
 </template>

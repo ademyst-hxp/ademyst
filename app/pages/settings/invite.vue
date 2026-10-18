@@ -237,7 +237,9 @@ useHead({
 			class="items-center justify-center"
 		>
 			<p>
-				{{ (referralCodeIndex % (myReferralCodes?.length ?? 1)) + 1 }}/{{ myReferralCodes?.length ?? 1 }}
+				{{
+					(referralCodeIndex % (myReferralCodes?.length ?? 1)) + 1
+				}}/{{ myReferralCodes?.length ?? 1 }}
 			</p>
 			<div class="flex items-center gap-0.5">
 				<ChevronLeftIcon
@@ -246,7 +248,8 @@ useHead({
 					tabindex="0"
 				/>
 				<div
-					v-for="letter in focusedReferralCode?.code.toUpperCase() || []"
+					v-for="letter in focusedReferralCode?.code.toUpperCase() ||
+					[]"
 					class="bg-black/5 text-xl font-semibold font-title rounded-lg px-2"
 				>
 					{{ letter }}

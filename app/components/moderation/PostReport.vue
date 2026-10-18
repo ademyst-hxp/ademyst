@@ -116,7 +116,8 @@ const reviewReport = async (status: "reviewed" | "rejected" | "pending") => {
 				Effectué par <b>{{ data.reporter.email }}</b>
 			</p>
 			<p v-if="data.reportedPost" class="text-muted text-sm">
-				Concernant la publication de <b>@{{ data.reportedPost.profile.name }}</b>
+				Concernant la publication de
+				<b>@{{ data.reportedPost.profile.name }}</b>
 			</p>
 		</div>
 		<div v-if="handlable" class="flex items-center gap-2">
@@ -154,7 +155,9 @@ const reviewReport = async (status: "reviewed" | "rejected" | "pending") => {
 			/>
 		</div>
 		<div v-if="editable" class="flex flex-col gap-4">
-			<h3 class="flex items-center gap-2 text-lg font-semibold font-title">
+			<h3
+				class="flex items-center gap-2 text-lg font-semibold font-title"
+			>
 				<HandThumbUpIcon class="w-6 h-6" /> Bonnes pratiques
 			</h3>
 			<ul class="list-disc list-inside">

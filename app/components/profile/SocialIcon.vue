@@ -3,12 +3,15 @@ import { domains } from "~~/shared/consts/links";
 
 import { GlobeAltIcon } from "@heroicons/vue/24/outline";
 
-const props = withDefaults(defineProps<{
-	icon?: string;
-	customColor?: string;
-}>(), {
-	customColor: "",
-});
+const props = withDefaults(
+	defineProps<{
+		icon?: string;
+		customColor?: string;
+	}>(),
+	{
+		customColor: "",
+	},
+);
 
 const icon = computed(() => {
 	if (props.icon) {

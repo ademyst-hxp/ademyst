@@ -37,7 +37,9 @@ useHead({
 
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center font-title">Conditions d'utilisation</h1>
+		<h1 class="text-3xl font-bold text-center font-title">
+			Conditions d'utilisation
+		</h1>
 	</Teleport>
 
 	<section class="flex flex-col gap-6">

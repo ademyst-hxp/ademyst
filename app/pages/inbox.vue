@@ -236,8 +236,8 @@ const groupedActions = computed(() => {
 		title="Adresse e-mail non confirmée"
 	>
 		<p>
-			Votre adresse e-mail n'est pas confirmée. Veuillez vérifier votre boîte
-			de réception pour le lien de confirmation.
+			Votre adresse e-mail n'est pas confirmée. Veuillez vérifier votre
+			boîte de réception pour le lien de confirmation.
 		</p>
 		<RouterLink
 			:to="`/settings/account`"

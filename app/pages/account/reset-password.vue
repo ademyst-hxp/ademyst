@@ -155,11 +155,7 @@ useHead({
 				>
 			</div>
 			<div class="flex justify-center items-center gap-4 w-full">
-				<Button
-					label="Changer le mot de passe"
-					size="medium"
-					submit
-				/>
+				<Button label="Changer le mot de passe" size="medium" submit />
 			</div>
 		</form>
 	</Box>

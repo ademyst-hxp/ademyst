@@ -36,7 +36,9 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 	<Popup>
 		<slot />
 		<Box class="items-center w-full max-h-full sm:w-lg">
-			<h2 class="text-xl font-semibold text-surface-text mb-4 font-title sm:text-3xl">
+			<h2
+				class="text-xl font-semibold text-surface-text mb-4 font-title sm:text-3xl"
+			>
 				{{ title || "Menu" }}
 			</h2>
 			<div
@@ -58,7 +60,9 @@ const handleSelect = (handler: string | (() => void | Promise<void>)) => {
 						class="w-8 h-8"
 					/>
 					<div class="flex flex-col -space-y-1">
-						<span class="font-medium group-hover:underline">{{ action.label }}</span>
+						<span class="font-medium group-hover:underline">{{
+							action.label
+						}}</span>
 						<p
 							v-if="action.description"
 							class="text-sm text-surface-text-muted"

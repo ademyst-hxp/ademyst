@@ -341,7 +341,9 @@ const isNameDialogOpen = ref(false);
 		</div>
 	</section>
 	<section class="flex flex-col gap-2">
-		<h2 class="text-xl font-semibold font-title px-8">Vous cherchiez peut-être...</h2>
+		<h2 class="text-xl font-semibold font-title px-8">
+			Vous cherchiez peut-être...
+		</h2>
 		<Actions
 			scale="sm"
 			:actions="[

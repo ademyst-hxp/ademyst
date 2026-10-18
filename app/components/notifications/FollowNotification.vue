@@ -55,6 +55,9 @@ const props = withDefaults(
 				a commencé à vous suivre
 			</h4>
 		</template>
-		<div v-if="!data.read" class="bg-info rounded-full w-3 h-3 ml-auto"></div>
+		<div
+			v-if="!data.read"
+			class="bg-info rounded-full w-3 h-3 ml-auto"
+		></div>
 	</Box>
 </template>

@@ -235,7 +235,9 @@ watch(
 				class="flex flex-col items-center gap-2 text-center py-8"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
-				<h2 class="text-2xl font-bold font-title px-8">Une petite pause ?</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Une petite pause ?
+				</h2>
 				<p class="text-muted px-8">
 					Vous avez parcouru {{ index + 1 }} publications depuis
 					l'ouverture de cette page.
@@ -245,7 +247,9 @@ watch(
 				v-else-if="(index + 1) % 13 === 0"
 				class="flex flex-col gap-2 py-4"
 			>
-				<h2 class="text-2xl font-bold font-title px-8">Profils à suivre</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
 				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
 					<ProfileBox
 						v-for="user in users"
@@ -279,7 +283,9 @@ watch(
 				class="flex flex-col items-center gap-2 text-center py-8"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
-				<h2 class="text-2xl font-bold font-title px-8">Une petite pause ?</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Une petite pause ?
+				</h2>
 				<p class="text-muted px-8">
 					Vous avez parcouru {{ index + 1 }} publications depuis
 					l'ouverture de cette page.
@@ -289,7 +295,9 @@ watch(
 				v-else-if="(index + 1) % 9 === 0"
 				class="flex flex-col gap-2 py-4"
 			>
-				<h2 class="text-2xl font-bold font-title px-8">Profils à suivre</h2>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
 				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
 					<ProfileBox
 						v-for="user in users"
