@@ -2,6 +2,7 @@
 import type { Post, PostFlag } from "~~/shared/models/interactions";
 
 import Box from "../base/Box.vue";
+import Popup from "../base/Popup.vue";
 
 import ProfileRow from "../profile/ProfileRow.vue";
 
@@ -24,6 +25,7 @@ import {
 	BookmarkIcon,
 } from "@heroicons/vue/24/outline";
 import PostCard from "../cards/PostCard.vue";
+import Warning from "../boxes/Warning.vue";
 
 const props = withDefaults(
 	defineProps<{
@@ -145,6 +147,7 @@ const actions = computed(() => {
 
 const isMenuOpen = ref(false);
 const isDeleteMenuOpen = ref(false);
+const isFriendOnlyPopupOpen = ref(false);
 
 const rendered = computed(() => {
 	return $md.render(props.data.content);
@@ -155,6 +158,14 @@ const rendered = computed(() => {
 		<div class="flex items-center gap-2">
 			<ProfileRow :data="post.profile" />
 			<div class="grow" />
+			<div
+				v-if="post.visibility === 'friends'"
+				class="cursor-pointer flex items-center gap-1 bg-tertiary rounded-full px-3 py-2 text-sm text-white font-semibold"
+				tabindex="0"
+				@click="isFriendOnlyPopupOpen = true"
+			>
+				<HeartSolidIcon class="h-5 w-5" />
+			</div>
 			<span
 				class="text-surface-text-muted"
 				:class="post.updatedAt ? 'italic' : ''"
@@ -171,9 +182,12 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div v-if="post.parentId" class="flex items-center gap-2">
-			<ChatBubbleLeftRightIcon class="h-6 w-6" />
-			<p class="text-lg">
+		<div
+			v-if="post.parentId"
+			class="flex items-center gap-1 text-surface-text-muted px-2 -mb-2"
+		>
+			<ChatBubbleLeftRightIcon class="h-4 w-4" />
+			<p class="text-sm">
 				En réponse à
 				<RouterLink
 					:to="`/posts/${post.parentId}`"
@@ -311,4 +325,34 @@ const rendered = computed(() => {
 			},
 		]"
 	/>
+
+	<Popup v-if="isFriendOnlyPopupOpen" @close="isFriendOnlyPopupOpen = false">
+		<Box class="w-full sm:w-lg">
+			<h2 class="text-2xl text-tertiary font-semibold font-title">
+				Publication "amis uniquement"
+			</h2>
+			<p>
+				Vous voyez cette publication car l'auteur vous a désigné(e)
+				comme étant l'un de ses amis. Vous pouvez faire de même en
+				allant sur son profil, en le suivant puis en cliquant sur
+				"Ajouter aux amis".
+			</p>
+			<Warning class="-mx-2" title="Vos réponses ne sont pas invisibles">
+				Si vous répondez à cette publication, la visibilité de votre
+				réponse dépendra de celle que vous choisirez et non de celle de
+				la publication d'origine. Il est possible que certains
+				utilisateurs voient votre réponse sans voir la publication
+				d'origine, et inversement.
+			</Warning>
+			<Button
+				label="Fermer"
+				:handler="
+					() => {
+						isFriendOnlyPopupOpen = false;
+					}
+				"
+				variant="link"
+			/>
+		</Box>
+	</Popup>
 </template>

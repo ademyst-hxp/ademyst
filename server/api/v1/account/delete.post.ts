@@ -2,10 +2,7 @@ import { createError, readBody } from "h3";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { useDb } from "#server/db";
-import {
-	accountDeletionTokens,
-	accounts,
-} from "#server/db/schema/accounts";
+import { accountDeletionTokens, accounts } from "#server/db/schema/accounts";
 
 function normalizeToken(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -31,15 +28,11 @@ export default defineEventHandler(async (event) => {
 
 	await db.transaction(async (tx) => {
 		const [tokenRow] = await tx
-			.select({
-				id: accountDeletionTokens.id,
-				accountId: accountDeletionTokens.accountId,
-			})
+			.select()
 			.from(accountDeletionTokens)
 			.where(
 				and(
 					eq(accountDeletionTokens.token, token),
-					isNull(accountDeletionTokens.usedAt),
 					eq(accountDeletionTokens.revoked, false),
 				),
 			)
@@ -49,6 +42,13 @@ export default defineEventHandler(async (event) => {
 			throw createError({
 				statusCode: 400,
 				statusMessage: "Invalid or expired token",
+			});
+		}
+
+		if (tokenRow.usedAt) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Token has already been used",
 			});
 		}
 
@@ -65,9 +65,7 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 
-		await tx
-			.delete(accounts)
-			.where(eq(accounts.id, tokenRow.accountId));
+		await tx.delete(accounts).where(eq(accounts.id, tokenRow.accountId));
 	});
 
 	return { ok: true };

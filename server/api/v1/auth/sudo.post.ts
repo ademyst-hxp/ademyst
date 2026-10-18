@@ -7,7 +7,7 @@ import { useDb } from "#server/db";
 import {
 	accountDeletionTokens,
 	accounts,
-	emailConfirmationTokens,
+	emailChangeTokens,
 	passwordResetTokens,
 } from "#server/db/schema/accounts";
 import { verifyPassword } from "#server/utils/password";
@@ -112,16 +112,13 @@ export default defineEventHandler(async (event) => {
 				});
 			}
 
-			await db.insert(emailConfirmationTokens).values({
+			await db.insert(emailChangeTokens).values({
 				accountId: account.id,
 				token,
 				email: newEmail,
 				ipAddress,
 				userAgent,
 			});
-
-			// On l'expose pas, direct envoyé ds le mail
-			token = undefined
 
 			break;
 		case "delete-account":
