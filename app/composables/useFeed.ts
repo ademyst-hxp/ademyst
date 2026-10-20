@@ -117,11 +117,12 @@ export const useFeed = () => {
 	};
 
 	// Appends the next page of a tab. Does nothing while another request is
-	// running or when the last page has already been reached.
-	const loadMore = async (tab: FeedTab) => {
-		if (loading.value || loadingMore.value) return;
-		if (!loadedTabs.value.includes(tab)) return;
-		if (!pages.value[tab].hasNext) return;
+	// running or when the last page has already been reached. Resolves to
+	// true only when a page was appended.
+	const loadMore = async (tab: FeedTab): Promise<boolean> => {
+		if (loading.value || loadingMore.value) return false;
+		if (!loadedTabs.value.includes(tab)) return false;
+		if (!pages.value[tab].hasNext) return false;
 
 		loadingMore.value = true;
 		error.value = null;
@@ -132,7 +133,7 @@ export const useFeed = () => {
 			const response = await fetchPage(tab, pages.value[tab].next);
 
 			// The feed was refreshed meanwhile: drop this page.
-			if (startedAt !== generation.value) return;
+			if (startedAt !== generation.value) return false;
 
 			// Filtering/sorting is done per page by the API, so the same post
 			// must never be shown twice.
@@ -144,8 +145,12 @@ export const useFeed = () => {
 				next: response.next,
 				hasNext: response.hasNext,
 			};
+
+			return true;
 		} catch (err) {
 			error.value = err instanceof Error ? err.message : String(err);
+
+			return false;
 		} finally {
 			loadingMore.value = false;
 		}

@@ -16,6 +16,8 @@ import type { ProfileReport } from "~~/shared/models/reports";
 import type { WhisperReport } from "~~/shared/models/reports";
 import type { Sanction } from "~~/shared/models/sanctions";
 
+import { ArrowPathIcon } from "@heroicons/vue/24/outline";
+
 import Actions from "~/components/base/Actions.vue";
 import WarningBox from "~/components/boxes/Warning.vue";
 import NotificationBox from "~/components/notifications/Notification.vue";
@@ -60,21 +62,93 @@ useHead({
 	],
 });
 
+type InboxNotification =
+	| AccountSanctionNotification
+	| PostSanctionNotification
+	| ReportNotification
+	| PostNotification
+	| WhisperNotification
+	| FollowNotification;
+
+type InboxPage = {
+	notifications: InboxNotification[];
+	next: number;
+	hasNext: boolean;
+};
+
+const PAGE_SIZE = 20;
+
+const fetchPage = (offset: number) =>
+	$api<InboxPage>("/inbox", { query: { limit: PAGE_SIZE, offset } });
+
 const {
-	data: notifications,
+	data: firstPage,
 	error: fetchError,
-	refresh: refreshNotifications,
-} = useAsyncData("inbox", () =>
-	$api<{
-		notifications: (
-			| AccountSanctionNotification
-			| PostSanctionNotification
-			| ReportNotification
-			| PostNotification
-			| WhisperNotification
-			| FollowNotification
-		)[];
-	}>("/inbox").then((res) => res.notifications),
+	refresh: refreshFirstPage,
+} = await useAsyncData("inbox", () => fetchPage(0));
+
+// Notifications loaded so far (first page + the following ones).
+const notifications = ref<InboxNotification[]>([]);
+const nextOffset = ref(0);
+const hasNext = ref(false);
+const loadingMore = ref(false);
+
+// Incremented on every refresh so that a page requested before it cannot be
+// appended afterwards.
+let generation = 0;
+
+const seedFromFirstPage = () => {
+	notifications.value = firstPage.value?.notifications ?? [];
+	nextOffset.value = firstPage.value?.next ?? 0;
+	hasNext.value = firstPage.value?.hasNext ?? false;
+};
+
+seedFromFirstPage();
+
+const refreshNotifications = async () => {
+	generation++;
+	await refreshFirstPage();
+	seedFromFirstPage();
+};
+
+const notificationKey = (notification: InboxNotification) =>
+	`${getNotificationType(notification)}-${notification.id}`;
+
+const loadMoreNotifications = async (): Promise<boolean> => {
+	if (loadingMore.value || !hasNext.value) return false;
+
+	const startedAt = generation;
+	loadingMore.value = true;
+
+	try {
+		const page = await fetchPage(nextOffset.value);
+
+		if (startedAt !== generation) return false;
+
+		// New notifications arriving meanwhile shift the offsets: never show
+		// the same notification twice.
+		const known = new Set(notifications.value.map(notificationKey));
+
+		notifications.value = [
+			...notifications.value,
+			...page.notifications.filter((n) => !known.has(notificationKey(n))),
+		];
+		nextOffset.value = page.next;
+		hasNext.value = page.hasNext;
+
+		return true;
+	} catch (err) {
+		console.error("Erreur lors du chargement des notifications:", err);
+
+		return false;
+	} finally {
+		loadingMore.value = false;
+	}
+};
+
+const { sentinel } = useScrollSentinel(
+	loadMoreNotifications,
+	() => hasNext.value,
 );
 
 const criticalCount = computed(() => {
@@ -238,7 +312,7 @@ const groupedActions = computed(() => {
 		<Actions v-for="group in groupedActions" scale="sm" :actions="group" />
 
 		<p
-			v-if="!notifications?.length"
+			v-if="!notifications?.length && !hasNext"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
 			Aucune notification en vue pour le moment.
@@ -257,7 +331,8 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['post', 'whisper'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -277,7 +352,8 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['follow'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -301,7 +377,8 @@ const groupedActions = computed(() => {
 					['account_sanction', 'post_sanction'].includes(
 						getNotificationType(n),
 					),
-				).length
+				).length &&
+				!hasNext
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -321,11 +398,17 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['report'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
 			Aucune notification en vue pour le moment.
 		</p>
 	</section>
+
+	<!-- Pagination sentinel -->
+	<div ref="sentinel" class="flex justify-center py-6 text-muted">
+		<ArrowPathIcon v-if="loadingMore" class="w-6 h-6 animate-spin" />
+	</div>
 </template>

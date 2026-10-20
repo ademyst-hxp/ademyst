@@ -55,36 +55,16 @@ watch(tab, (value) => loadTab(value));
 
 // Infinite scroll: when the sentinel at the bottom of the feed gets close to
 // the viewport, the next page of the current tab is requested.
-const sentinel = ref<HTMLElement | null>(null);
-let observer: IntersectionObserver | null = null;
+const { sentinel, recheck } = useScrollSentinel(
+	() => loadMore(tab.value),
+	() => hasMore(tab.value),
+);
 
-const loadNextPage = async () => {
-	await loadMore(tab.value);
-
-	// The observer only fires when visibility changes: observing the sentinel
-	// again checks whether it is still on screen (short page, filtered posts)
-	// and chains the next load if so.
-	if (observer && sentinel.value && hasMore(tab.value)) {
-		observer.unobserve(sentinel.value);
-		observer.observe(sentinel.value);
-	}
-};
-
-onMounted(() => {
-	if (!sentinel.value) return;
-
-	observer = new IntersectionObserver(
-		(entries) => {
-			if (entries.some((entry) => entry.isIntersecting)) {
-				loadNextPage();
-			}
-		},
-		{ rootMargin: "400px 0px" },
-	);
-	observer.observe(sentinel.value);
+// A page requested while the feed was loading is skipped: once the loading
+// is over, check again whether the sentinel is still on screen.
+watch(loading, (value) => {
+	if (!value) recheck();
 });
-
-onBeforeUnmount(() => observer?.disconnect());
 
 definePageMeta({
 	title: "Ademyst: Discover",

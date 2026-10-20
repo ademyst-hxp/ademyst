@@ -6,7 +6,7 @@ import type { ProfileReport } from "~~/shared/models/reports";
 import type { Badge } from "~~/shared/models/shop";
 
 import SocialIcon from "@/components/profile/SocialIcon.vue";
-import { AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
+import { ArrowPathIcon, AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
 
 import PostView from "@/components/interactions/Post.vue";
@@ -48,15 +48,78 @@ const { data, pending } = await useAsyncData(requestKey, async () => {
 	return $api<ProfileResponse>(`/users/${encodeURIComponent(name.value)}`);
 });
 
-const { data: posts } = await useAsyncData(postsRequestKey, async () => {
-	if (!name.value) throw createError({ statusCode: 400 });
+const POSTS_PAGE_SIZE = 20;
 
-	return (
-		await $api<{ posts: Post[] }>(
-			`/users/${encodeURIComponent(name.value)}/posts`,
-		)
-	).posts;
-});
+type PostsPage = { posts: Post[]; next: number; hasNext: boolean };
+
+const fetchPostsPage = (userName: string, offset: number) =>
+	$api<PostsPage>(`/users/${encodeURIComponent(userName)}/posts`, {
+		query: { limit: POSTS_PAGE_SIZE, offset },
+	});
+
+const { data: firstPostsPage } = await useAsyncData(
+	postsRequestKey,
+	async () => {
+		if (!name.value) throw createError({ statusCode: 400 });
+
+		return fetchPostsPage(name.value, 0);
+	},
+);
+
+// Posts loaded so far (first page + the following ones).
+const posts = ref<Post[]>([]);
+const postsNext = ref(0);
+const postsHasNext = ref(false);
+const loadingMorePosts = ref(false);
+
+watch(
+	firstPostsPage,
+	(page) => {
+		posts.value = page?.posts ?? [];
+		postsNext.value = page?.next ?? 0;
+		postsHasNext.value = page?.hasNext ?? false;
+	},
+	{ immediate: true },
+);
+
+const loadMorePosts = async (): Promise<boolean> => {
+	if (loadingMorePosts.value || !postsHasNext.value || !name.value) {
+		return false;
+	}
+
+	const requestedName = name.value;
+	loadingMorePosts.value = true;
+
+	try {
+		const page = await fetchPostsPage(requestedName, postsNext.value);
+
+		// Another profile was opened meanwhile.
+		if (requestedName !== name.value) return false;
+
+		// Never show the same post twice if the offsets shifted meanwhile.
+		const known = new Set(posts.value.map((post) => post.id));
+
+		posts.value = [
+			...posts.value,
+			...page.posts.filter((post) => !known.has(post.id)),
+		];
+		postsNext.value = page.next;
+		postsHasNext.value = page.hasNext;
+
+		return true;
+	} catch (err) {
+		console.error("Erreur lors du chargement des publications:", err);
+
+		return false;
+	} finally {
+		loadingMorePosts.value = false;
+	}
+};
+
+const { sentinel } = useScrollSentinel(
+	loadMorePosts,
+	() => postsHasNext.value,
+);
 
 const { data: following } = await useAsyncData(
 	followingRequestKey,
@@ -467,7 +530,7 @@ const focusedBadge = ref<Badge | null>(null);
 		<section class="flex items-center gap-4 px-4">
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
-					toLitteral(posts?.length ?? 0)
+					toLitteral(posts.length) + (postsHasNext ? "+" : "")
 				}}</span>
 				<span class="text-muted">Publications</span>
 			</div>
@@ -569,8 +632,17 @@ const focusedBadge = ref<Badge | null>(null);
 	</section>
 
 	<section v-if="tab === 'posts'" class="space-y-2">
-		<PostView v-for="post in posts ?? []" :key="post.id" :data="post" />
+		<PostView v-for="post in posts" :key="post.id" :data="post" />
 	</section>
+
+	<!-- Pagination sentinel (hidden, hence never observed, outside the posts tab) -->
+	<div
+		v-show="tab === 'posts'"
+		ref="sentinel"
+		class="flex justify-center py-6 text-muted"
+	>
+		<ArrowPathIcon v-if="loadingMorePosts" class="w-6 h-6 animate-spin" />
+	</div>
 
 	<section v-if="tab === 'following'" class="space-y-2">
 		<div
