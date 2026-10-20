@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { getNotificationAction, getNotificationType, makeNotificationGroups } from "~/utils/notifications";
+import {
+	getNotificationAction,
+	getNotificationType,
+	makeNotificationGroups,
+} from "~/utils/notifications";
 
 import type { Account } from "~~/shared/models/accounts";
 import type { AccountSanctionNotification } from "~~/shared/models/inbox";
@@ -62,6 +66,10 @@ useHead({
 	],
 });
 
+const tab = ref<"all" | "interactions" | "relations" | "sanctions" | "reports">(
+	"all",
+);
+
 type InboxNotification =
 	| AccountSanctionNotification
 	| PostSanctionNotification
@@ -79,7 +87,11 @@ type InboxPage = {
 const PAGE_SIZE = 20;
 
 const fetchPage = (offset: number) =>
-	$api<InboxPage>("/inbox", { query: { limit: PAGE_SIZE, offset } });
+	$api<InboxPage>("/inbox", {
+		// The tab is the server-side filter: the API only returns (and
+		// paginates) the notifications of the selected type.
+		query: { limit: PAGE_SIZE, offset, type: tab.value },
+	});
 
 const {
 	data: firstPage,
@@ -105,17 +117,32 @@ const seedFromFirstPage = () => {
 
 seedFromFirstPage();
 
+const refreshing = ref(false);
+
 const refreshNotifications = async () => {
 	generation++;
-	await refreshFirstPage();
-	seedFromFirstPage();
+	refreshing.value = true;
+
+	try {
+		await refreshFirstPage();
+		seedFromFirstPage();
+	} finally {
+		refreshing.value = false;
+	}
 };
+
+// Another tab = another filter: start again from its first page.
+watch(tab, () => {
+	notifications.value = [];
+	hasNext.value = true;
+	refreshNotifications();
+});
 
 const notificationKey = (notification: InboxNotification) =>
 	`${getNotificationType(notification)}-${notification.id}`;
 
 const loadMoreNotifications = async (): Promise<boolean> => {
-	if (loadingMore.value || !hasNext.value) return false;
+	if (loadingMore.value || refreshing.value || !hasNext.value) return false;
 
 	const startedAt = generation;
 	loadingMore.value = true;
@@ -146,10 +173,15 @@ const loadMoreNotifications = async (): Promise<boolean> => {
 	}
 };
 
-const { sentinel } = useScrollSentinel(
+const { sentinel, recheck } = useScrollSentinel(
 	loadMoreNotifications,
 	() => hasNext.value,
 );
+
+// A page requested during a refresh is skipped: check again when it is over.
+watch(refreshing, (value) => {
+	if (!value) recheck();
+});
 
 const criticalCount = computed(() => {
 	if (!notifications.value) return 0;
@@ -211,10 +243,6 @@ const tabs = [
 		value: "reports",
 	},
 ];
-
-const tab = ref<"all" | "interactions" | "relations" | "sanctions" | "reports">(
-	"all",
-);
 
 /************************************/
 
@@ -312,7 +340,7 @@ const groupedActions = computed(() => {
 		<Actions v-for="group in groupedActions" scale="sm" :actions="group" />
 
 		<p
-			v-if="!notifications?.length && !hasNext"
+			v-if="!notifications?.length && !hasNext && !refreshing"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
 			Aucune notification en vue pour le moment.
@@ -332,7 +360,8 @@ const groupedActions = computed(() => {
 				!notifications?.filter((n) =>
 					['post', 'whisper'].includes(getNotificationType(n)),
 				).length &&
-				!hasNext
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -353,7 +382,8 @@ const groupedActions = computed(() => {
 				!notifications?.filter((n) =>
 					['follow'].includes(getNotificationType(n)),
 				).length &&
-				!hasNext
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -378,7 +408,8 @@ const groupedActions = computed(() => {
 						getNotificationType(n),
 					),
 				).length &&
-				!hasNext
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -399,7 +430,8 @@ const groupedActions = computed(() => {
 				!notifications?.filter((n) =>
 					['report'].includes(getNotificationType(n)),
 				).length &&
-				!hasNext
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -409,6 +441,9 @@ const groupedActions = computed(() => {
 
 	<!-- Pagination sentinel -->
 	<div ref="sentinel" class="flex justify-center py-6 text-muted">
-		<ArrowPathIcon v-if="loadingMore" class="w-6 h-6 animate-spin" />
+		<ArrowPathIcon
+			v-if="loadingMore || refreshing"
+			class="w-6 h-6 animate-spin"
+		/>
 	</div>
 </template>

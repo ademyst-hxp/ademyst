@@ -1,6 +1,12 @@
 import { useDb } from "~~/server/db";
 import { profileReports } from "~~/server/db/schema/reports";
+import { desc, eq } from "drizzle-orm";
 
+import {
+	REPORT_STATUSES,
+	queryEnum,
+	queryPagination,
+} from "~~/server/utils/helpers/filters";
 import { retrieveSeveralCleanProfileReports } from "~~/server/utils/converters/reports";
 
 export default defineEventHandler(async (event) => {
@@ -8,12 +14,15 @@ export default defineEventHandler(async (event) => {
 
 	const identity = await requireAuth(event, { min_level: 7 });
 
-	const limit = Number(event.context.query?.limit) || 100;
-	const offset = Number(event.context.query?.offset) || 0;
+	// Filters (all optional): ?status=pending|reviewed|rejected
+	const { limit, offset } = queryPagination(event);
+	const status = queryEnum(event, "status", REPORT_STATUSES);
 
 	const _profile_reports = await db
 		.select()
 		.from(profileReports)
+		.where(status ? eq(profileReports.status, status) : undefined)
+		.orderBy(desc(profileReports.createdAt))
 		.limit(limit)
 		.offset(offset);
 

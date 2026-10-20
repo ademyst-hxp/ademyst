@@ -7,7 +7,13 @@ import {
 	reportNotifications,
 	whisperNotifications,
 } from "#server/db/schema/inbox";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
+
+import {
+	queryBoolean,
+	queryEnum,
+	queryPagination,
+} from "~~/server/utils/helpers/filters";
 
 import type { H3Event } from "h3";
 
@@ -17,6 +23,15 @@ const endpoints = {
 	unread: "/api/v1/inbox/unread",
 };
 
+// ?type=... matches the tabs of the inbox page.
+const TYPES = [
+	"all",
+	"interactions",
+	"relations",
+	"sanctions",
+	"reports",
+] as const;
+
 const timeOf = (row: { createdAt: Date | string | number }) =>
 	new Date(row.createdAt).getTime();
 
@@ -25,10 +40,13 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const identity = await getIdentity(event);
 
-	const query = getQuery(event);
+	const { limit, offset } = queryPagination(event);
 
-	const limit = Math.min(Number(query.limit) || 100, 100);
-	const offset = Math.max(Number(query.offset) || 0, 0);
+	// Filters (all optional):
+	//   type   = all | interactions | relations | sanctions | reports
+	//   unread = true  -> only the notifications not read yet
+	const type = queryEnum(event, "type", TYPES) ?? "all";
+	const unreadOnly = queryBoolean(event, "unread") === true;
 
 	if (!identity) {
 		return {
@@ -46,6 +64,10 @@ export default defineEventHandler(async (event: H3Event) => {
 	// there is something after this page), then merged and sliced.
 	const fetchSize = offset + limit + 1;
 
+	// A table that does not belong to the requested type is not read at all.
+	const wants = (...types: (typeof TYPES)[number][]) =>
+		type === "all" || types.includes(type);
+
 	const [
 		accountSanctionNotificationsResult,
 		postSanctionNotificationsResult,
@@ -54,62 +76,129 @@ export default defineEventHandler(async (event: H3Event) => {
 		whisperNotificationsResult,
 		followNotificationsResult,
 	] = await Promise.all([
-		db
-			.select()
-			.from(accountSanctionNotifications)
-			.where(
-				eq(accountSanctionNotifications.profileId, identity.profileId),
-			)
-			.orderBy(
-				desc(accountSanctionNotifications.createdAt),
-				desc(accountSanctionNotifications.id),
-			)
-			.limit(fetchSize),
-		db
-			.select()
-			.from(postSanctionNotifications)
-			.where(eq(postSanctionNotifications.profileId, identity.profileId))
-			.orderBy(
-				desc(postSanctionNotifications.createdAt),
-				desc(postSanctionNotifications.id),
-			)
-			.limit(fetchSize),
-		db
-			.select()
-			.from(reportNotifications)
-			.where(eq(reportNotifications.profileId, identity.profileId))
-			.orderBy(
-				desc(reportNotifications.createdAt),
-				desc(reportNotifications.id),
-			)
-			.limit(fetchSize),
-		db
-			.select()
-			.from(postNotifications)
-			.where(eq(postNotifications.profileId, identity.profileId))
-			.orderBy(
-				desc(postNotifications.createdAt),
-				desc(postNotifications.id),
-			)
-			.limit(fetchSize),
-		db
-			.select()
-			.from(whisperNotifications)
-			.where(eq(whisperNotifications.profileId, identity.profileId))
-			.orderBy(
-				desc(whisperNotifications.createdAt),
-				desc(whisperNotifications.id),
-			)
-			.limit(fetchSize),
-		db
-			.select()
-			.from(followNotifications)
-			.where(eq(followNotifications.profileId, identity.profileId))
-			.orderBy(
-				desc(followNotifications.createdAt),
-				desc(followNotifications.id),
-			)
-			.limit(fetchSize),
+		wants("sanctions")
+			? db
+					.select()
+					.from(accountSanctionNotifications)
+					.where(
+						and(
+							eq(
+								accountSanctionNotifications.profileId,
+								identity.profileId,
+							),
+							unreadOnly
+								? eq(accountSanctionNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(accountSanctionNotifications.createdAt),
+						desc(accountSanctionNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
+		wants("sanctions")
+			? db
+					.select()
+					.from(postSanctionNotifications)
+					.where(
+						and(
+							eq(
+								postSanctionNotifications.profileId,
+								identity.profileId,
+							),
+							unreadOnly
+								? eq(postSanctionNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(postSanctionNotifications.createdAt),
+						desc(postSanctionNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
+		wants("reports")
+			? db
+					.select()
+					.from(reportNotifications)
+					.where(
+						and(
+							eq(
+								reportNotifications.profileId,
+								identity.profileId,
+							),
+							unreadOnly
+								? eq(reportNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(reportNotifications.createdAt),
+						desc(reportNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
+		wants("interactions")
+			? db
+					.select()
+					.from(postNotifications)
+					.where(
+						and(
+							eq(postNotifications.profileId, identity.profileId),
+							unreadOnly
+								? eq(postNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(postNotifications.createdAt),
+						desc(postNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
+		wants("interactions")
+			? db
+					.select()
+					.from(whisperNotifications)
+					.where(
+						and(
+							eq(
+								whisperNotifications.profileId,
+								identity.profileId,
+							),
+							unreadOnly
+								? eq(whisperNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(whisperNotifications.createdAt),
+						desc(whisperNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
+		wants("relations")
+			? db
+					.select()
+					.from(followNotifications)
+					.where(
+						and(
+							eq(
+								followNotifications.profileId,
+								identity.profileId,
+							),
+							unreadOnly
+								? eq(followNotifications.read, false)
+								: undefined,
+						),
+					)
+					.orderBy(
+						desc(followNotifications.createdAt),
+						desc(followNotifications.id),
+					)
+					.limit(fetchSize)
+			: Promise.resolve([]),
 	]);
 
 	const merged = [
