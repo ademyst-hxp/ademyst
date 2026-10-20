@@ -8,6 +8,7 @@ import type { Badge } from "~~/shared/models/shop";
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
 
 import Box from "~/components/base/Box.vue";
+import FilterSelect from "~/components/base/FilterSelect.vue";
 import ProfileReportView from "~/components/moderation/ProfileReport.vue";
 import SanctionView from "~/components/moderation/Sanction.vue";
 import BadgeInfo from "~/components/profile/BadgeInfo.vue";
@@ -31,7 +32,10 @@ const name = computed(() => {
 });
 
 const requestKey = computed(() => `profile-${name.value ?? "missing"}`);
-const postsRequestKey = computed(() => `posts-${name.value ?? "missing"}`);
+// Not `posts-<name>`: the profile page caches another shape under that key.
+const postsRequestKey = computed(
+	() => `posts-count-${name.value ?? "missing"}`,
+);
 
 const { data, pending } = await useAsyncData(requestKey, async () => {
 	if (!name.value) throw createError({ statusCode: 400 });
@@ -39,14 +43,17 @@ const { data, pending } = await useAsyncData(requestKey, async () => {
 	return $api<ProfileResponse>(`/users/${encodeURIComponent(name.value)}`);
 });
 
-const { data: posts } = await useAsyncData(postsRequestKey, async () => {
+// Only used for the "Publications" counter: one page of 100 is enough, a "+"
+// is displayed when there are more.
+const { data: postsPage } = await useAsyncData(postsRequestKey, async () => {
 	if (!name.value) throw createError({ statusCode: 400 });
 
-	return (
-		await $api<{ posts: Post[] }>(
-			`/users/${encodeURIComponent(name.value)}/posts`,
-		)
-	).posts;
+	const response = await $api<{ posts: Post[]; hasNext: boolean }>(
+		`/users/${encodeURIComponent(name.value)}/posts`,
+		{ query: { limit: 100 } },
+	);
+
+	return { count: response.posts.length, hasNext: response.hasNext };
 });
 
 const { data: sanctions } =
@@ -76,6 +83,67 @@ const { data: reports } = await useAsyncData(
 			)
 		).reports;
 	},
+);
+
+/**********/
+// Server-side filters. The unfiltered lists above feed the counters of the
+// overview, the filtered ones are only fetched when a filter is selected.
+const REPORT_STATUS_OPTIONS = [
+	{ label: "Tous", value: "" },
+	{ label: "En attente", value: "pending" },
+	{ label: "Traités", value: "reviewed" },
+	{ label: "Rejetés", value: "rejected" },
+];
+
+const SANCTION_STATE_OPTIONS = [
+	{ label: "Toutes", value: "" },
+	{ label: "Actives", value: "true" },
+	{ label: "Expirées", value: "false" },
+];
+
+const reportStatus = ref("");
+const sanctionState = ref("");
+
+const { data: filteredReports, pending: filteredReportsPending } =
+	await useAsyncData(
+		`reports-${name.value ?? "missing"}-filtered`,
+		async () => {
+			if (!reportStatus.value) return null;
+
+			return (
+				await $api<{ reports: ProfileReport[] }>(
+					`/moderation/users/${encodeURIComponent(data.value?.profile?.id || "")}/reports`,
+					{ query: { status: reportStatus.value } },
+				)
+			).reports;
+		},
+		{ watch: [reportStatus] },
+	);
+
+const { data: filteredSanctions, pending: filteredSanctionsPending } =
+	await useAsyncData(
+		`sanctions-${name.value ?? "missing"}-filtered`,
+		async () => {
+			if (!sanctionState.value) return null;
+
+			return (
+				await $api<{ data: Sanction[] }>(
+					`/moderation/users/${encodeURIComponent(data.value?.profile?.id || "")}/sanctions`,
+					{ query: { active: sanctionState.value } },
+				)
+			).data;
+		},
+		{ watch: [sanctionState] },
+	);
+
+const visibleReports = computed(() =>
+	reportStatus.value ? (filteredReports.value ?? []) : (reports.value ?? []),
+);
+
+const visibleSanctions = computed(() =>
+	sanctionState.value
+		? (filteredSanctions.value ?? [])
+		: (sanctions.value ?? []),
 );
 
 const profile = computed<Profile | null>(() => data.value?.profile ?? null);
@@ -232,7 +300,7 @@ const focusedBadge = ref<Badge | null>(null);
 		<section class="flex items-center gap-4 px-4">
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
-					toLitteral(posts?.length ?? 0)
+					toLitteral(postsPage?.count ?? 0) + (postsPage?.hasNext ? "+" : "")
 				}}</span>
 				<span class="text-muted">Publications</span>
 			</div>
@@ -335,14 +403,24 @@ const focusedBadge = ref<Badge | null>(null);
 	<section v-if="tab === 'reports'" class="space-y-2">
 		<div class="flex flex-col -space-y-1 px-8">
 			<h2 class="text-2xl font-bold">Signalements</h2>
-			<div v-if="!reports || reports.length === 0" class="text-muted">
-				Aucun signalement pour
-				{{ profile?.displayName ?? profile?.name }}
-			</div>
+		</div>
+		<FilterSelect
+			id="report-status"
+			v-model="reportStatus"
+			label="Statut"
+			:options="REPORT_STATUS_OPTIONS"
+		/>
+		<div
+			v-if="visibleReports.length === 0 && !filteredReportsPending"
+			class="px-8 text-muted"
+		>
+			Aucun signalement
+			{{ reportStatus ? "avec ce statut" : "" }} pour
+			{{ profile?.displayName ?? profile?.name }}
 		</div>
 		<div class="flex flex-col gap-2">
 			<ProfileReportView
-				v-for="report in reports ?? []"
+				v-for="report in visibleReports"
 				:key="report.id"
 				:data="report"
 				:editable="false"
@@ -362,22 +440,28 @@ const focusedBadge = ref<Badge | null>(null);
 					size="small"
 				/>
 			</div>
-			<div
-				v-if="
-					!sanctions ||
-					sanctions.filter((s) => s.type != 'warning').length === 0
-				"
-				class="text-muted"
-			>
-				Aucune sanction pour
-				{{ profile?.displayName ?? profile?.name }}
-			</div>
+		</div>
+		<FilterSelect
+			id="sanction-state"
+			v-model="sanctionState"
+			label="Statut"
+			:options="SANCTION_STATE_OPTIONS"
+		/>
+		<div
+			v-if="
+				visibleSanctions.filter((s) => s.type != 'warning').length ===
+					0 && !filteredSanctionsPending
+			"
+			class="px-8 text-muted"
+		>
+			Aucune sanction pour
+			{{ profile?.displayName ?? profile?.name }}
 		</div>
 		<div class="flex flex-col gap-2">
 			<SanctionView
-				v-for="sanction in sanctions?.filter(
+				v-for="sanction in visibleSanctions.filter(
 					(s) => s.type != 'warning',
-				) ?? []"
+				)"
 				:key="sanction.id"
 				:data="sanction"
 			/>
@@ -387,20 +471,27 @@ const focusedBadge = ref<Badge | null>(null);
 	<section v-if="tab === 'warnings'" class="space-y-2">
 		<div class="flex flex-col -space-y-1 px-8">
 			<h2 class="text-2xl font-bold">Avertissements</h2>
-			<div
-				v-if="
-					!sanctions ||
-					sanctions.filter((s) => s.type == 'warning').length === 0
-				"
-				class="text-muted"
-			>
-				Aucun avertissement pour
-				{{ profile?.displayName ?? profile?.name }}
-			</div>
+		</div>
+		<FilterSelect
+			id="warning-state"
+			v-model="sanctionState"
+			label="Statut"
+			:options="SANCTION_STATE_OPTIONS"
+		/>
+		<div
+			v-if="
+				visibleSanctions.filter((s) => s.type == 'warning').length ===
+					0 && !filteredSanctionsPending
+			"
+			class="px-8 text-muted"
+		>
+			Aucun avertissement pour
+			{{ profile?.displayName ?? profile?.name }}
 		</div>
 		<SanctionView
-			v-for="sanction in sanctions?.filter((s) => s.type == 'warning') ??
-			[]"
+			v-for="sanction in visibleSanctions.filter(
+				(s) => s.type == 'warning',
+			)"
 			:key="sanction.id"
 			:data="sanction"
 		/>

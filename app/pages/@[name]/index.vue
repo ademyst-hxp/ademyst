@@ -6,7 +6,7 @@ import type { ProfileReport } from "~~/shared/models/reports";
 import type { Badge } from "~~/shared/models/shop";
 
 import SocialIcon from "@/components/profile/SocialIcon.vue";
-import { AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
+import { ArrowPathIcon, AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
 
 import PostView from "@/components/interactions/Post.vue";
@@ -48,45 +48,69 @@ const { data, pending } = await useAsyncData(requestKey, async () => {
 	return $api<ProfileResponse>(`/users/${encodeURIComponent(name.value)}`);
 });
 
-const { data: posts } = await useAsyncData(postsRequestKey, async () => {
-	if (!name.value) throw createError({ statusCode: 400 });
+const PAGE_SIZE = 20;
 
-	return (
-		await $api<{ posts: Post[] }>(
-			`/users/${encodeURIComponent(name.value)}/posts`,
-		)
-	).posts;
+// Same shape for /posts, /following and /followers: the items live under a
+// different key, and `next`/`hasNext` are missing from the "partial" answer
+// returned for a private profile.
+const fetchList = async <T,>(
+	resource: "posts" | "following" | "followers",
+	offset: number,
+	userName = name.value,
+): Promise<ListPage<T>> => {
+	if (!userName) throw createError({ statusCode: 400 });
+
+	const response = await $api<Record<string, any>>(
+		`/users/${encodeURIComponent(userName)}/${resource}`,
+		{ query: { limit: PAGE_SIZE, offset } },
+	);
+
+	const items = (response[resource] ?? []) as T[];
+
+	return {
+		items,
+		next:
+			typeof response.next === "number"
+				? response.next
+				: offset + items.length,
+		hasNext: response.hasNext === true,
+	};
+};
+
+const postsList = usePaginatedList<Post>((offset) =>
+	fetchList<Post>("posts", offset),
+);
+const followingList = usePaginatedList<Profile>((offset) =>
+	fetchList<Profile>("following", offset),
+);
+const followersList = usePaginatedList<Profile>((offset) =>
+	fetchList<Profile>("followers", offset),
+);
+
+// Lists loaded so far (first page + the following ones).
+const posts = postsList.items;
+const following = followingList.items;
+const followers = followersList.items;
+const postsHasNext = postsList.hasNext;
+
+const { data: firstPosts } = await useAsyncData(postsRequestKey, () =>
+	fetchList<Post>("posts", 0),
+);
+const { data: firstFollowing } = await useAsyncData(followingRequestKey, () =>
+	fetchList<Profile>("following", 0),
+);
+const { data: firstFollowers } = await useAsyncData(followersRequestKey, () =>
+	fetchList<Profile>("followers", 0),
+);
+
+// Seeded from the first pages, and again when another profile is opened.
+watch(firstPosts, (page) => postsList.reset(page), { immediate: true });
+watch(firstFollowing, (page) => followingList.reset(page), {
+	immediate: true,
 });
-
-const { data: following } = await useAsyncData(
-	followingRequestKey,
-	async () => {
-		if (!name.value) throw createError({ statusCode: 400 });
-
-		return (
-			await $api<{
-				following: Profile[];
-				hasNext: boolean;
-				next: number | null;
-			}>(`/users/${encodeURIComponent(name.value)}/following`)
-		).following;
-	},
-);
-
-const { data: followers } = await useAsyncData(
-	followersRequestKey,
-	async () => {
-		if (!name.value) throw createError({ statusCode: 400 });
-
-		return (
-			await $api<{
-				followers: Profile[];
-				hasNext: boolean;
-				next: number | null;
-			}>(`/users/${encodeURIComponent(name.value)}/followers`)
-		).followers;
-	},
-);
+watch(firstFollowers, (page) => followersList.reset(page), {
+	immediate: true,
+});
 
 const profile = computed(() => data.value?.profile ?? null);
 const stats = computed(
@@ -314,6 +338,26 @@ const submitReport = async () => {
 
 const tab = ref("posts");
 
+// One sentinel for the three lists: it loads the next page of the open tab.
+const activeList = () =>
+	tab.value === "posts"
+		? postsList
+		: tab.value === "following"
+			? followingList
+			: tab.value === "followers"
+				? followersList
+				: null;
+
+const loadingMore = computed(() => activeList()?.loadingMore.value ?? false);
+
+const { sentinel, recheck } = useScrollSentinel(
+	async () => (await activeList()?.loadMore()) ?? false,
+	() => activeList()?.hasNext.value ?? false,
+);
+
+// The sentinel may already be on screen when another tab is opened.
+watch(tab, () => nextTick(recheck));
+
 const tabs = computed<{ name: string; value: string }[]>(() => {
 	let _tabs = [
 		{ name: "Publications", value: "posts" },
@@ -491,7 +535,7 @@ const focusedBadge = ref<Badge | null>(null);
 		<section class="flex items-center gap-4 px-4">
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
-					toLitteral(posts?.length ?? 0)
+					toLitteral(posts.length) + (postsHasNext ? "+" : "")
 				}}</span>
 				<span class="text-muted">Publications</span>
 			</div>
@@ -593,15 +637,24 @@ const focusedBadge = ref<Badge | null>(null);
 	</section>
 
 	<section v-if="tab === 'posts'" class="space-y-2">
-		<PostView v-for="post in posts ?? []" :key="post.id" :data="post" />
+		<PostView v-for="post in posts" :key="post.id" :data="post" />
 	</section>
+
+	<!-- Pagination sentinel (hidden, hence never observed, outside the lists) -->
+	<div
+		v-show="tab !== 'report'"
+		ref="sentinel"
+		class="flex justify-center py-6 text-muted"
+	>
+		<ArrowPathIcon v-if="loadingMore" class="w-6 h-6 animate-spin" />
+	</div>
 
 	<section v-if="tab === 'following'" class="space-y-2">
 		<div
 			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
 		>
 			<ProfileBox
-				v-for="followed in following ?? []"
+				v-for="followed in following"
 				:key="followed.id"
 				:data="followed"
 				class="cursor-pointer"
@@ -615,7 +668,7 @@ const focusedBadge = ref<Badge | null>(null);
 			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
 		>
 			<ProfileBox
-				v-for="follower in followers ?? []"
+				v-for="follower in followers"
 				:key="follower.id"
 				:data="follower"
 				class="cursor-pointer"

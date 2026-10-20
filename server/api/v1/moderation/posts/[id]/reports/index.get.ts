@@ -1,7 +1,8 @@
 import { useDb } from "~~/server/db";
 import { postReports } from "~~/server/db/schema/reports";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
+import { REPORT_STATUSES, queryEnum } from "~~/server/utils/helpers/filters";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId } from "~~/server/utils/normalizers/ids";
 
@@ -11,6 +12,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event);
+
+	// Filter (optional): ?status=pending|reviewed|rejected
+	const status = queryEnum(event, "status", REPORT_STATUSES);
 
 	const postId = normalizeId(event.context.params?.id);
 
@@ -24,7 +28,12 @@ export default defineEventHandler(async (event: H3Event) => {
 	const dbReports = await db
 		.select()
 		.from(postReports)
-		.where(eq(postReports.reportedPostId, postId));
+		.where(
+			and(
+				eq(postReports.reportedPostId, postId),
+				status ? eq(postReports.status, status) : undefined,
+			),
+		);
 
 	const reports = await retrieveSeveralCleanPostReports(
 		event,

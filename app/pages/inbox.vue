@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { getNotificationAction, getNotificationType, makeNotificationGroups } from "~/utils/notifications";
+import {
+	getNotificationAction,
+	getNotificationType,
+	makeNotificationGroups,
+} from "~/utils/notifications";
 
 import type { Account } from "~~/shared/models/accounts";
 import type { AccountSanctionNotification } from "~~/shared/models/inbox";
@@ -15,6 +19,8 @@ import type { PostReport } from "~~/shared/models/reports";
 import type { ProfileReport } from "~~/shared/models/reports";
 import type { WhisperReport } from "~~/shared/models/reports";
 import type { Sanction } from "~~/shared/models/sanctions";
+
+import { ArrowPathIcon } from "@heroicons/vue/24/outline";
 
 import Actions from "~/components/base/Actions.vue";
 import WarningBox from "~/components/boxes/Warning.vue";
@@ -60,22 +66,122 @@ useHead({
 	],
 });
 
-const {
-	data: notifications,
-	error: fetchError,
-	refresh: refreshNotifications,
-} = useAsyncData("inbox", () =>
-	$api<{
-		notifications: (
-			| AccountSanctionNotification
-			| PostSanctionNotification
-			| ReportNotification
-			| PostNotification
-			| WhisperNotification
-			| FollowNotification
-		)[];
-	}>("/inbox").then((res) => res.notifications),
+const tab = ref<"all" | "interactions" | "relations" | "sanctions" | "reports">(
+	"all",
 );
+
+type InboxNotification =
+	| AccountSanctionNotification
+	| PostSanctionNotification
+	| ReportNotification
+	| PostNotification
+	| WhisperNotification
+	| FollowNotification;
+
+type InboxPage = {
+	notifications: InboxNotification[];
+	next: number;
+	hasNext: boolean;
+};
+
+const PAGE_SIZE = 20;
+
+const fetchPage = (offset: number) =>
+	$api<InboxPage>("/inbox", {
+		// The tab is the server-side filter: the API only returns (and
+		// paginates) the notifications of the selected type.
+		query: { limit: PAGE_SIZE, offset, type: tab.value },
+	});
+
+const {
+	data: firstPage,
+	error: fetchError,
+	refresh: refreshFirstPage,
+} = await useAsyncData("inbox", () => fetchPage(0));
+
+// Notifications loaded so far (first page + the following ones).
+const notifications = ref<InboxNotification[]>([]);
+const nextOffset = ref(0);
+const hasNext = ref(false);
+const loadingMore = ref(false);
+
+// Incremented on every refresh so that a page requested before it cannot be
+// appended afterwards.
+let generation = 0;
+
+const seedFromFirstPage = () => {
+	notifications.value = firstPage.value?.notifications ?? [];
+	nextOffset.value = firstPage.value?.next ?? 0;
+	hasNext.value = firstPage.value?.hasNext ?? false;
+};
+
+seedFromFirstPage();
+
+const refreshing = ref(false);
+
+const refreshNotifications = async () => {
+	generation++;
+	refreshing.value = true;
+
+	try {
+		await refreshFirstPage();
+		seedFromFirstPage();
+	} finally {
+		refreshing.value = false;
+	}
+};
+
+// Another tab = another filter: start again from its first page.
+watch(tab, () => {
+	notifications.value = [];
+	hasNext.value = true;
+	refreshNotifications();
+});
+
+const notificationKey = (notification: InboxNotification) =>
+	`${getNotificationType(notification)}-${notification.id}`;
+
+const loadMoreNotifications = async (): Promise<boolean> => {
+	if (loadingMore.value || refreshing.value || !hasNext.value) return false;
+
+	const startedAt = generation;
+	loadingMore.value = true;
+
+	try {
+		const page = await fetchPage(nextOffset.value);
+
+		if (startedAt !== generation) return false;
+
+		// New notifications arriving meanwhile shift the offsets: never show
+		// the same notification twice.
+		const known = new Set(notifications.value.map(notificationKey));
+
+		notifications.value = [
+			...notifications.value,
+			...page.notifications.filter((n) => !known.has(notificationKey(n))),
+		];
+		nextOffset.value = page.next;
+		hasNext.value = page.hasNext;
+
+		return true;
+	} catch (err) {
+		console.error("Erreur lors du chargement des notifications:", err);
+
+		return false;
+	} finally {
+		loadingMore.value = false;
+	}
+};
+
+const { sentinel, recheck } = useScrollSentinel(
+	loadMoreNotifications,
+	() => hasNext.value,
+);
+
+// A page requested during a refresh is skipped: check again when it is over.
+watch(refreshing, (value) => {
+	if (!value) recheck();
+});
 
 const criticalCount = computed(() => {
 	if (!notifications.value) return 0;
@@ -137,10 +243,6 @@ const tabs = [
 		value: "reports",
 	},
 ];
-
-const tab = ref<"all" | "interactions" | "relations" | "sanctions" | "reports">(
-	"all",
-);
 
 /************************************/
 
@@ -238,7 +340,7 @@ const groupedActions = computed(() => {
 		<Actions v-for="group in groupedActions" scale="sm" :actions="group" />
 
 		<p
-			v-if="!notifications?.length"
+			v-if="!notifications?.length && !hasNext && !refreshing"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
 			Aucune notification en vue pour le moment.
@@ -257,7 +359,9 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['post', 'whisper'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -277,7 +381,9 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['follow'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -301,7 +407,9 @@ const groupedActions = computed(() => {
 					['account_sanction', 'post_sanction'].includes(
 						getNotificationType(n),
 					),
-				).length
+				).length &&
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
@@ -321,11 +429,21 @@ const groupedActions = computed(() => {
 			v-if="
 				!notifications?.filter((n) =>
 					['report'].includes(getNotificationType(n)),
-				).length
+				).length &&
+				!hasNext &&
+				!refreshing
 			"
 			class="text-sm text-surface-text-muted text-center py-8"
 		>
 			Aucune notification en vue pour le moment.
 		</p>
 	</section>
+
+	<!-- Pagination sentinel -->
+	<div ref="sentinel" class="flex justify-center py-6 text-muted">
+		<ArrowPathIcon
+			v-if="loadingMore || refreshing"
+			class="w-6 h-6 animate-spin"
+		/>
+	</div>
 </template>

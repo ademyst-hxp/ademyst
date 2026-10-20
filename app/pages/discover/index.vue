@@ -16,8 +16,19 @@ import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 const { $api } = useNuxtApp();
 
 const { session, refresh: refreshSession } = useAuthSession();
-const { whispers, suggestions, hits, following, users, refresh, loadTab } =
-	useFeed();
+const {
+	whispers,
+	suggestions,
+	hits,
+	following,
+	users,
+	loading,
+	loadingMore,
+	refresh,
+	loadTab,
+	loadMore,
+	hasMore,
+} = useFeed();
 const { blockUser } = useRelations();
 
 const tab = ref<FeedTab>("following");
@@ -41,6 +52,19 @@ await useAsyncData("discover-feed", async () => {
 });
 
 watch(tab, (value) => loadTab(value));
+
+// Infinite scroll: when the sentinel at the bottom of the feed gets close to
+// the viewport, the next page of the current tab is requested.
+const { sentinel, recheck } = useScrollSentinel(
+	() => loadMore(tab.value),
+	() => hasMore(tab.value),
+);
+
+// A page requested while the feed was loading is skipped: once the loading
+// is over, check again whether the sentinel is still on screen.
+watch(loading, (value) => {
+	if (!value) recheck();
+});
 
 definePageMeta({
 	title: "Ademyst: Discover",
@@ -303,6 +327,17 @@ watch(
 	<section class="flex flex-col gap-2 overflow-visible" v-if="tab === 'hits'">
 		<PostBox v-for="post in hits" :key="'hits-' + post.id" :data="post" />
 	</section>
+
+	<!-- Pagination sentinel -->
+	<div ref="sentinel" class="flex justify-center py-6 text-muted">
+		<ArrowPathIcon
+			v-if="loadingMore || loading"
+			class="w-6 h-6 animate-spin"
+		/>
+		<p v-else-if="!hasMore(tab)" class="text-sm">
+			Vous avez tout vu pour le moment.
+		</p>
+	</div>
 
 	<!-- Focused Whisper -->
 	<Menu

@@ -1,25 +1,35 @@
 import { useDb } from "#server/db";
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { retrieveSeveralCleanReferrals } from "~~/server/utils/converters/referrals";
+import { queryBoolean, queryPagination } from "~~/server/utils/helpers/filters";
 
 import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
-	const isAll = event.context.params?.all === "true";
+	// These values were read from the route params, which never contain the
+	// query string: ?all=true, ?limit and ?offset were silently ignored.
+	const isAll = queryBoolean(event, "all") === true;
+	const { limit, offset } = queryPagination(event, { defaultLimit: 50 });
 
-	const offset = parseInt(event.context.params?.offset ?? "0", 10);
-	const limit = parseInt(event.context.params?.limit ?? "50", 10);
+	// Filter (optional): ?code=<referral code>
+	const rawCode = getQuery(event).code;
+	const code = typeof rawCode === "string" && rawCode ? rawCode : undefined;
 
 	const identity = isAll
 		? await requireAuth(event, { min_level: 6 })
 		: await requireAuth(event);
 
 	const result = isAll
-		? await db.select().from(referrals).offset(offset).limit(limit)
+		? await db
+				.select()
+				.from(referrals)
+				.where(code ? eq(referrals.code, code) : undefined)
+				.offset(offset)
+				.limit(limit)
 		: (
 				await db
 					.select({
@@ -30,7 +40,12 @@ export default defineEventHandler(async (event: H3Event) => {
 						referralCodes,
 						eq(referrals.code, referralCodes.code),
 					)
-					.where(eq(referralCodes.authorId, identity.profileId))
+					.where(
+						and(
+							eq(referralCodes.authorId, identity.profileId),
+							code ? eq(referrals.code, code) : undefined,
+						),
+					)
 					.offset(offset)
 					.limit(limit)
 			).map((row) => row.referral);
@@ -44,5 +59,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	return {
 		status: "ok",
 		data: cleanReferrals,
+		next: offset + limit,
+		hasNext: result.length === limit,
 	};
 });
