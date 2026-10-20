@@ -3,6 +3,7 @@ import type { Post } from "~~/shared/models/interactions";
 import type { PostReport } from "~~/shared/models/reports";
 
 import Box from "~/components/base/Box.vue";
+import FilterSelect from "~/components/base/FilterSelect.vue";
 import PostBox from "~/components/interactions/Post.vue";
 import PostReportView from "~/components/moderation/PostReport.vue";
 
@@ -83,6 +84,37 @@ const { data: reports } = await useAsyncData(
 			)
 		).reports;
 	},
+);
+
+// Server-side filter. The unfiltered list above feeds the counter of the
+// header, the filtered one is only fetched when a status is selected.
+const REPORT_STATUS_OPTIONS = [
+	{ label: "Tous", value: "" },
+	{ label: "En attente", value: "pending" },
+	{ label: "Traités", value: "reviewed" },
+	{ label: "Rejetés", value: "rejected" },
+];
+
+const reportStatus = ref("");
+
+const { data: filteredReports, pending: filteredReportsPending } =
+	await useAsyncData(
+		`reports-${postId ?? "missing"}-filtered`,
+		async () => {
+			if (!reportStatus.value) return null;
+
+			return (
+				await $api<{ reports: PostReport[] }>(
+					`/moderation/posts/${encodeURIComponent(postId)}/reports`,
+					{ query: { status: reportStatus.value } },
+				)
+			).reports;
+		},
+		{ watch: [reportStatus] },
+	);
+
+const visibleReports = computed(() =>
+	reportStatus.value ? (filteredReports.value ?? []) : (reports.value ?? []),
 );
 
 const tab = ref<"reports" | "flags">("reports");
@@ -199,8 +231,20 @@ const submitFlags = async () => {
 	<TabBar v-model="tab" :tabs="tabs" />
 
 	<section v-if="tab === 'reports'" class="flex flex-col gap-2">
+		<FilterSelect
+			id="report-status"
+			v-model="reportStatus"
+			label="Statut"
+			:options="REPORT_STATUS_OPTIONS"
+		/>
+		<p
+			v-if="visibleReports.length === 0 && !filteredReportsPending"
+			class="px-8 text-muted"
+		>
+			Aucun signalement{{ reportStatus ? " avec ce statut" : "" }}.
+		</p>
 		<PostReportView
-			v-for="report in reports ?? []"
+			v-for="report in visibleReports"
 			:key="report.id"
 			:data="report"
 			:editable="false"
