@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
 	const query = getQuery(event);
 
-	const limit = Math.min(Number(query.limit) || 100, 100);
+	const limit = Math.min(Number(query.limit) || 20, 20);
 	const offset = Math.max(Number(query.offset) || 0, 0);
 
 	const rawWhispers = await db
