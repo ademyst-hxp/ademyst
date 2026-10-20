@@ -1,31 +1,42 @@
 import { useDb } from "#server/db";
 import { referralCodes } from "~~/server/db/schema/referrals";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { retrieveSeveralCleanReferralCodes } from "~~/server/utils/converters/referrals";
+import { queryBoolean, queryPagination } from "~~/server/utils/helpers/filters";
 
 import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
-	const isAll = event.context.params?.all === "true";
+	// These values were read from the route params, which never contain the
+	// query string: ?all=true, ?limit and ?offset were silently ignored.
+	const isAll = queryBoolean(event, "all") === true;
+	const { limit, offset } = queryPagination(event, { defaultLimit: 50 });
 
-	const offset = parseInt(event.context.params?.offset ?? "0", 10);
-	const limit = parseInt(event.context.params?.limit ?? "50", 10);
+	// Filter (optional): ?enabled=true|false
+	const enabled = queryBoolean(event, "enabled");
 
 	const identity = isAll
 		? await requireAuth(event, { min_level: 6 })
 		: await requireAuth(event);
 
-	const result = isAll
-		? await db.select().from(referralCodes).offset(offset).limit(limit)
-		: await db
-				.select()
-				.from(referralCodes)
-				.where(eq(referralCodes.authorId, identity.profileId))
-				.offset(offset)
-				.limit(limit);
+	const result = await db
+		.select()
+		.from(referralCodes)
+		.where(
+			and(
+				isAll
+					? undefined
+					: eq(referralCodes.authorId, identity.profileId),
+				enabled === undefined
+					? undefined
+					: eq(referralCodes.enabled, enabled),
+			),
+		)
+		.offset(offset)
+		.limit(limit);
 
 	const cleanReferrals = await retrieveSeveralCleanReferralCodes(
 		event,
@@ -36,5 +47,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	return {
 		status: "ok",
 		data: cleanReferrals,
+		next: offset + limit,
+		hasNext: result.length === limit,
 	};
 });

@@ -41,6 +41,7 @@ const {
 	const res = (
 		await $api<{ data: ReferralCode[] }>("/referrals/codes", {
 			method: "GET",
+			query: { enabled: true },
 		})
 	)?.data;
 

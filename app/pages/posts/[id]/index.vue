@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
 
-import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+import { ArrowPathIcon, EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
 
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
@@ -35,27 +35,84 @@ const postAsyncData = useAsyncData<Post | null>(
 	{ default: () => null },
 );
 
-const answersAsyncData = useAsyncData<Post[]>(
+const ANSWERS_PAGE_SIZE = 20;
+
+type AnswersPage = { answers: Post[]; next: number; hasNext: boolean };
+
+const fetchAnswersPage = async (offset: number): Promise<AnswersPage> => {
+	const response = await $api<{
+		status: string;
+		data: Post[];
+		next: number;
+		hasNext: boolean;
+	}>(`/posts/${postId}/answers`, {
+		query: { limit: ANSWERS_PAGE_SIZE, offset },
+	});
+
+	return {
+		answers: response.data,
+		next: response.next,
+		hasNext: response.hasNext,
+	};
+};
+
+const answersAsyncData = useAsyncData<AnswersPage>(
 	`post-${postId}-answers`,
 	async () => {
 		try {
-			const response = await $api<{ status: string; data: Post[] }>(
-				`/posts/${postId}/answers`,
-			);
-			return response.data;
+			return await fetchAnswersPage(0);
 		} catch (e: any) {
 			error.value =
 				e.message || "Erreur lors du chargement des réponses.";
-			return [];
+			return { answers: [], next: 0, hasNext: false };
 		}
 	},
-	{ default: () => [] },
+	{ default: () => ({ answers: [], next: 0, hasNext: false }) },
 );
 
 await Promise.all([refreshPromise, postAsyncData, answersAsyncData]);
 
 const { data: post, pending: postPending } = postAsyncData;
-const { data: answers } = answersAsyncData;
+const { data: firstAnswersPage } = answersAsyncData;
+
+// Answers loaded so far (first page + the following ones).
+const answers = ref<Post[]>(firstAnswersPage.value.answers);
+const answersNext = ref(firstAnswersPage.value.next);
+const answersHasNext = ref(firstAnswersPage.value.hasNext);
+const loadingMoreAnswers = ref(false);
+
+const loadMoreAnswers = async (): Promise<boolean> => {
+	if (loadingMoreAnswers.value || !answersHasNext.value) return false;
+
+	loadingMoreAnswers.value = true;
+
+	try {
+		const page = await fetchAnswersPage(answersNext.value);
+
+		// Never show the same answer twice if the offsets shifted meanwhile.
+		const known = new Set(answers.value.map((answer) => answer.id));
+
+		answers.value = [
+			...answers.value,
+			...page.answers.filter((answer) => !known.has(answer.id)),
+		];
+		answersNext.value = page.next;
+		answersHasNext.value = page.hasNext;
+
+		return true;
+	} catch (e: any) {
+		error.value = e.message || "Erreur lors du chargement des réponses.";
+
+		return false;
+	} finally {
+		loadingMoreAnswers.value = false;
+	}
+};
+
+const { sentinel } = useScrollSentinel(
+	loadMoreAnswers,
+	() => answersHasNext.value,
+);
 
 if (!session.value) {
 	navigateTo("/auth/login");
@@ -200,6 +257,11 @@ const handlePublish = async () => {
 	<section class="flex flex-col gap-4">
 		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" />
 	</section>
+
+	<!-- Pagination sentinel -->
+	<div ref="sentinel" class="flex justify-center py-6 text-muted">
+		<ArrowPathIcon v-if="loadingMoreAnswers" class="w-6 h-6 animate-spin" />
+	</div>
 
 	<Menu
 		v-if="isVisibilityMenuOpen"

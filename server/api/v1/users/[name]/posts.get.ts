@@ -52,11 +52,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const relationships = await getRelationshipStatus(
-		event,
-		identity,
-		profile,
-	);
+	const relationships = await getRelationshipStatus(event, identity, profile);
 
 	if (relationships.blocked) {
 		throw createError({
@@ -73,11 +69,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		.limit(limit)
 		.offset(offset);
 
-	const _posts = await retrieveSeveralCleanPosts(
-		event,
-		identity,
-		dbPosts,
-	);
+	const _posts = await retrieveSeveralCleanPosts(event, identity, dbPosts);
 
 	return {
 		status: "ok",

@@ -2,7 +2,7 @@
 import type { Account } from "~~/shared/models/accounts";
 
 import { ArrowRightEndOnRectangleIcon, ArrowsRightLeftIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
-import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, PaperAirplaneIcon } from "@heroicons/vue/24/outline";
+import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
 import Icon from "~/assets/icon.svg";
 
 import Menu from "../Menu.vue";
@@ -121,6 +121,14 @@ const path = computed(() => useRoute().path);
 					"
 				/>
 			</RouterLink>
+
+			<RouterLink
+				v-else
+				to="/auth/login"
+				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
+			>
+				<UserPlusIcon class="w-7 h-7" />
+			</RouterLink>
 		</div>
 
 		<!-- Desktop -->
@@ -185,6 +193,21 @@ const path = computed(() => useRoute().path);
 					:src="`/api/v1/users/${session.profile.name}/avatar.webp`"
 				/>
 				{{ session.profile.displayName || session.profile.name }}
+			</div>
+
+			<div v-else class="flex items-center gap-2">
+				<Button
+					label="S'inscrire"
+					variant="white"
+					size="small"
+					:handler="() => navigateTo('/auth/signup')"
+				/>
+				<Button
+					label="Se connecter"
+					variant="primary"
+					size="small"
+					:handler="() => navigateTo('/auth/login')"
+				/>
 			</div>
 		</div>
 	</nav>
