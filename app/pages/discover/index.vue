@@ -16,8 +16,19 @@ import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
 const { $api } = useNuxtApp();
 
 const { session, refresh: refreshSession } = useAuthSession();
-const { whispers, suggestions, hits, following, users, refresh, loadTab } =
-	useFeed();
+const {
+	whispers,
+	suggestions,
+	hits,
+	following,
+	users,
+	loading,
+	loadingMore,
+	refresh,
+	loadTab,
+	loadMore,
+	hasMore,
+} = useFeed();
 const { blockUser } = useRelations();
 
 const tab = ref<FeedTab>("following");
@@ -41,6 +52,39 @@ await useAsyncData("discover-feed", async () => {
 });
 
 watch(tab, (value) => loadTab(value));
+
+// Infinite scroll: when the sentinel at the bottom of the feed gets close to
+// the viewport, the next page of the current tab is requested.
+const sentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+const loadNextPage = async () => {
+	await loadMore(tab.value);
+
+	// The observer only fires when visibility changes: observing the sentinel
+	// again checks whether it is still on screen (short page, filtered posts)
+	// and chains the next load if so.
+	if (observer && sentinel.value && hasMore(tab.value)) {
+		observer.unobserve(sentinel.value);
+		observer.observe(sentinel.value);
+	}
+};
+
+onMounted(() => {
+	if (!sentinel.value) return;
+
+	observer = new IntersectionObserver(
+		(entries) => {
+			if (entries.some((entry) => entry.isIntersecting)) {
+				loadNextPage();
+			}
+		},
+		{ rootMargin: "400px 0px" },
+	);
+	observer.observe(sentinel.value);
+});
+
+onBeforeUnmount(() => observer?.disconnect());
 
 definePageMeta({
 	title: "Ademyst: Discover",
@@ -303,6 +347,17 @@ watch(
 	<section class="flex flex-col gap-2 overflow-visible" v-if="tab === 'hits'">
 		<PostBox v-for="post in hits" :key="'hits-' + post.id" :data="post" />
 	</section>
+
+	<!-- Pagination sentinel -->
+	<div ref="sentinel" class="flex justify-center py-6 text-muted">
+		<ArrowPathIcon
+			v-if="loadingMore || loading"
+			class="w-6 h-6 animate-spin"
+		/>
+		<p v-else-if="!hasMore(tab)" class="text-sm">
+			Vous avez tout vu pour le moment.
+		</p>
+	</div>
 
 	<!-- Focused Whisper -->
 	<Menu
