@@ -31,22 +31,65 @@ export type BeamProfile = {
  * A valid token is mandatory. Never use this function as a "best effort"
  * verification: an invalid token always throws.
  */
-export async function verifyBeamProfile(token: unknown): Promise<BeamProfile> {
-	if (typeof token !== "string" || !token.trim()) {
+export async function verifyBeamProfile(
+	username: string,
+	token: unknown,
+): Promise<BeamProfile | null> {
+	const normalizedToken =
+		typeof token === "string" && token.trim() ? token.trim() : null;
+
+	// Check username existence and token validity.
+	const testRes = await fetch(
+		"https://api.beam.ejnalo.me/auth/ademyst-check",
+		{
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				username,
+				token: normalizedToken,
+			}),
+		},
+	);
+
+	if (!testRes.ok) {
 		throw createError({
-			statusCode: 401,
-			statusMessage: "Beam verification required",
+			statusCode: 502,
+			statusMessage: "Failed to check Beam username",
 		});
 	}
 
-	const normalizedToken = token.trim();
+	const testData = (await testRes.json()) as {
+		username: string;
+		exists: boolean;
+		isTokenValid: boolean;
+	};
 
+	// No Beam username: allow a normal signup.
+	if (testData.exists === false) {
+		return null;
+	}
+
+	// The username exists: a valid matching token is mandatory.
+	if (
+		testData.exists !== true ||
+		!normalizedToken ||
+		testData.isTokenValid !== true ||
+		testData.username !== username
+	) {
+		throw createError({
+			statusCode: 401,
+			statusMessage: "Invalid Beam sudo token",
+		});
+	}
+
+	// Consume the token only through account-transfer.
 	const response = await fetch(
 		"https://api.beam.ejnalo.me/auth/account-transfer",
 		{
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${normalizedToken}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
@@ -58,16 +101,16 @@ export async function verifyBeamProfile(token: unknown): Promise<BeamProfile> {
 	if (!response.ok) {
 		throw createError({
 			statusCode: 401,
-			statusMessage: "Invalid Beam sudo token",
+			statusMessage: "Failed to transfer Beam account",
 		});
 	}
 
 	const profile = (await response.json()) as BeamProfile | null;
 
-	if (!profile?.id || !profile.name) {
+	if (!profile?.id || profile.name !== username) {
 		throw createError({
-			statusCode: 401,
-			statusMessage: "Invalid Beam sudo token",
+			statusCode: 502,
+			statusMessage: "Invalid Beam profile response",
 		});
 	}
 
