@@ -194,7 +194,7 @@ useHead({
 					<span class="font-semibold"> Région Supabase </span>
 				</div>
 
-				<p class="text-muted m-0!">West EU (Paris) — eu-west-3</p>
+				<p class="text-muted m-0!">West EU (Londres) — eu-west-2</p>
 			</div>
 
 			<h2 class="font-title">6. Transferts de données</h2>
