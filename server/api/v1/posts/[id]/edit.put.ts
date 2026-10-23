@@ -70,6 +70,24 @@ export default defineEventHandler(async (event: H3Event) => {
 					: 1000,
 	};
 
+	let [candidate] = await db.select()
+		.from(posts)
+		.where(eq(posts.id, id));
+
+	if (!candidate) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "Post not found",
+		});
+	}
+
+	if (candidate.profileId !== user.profileId) {
+		throw createError({
+			statusCode: 403,
+			statusMessage: "You are not allowed to edit this post",
+		});
+	}
+
 	const { content, visibility } = validatePayload(body, specs);
 
 	let updatedAt = undefined;
