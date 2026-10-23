@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const props = withDefaults(
 	defineProps<{
-		label: string;
 		options: {
 			label?: string;
 			value: string;
@@ -98,7 +97,6 @@ const iconsClasses = computed(() => ({
 </script>
 <template>
 	<div class="flex flex-col gap-1 w-fit max-w-full overflow-x-auto">
-		<!--label class="text-sm font-semibold text-muted">{{ label }}</label-->
 		<div
 			class="flex items-stretch bg-surface text-surface-text border border-surface-border rounded-full w-fit p-1"
 		>
