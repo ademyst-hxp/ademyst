@@ -52,7 +52,8 @@ useHead({
 			Politique de confidentialité
 		</h2>
 
-		<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
+		<p class="text-muted">Dernière mise à jour: 23 octobre 2026</p>
+		<p class="text-muted">Entrée en vigueur: 23 octobre 2026</p>
 	</header>
 
 	<article
@@ -79,17 +80,16 @@ useHead({
 
 			<h3 class="font-title">Informations de compte</h3>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>adresse e-mail ;</li>
 				<li>nom d'utilisateur ;</li>
 				<li>photo de profil, lorsqu'elle est fournie ;</li>
-				<li>informations civiles fournies par l'utilisateur ;</li>
-				<li>localisation, lorsqu'elle est fournie.</li>
+				<li>informations civiles et géographiques renseignées par l'utilisateur.</li>
 			</ul>
 
 			<h3 class="font-title">Contenus</h3>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>publications ;</li>
 				<li>réponses ;</li>
 				<li>images et autres médias ;</li>
@@ -100,7 +100,7 @@ useHead({
 
 			<h3 class="font-title">Données techniques</h3>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>adresse IP ;</li>
 				<li>informations relatives au navigateur ;</li>
 				<li>informations relatives à l'appareil ;</li>
@@ -113,7 +113,7 @@ useHead({
 
 			<p>Les données peuvent notamment être utilisées pour :</p>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>faire fonctionner Ademyst ;</li>
 				<li>gérer les comptes utilisateurs ;</li>
 				<li>afficher les publications ;</li>
@@ -127,7 +127,7 @@ useHead({
 			</ul>
 
 			<div
-				class="not-prose flex gap-3 rounded-2xl bg-violet-50 border border-violet-100 p-5 text-violet-950"
+				class="not-prose flex items-center gap-3 rounded-2xl bg-violet-50 border border-violet-100 p-5 text-violet-950"
 			>
 				<LockClosedIcon class="w-6 h-6 shrink-0" />
 
@@ -144,7 +144,7 @@ useHead({
 				sur la base :
 			</p>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>
 					de l'exécution du contrat permettant l'utilisation du
 					service ;
@@ -176,7 +176,7 @@ useHead({
 
 			<p>Ademyst utilise Supabase pour son infrastructure de données.</p>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>PostgreSQL est utilisé pour la base de données ;</li>
 				<li>
 					Supabase Storage est utilisé pour le stockage des fichiers
@@ -235,7 +235,7 @@ useHead({
 				leur finalité.
 			</p>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>
 					les données nécessaires au compte sont conservées pendant
 					son existence ;
@@ -298,7 +298,7 @@ useHead({
 				:
 			</p>
 
-			<ul>
+			<ul class="list-disc list-inside">
 				<li>d'un droit d'accès ;</li>
 				<li>d'un droit de rectification ;</li>
 				<li>d'un droit à l'effacement ;</li>

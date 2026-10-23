@@ -47,7 +47,8 @@ useHead({
 
 		<h2 class="text-3xl font-bold font-title">Mentions légales</h2>
 
-		<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
+		<p class="text-muted">Dernière mise à jour: 23 octobre 2026</p>
+		<p class="text-muted">Entrée en vigueur: 23 octobre 2026</p>
 	</header>
 
 	<article
@@ -79,7 +80,7 @@ useHead({
 			<h3 class="font-title">Cloudflare</h3>
 
 			<p>
-				Ademyst utilise Cloudflare Pages pour l'hébergement et la
+				Ademyst utilise Cloudflare Workers pour l'hébergement et la
 				distribution de son interface web.
 			</p>
 
@@ -191,8 +192,8 @@ useHead({
 				<EnvelopeIcon class="w-6 h-6 text-primary" />
 
 				<div class="-space-y-1 m-0!">
-					<span class="block font-semibold">Loan JEAN</span>
-					<span class="block text-muted">contact@ejnalo.me</span>
+					<span class="block font-semibold">Ademyst</span>
+					<span class="block text-muted">ademyst@proton.me</span>
 				</div>
 			</div>
 		</div>

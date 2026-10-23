@@ -51,13 +51,14 @@ useHead({
 				Conditions Générales d'Utilisation
 			</h2>
 
-			<p class="text-muted">Dernière mise à jour : 17 septembre 2026</p>
+			<p class="text-muted">Dernière mise à jour: 23 octobre 2026</p>
+			<p class="text-muted">Entrée en vigueur: 23 octobre 2026</p>
 		</header>
 
 		<article
 			class="rounded-3xl bg-surface border border-surface-border p-6 md:p-10"
 		>
-			<div class="prose prose-surface max-w-none">
+			<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
 				<h2 class="font-title">1. Objet</h2>
 
 				<p>
@@ -137,7 +138,7 @@ useHead({
 				</p>
 
 				<div
-					class="not-prose flex gap-3 rounded-2xl bg-orange-50 border border-orange-100 p-5 text-orange-950"
+					class="not-prose flex items-center gap-3 rounded-2xl bg-orange-50 border border-orange-100 p-5 text-orange-950"
 				>
 					<ExclamationTriangleIcon class="w-6 h-6 shrink-0 mt-0.5" />
 
@@ -151,7 +152,7 @@ useHead({
 
 				<p>Il est notamment interdit de publier des contenus :</p>
 
-				<ul>
+				<ul class="list-disc list-inside">
 					<li>manifestement illicites ;</li>
 					<li>
 						constituant une menace ou une incitation à la violence ;
@@ -211,7 +212,7 @@ useHead({
 
 				<p>Les mesures de modération peuvent notamment inclure :</p>
 
-				<ul>
+				<ul class="list-disc list-inside">
 					<li>la suppression d'une publication ;</li>
 					<li>la limitation de sa visibilité ;</li>
 					<li>la restriction de certaines fonctionnalités ;</li>
@@ -310,8 +311,8 @@ useHead({
 					<EnvelopeIcon class="w-6 h-6 text-primary" />
 
 					<div class="-space-y-1 m-0!">
-						<span class="block font-semibold">Loan JEAN</span>
-						<span class="block text-muted">contact@ejnalo.me</span>
+						<span class="block font-semibold">Ademyst</span>
+						<span class="block text-muted">ademyst@proton.me</span>
 					</div>
 				</div>
 			</div>
