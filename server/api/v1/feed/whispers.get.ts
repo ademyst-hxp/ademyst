@@ -1,39 +1,47 @@
-import { useDb } from "~~/server/db";
-import { whisperReports } from "~~/server/db/schema/reports";
-import { desc, eq } from "drizzle-orm";
+import { useDb } from "#server/db";
+import { whispers } from "#server/db/schema/interactions";
+import { desc } from "drizzle-orm/sql/expressions/select";
 
-import {
-	REPORT_STATUSES,
-	queryEnum,
-	queryPagination,
-} from "~~/server/utils/helpers/filters";
-import { retrieveSeveralCleanWhisperReports } from "~~/server/utils/converters/reports";
+import { retrieveSeveralCleanWhispers } from "#server/utils/converters/interactions";
+import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
-	const identity = await requireAuth(event, { min_level: 7 });
+	const identity = await requireAuth(event);
 
-	// Filters (all optional): ?status=pending|reviewed|rejected
-	const { limit, offset } = queryPagination(event);
-	const status = queryEnum(event, "status", REPORT_STATUSES);
+	const query = getQuery(event);
 
-	const _whisper_reports = await db
+	const limit = Math.min(Number(query.limit) || 100, 100);
+	const offset = Math.max(Number(query.offset) || 0, 0);
+
+	const rawWhispers = await db
 		.select()
-		.from(whisperReports)
-		.where(status ? eq(whisperReports.status, status) : undefined)
-		.orderBy(desc(whisperReports.createdAt))
+		.from(whispers)
+		.orderBy(desc(whispers.createdAt))
 		.limit(limit)
 		.offset(offset);
 
+	const resolvedWhispers = await retrieveSeveralCleanWhispers(
+		event,
+		identity,
+		rawWhispers,
+	);
+
+	const filteredWhispers = resolvedWhispers
+		.filter(
+			(whisper): whisper is NonNullable<typeof whisper> =>
+				whisper !== null,
+		)
+		.filter((whisper) => whisper.profile.level >= 3)
+		.sort((a, b) => {
+			return b.createdAt.getTime() - a.createdAt.getTime();
+		});
+
 	return {
 		status: "ok",
-		reports: await retrieveSeveralCleanWhisperReports(
-			event,
-			identity,
-			_whisper_reports,
-		),
+		posts: filteredWhispers,
 		next: offset + limit,
-		hasNext: _whisper_reports.length === limit,
+		hasNext: filteredWhispers.length === limit,
 	};
 });

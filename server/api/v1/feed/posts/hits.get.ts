@@ -60,6 +60,6 @@ export default defineEventHandler(async (event) => {
 		status: "ok",
 		posts: filteredPosts,
 		next: offset + limit,
-		hasNext: rawPosts.length === limit,
+		hasNext: filteredPosts.length === limit,
 	};
 });

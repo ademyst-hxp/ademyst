@@ -1,48 +1,39 @@
 import { useDb } from "~~/server/db";
 import { whisperReports } from "~~/server/db/schema/reports";
-import { and, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
-import { REPORT_STATUSES, queryEnum } from "~~/server/utils/helpers/filters";
-import { requireAuth } from "~~/server/utils/middleware/auth";
-import { normalizeId } from "~~/server/utils/normalizers/ids";
+import {
+	REPORT_STATUSES,
+	queryEnum,
+	queryPagination,
+} from "~~/server/utils/helpers/filters";
+import { retrieveSeveralCleanWhisperReports } from "~~/server/utils/converters/reports";
 
-import { H3Event } from "h3";
-
-export default defineEventHandler(async (event: H3Event) => {
+export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
-	const identity = await requireAuth(event);
+	const identity = await requireAuth(event, { min_level: 7 });
 
-	// Filter (optional): ?status=pending|reviewed|rejected
+	// Filters (all optional): ?status=pending|reviewed|rejected
+	const { limit, offset } = queryPagination(event);
 	const status = queryEnum(event, "status", REPORT_STATUSES);
 
-	const whisperId = normalizeId(event.context.params?.id);
-
-	if (!whisperId) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid whisper id",
-		});
-	}
-
-	const dbReports = await db
+	const _whisper_reports = await db
 		.select()
 		.from(whisperReports)
-		.where(
-			and(
-				eq(whisperReports.reportedWhisperId, whisperId),
-				status ? eq(whisperReports.status, status) : undefined,
-			),
-		);
-
-	const reports = await retrieveSeveralCleanWhisperReports(
-		event,
-		identity,
-		dbReports,
-	);
+		.where(status ? eq(whisperReports.status, status) : undefined)
+		.orderBy(desc(whisperReports.createdAt))
+		.limit(limit)
+		.offset(offset);
 
 	return {
 		status: "ok",
-		reports,
+		reports: await retrieveSeveralCleanWhisperReports(
+			event,
+			identity,
+			_whisper_reports,
+		),
+		next: offset + limit,
+		hasNext: _whisper_reports.length === limit,
 	};
 });
