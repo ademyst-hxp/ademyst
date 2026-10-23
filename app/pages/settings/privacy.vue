@@ -2,7 +2,17 @@
 import { defaultPrivacySettings } from "~~/shared/models/settings";
 import { type PrivacySettings } from "~~/shared/models/settings";
 
-import { ChevronLeftIcon, EyeSlashIcon, GiftIcon, GlobeAltIcon, HeartIcon, IdentificationIcon, KeyIcon, UserGroupIcon, UserIcon } from "@heroicons/vue/24/outline";
+import {
+	ChevronLeftIcon,
+	EyeSlashIcon,
+	GiftIcon,
+	GlobeAltIcon,
+	HeartIcon,
+	IdentificationIcon,
+	KeyIcon,
+	UserGroupIcon,
+	UserIcon,
+} from "@heroicons/vue/24/outline";
 
 import Actions from "~/components/base/Actions.vue";
 import Info from "~/components/boxes/Info.vue";
@@ -61,7 +71,8 @@ const { data: settings, refresh: refreshSettings } = await useAsyncData(
 
 			payload.value = {
 				profileVisibility: r.profileVisibility,
-				birthdayVisibility: r.birthdayVisibility,
+				birthdayVisibility: r.birthdayVisibility as
+					"everyone" | "followers" | "friends" | "me",
 				termsOfServiceConsent: r.termsOfServiceConsent,
 				privacyPolicyConsent: r.privacyPolicyConsent,
 			};
@@ -77,14 +88,15 @@ onMounted(async () => {
 
 interface UpdatePrivacySettingsRequest {
 	profileVisibility: "everyone" | "followers" | "me";
-	birthdayVisibility: Omit<PrivacySettings["birthdayVisibility"], "custom">;
+	birthdayVisibility: "everyone" | "followers" | "friends" | "me";
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
 }
 
 const payload = ref<UpdatePrivacySettingsRequest>({
 	profileVisibility: defaultPrivacySettings.profileVisibility,
-	birthdayVisibility: defaultPrivacySettings.birthdayVisibility,
+	birthdayVisibility: defaultPrivacySettings.birthdayVisibility as
+		"everyone" | "followers" | "friends" | "me",
 	termsOfServiceConsent: defaultPrivacySettings.termsOfServiceConsent,
 	privacyPolicyConsent: defaultPrivacySettings.privacyPolicyConsent,
 });
@@ -108,9 +120,6 @@ const saveSettings = async () => {
 		);
 	}
 };
-
-const isProfileVisibilityMenuOpen = ref(false);
-const isBirthdayVisibilityMenuOpen = ref(false);
 </script>
 <template>
 	<Teleport to="#header">
@@ -139,37 +148,89 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 			compte.
 		</p>
 		<div class="flex flex-col gap-2">
-			<Actions
-				scale="sm"
-				:actions="[
-					{
-						label: 'Profil',
-						icon: IdentificationIcon,
-						handler: () => {
-							isProfileVisibilityMenuOpen = true;
+			<div class="flex items-center gap-2">
+				<strong class="flex items-center gap-2">
+					<IdentificationIcon class="w-5 h-5" />
+					Profil
+				</strong>
+				<InlineSelect
+					label="Visibilité du profil*"
+					v-model="payload.profileVisibility"
+					:options="[
+						{
+							label: 'Public',
+							value: 'everyone',
+							icon: GlobeAltIcon,
 						},
-						indicator:
-							payload.profileVisibility == 'everyone'
-								? 'Public'
-								: 'Privé',
-					},
-					{
-						label: 'Anniversaire',
-						icon: GiftIcon,
-						handler: () => {
-							isBirthdayVisibilityMenuOpen = true;
+						{
+							label: 'Privé',
+							value: 'followers',
+							icon: UserGroupIcon,
 						},
-						indicator:
-							payload.birthdayVisibility == 'everyone'
-								? 'Tout le monde'
-								: payload.birthdayVisibility == 'followers'
-									? 'Abonnés'
-									: payload.birthdayVisibility == 'friends'
-										? 'Amis'
-										: 'Privé',
-					},
-				]"
-			/>
+					]"
+					scale="small"
+					class="max-md:hidden"
+				/>
+				<InlineSelect
+					label="Visibilité du profil*"
+					v-model="payload.profileVisibility"
+					:options="[
+						{
+							value: 'everyone',
+							icon: GlobeAltIcon,
+						},
+						{
+							value: 'followers',
+							icon: UserGroupIcon,
+						},
+					]"
+					scale="small"
+					class="md:hidden"
+				/>
+			</div>
+			<div class="flex items-center gap-2">
+				<strong class="flex items-center gap-2">
+					<GiftIcon class="w-5 h-5" />
+					Anniversaire
+				</strong>
+				<InlineSelect
+					v-model="payload.birthdayVisibility"
+					:options="[
+						{
+							label: 'Tout le monde',
+							value: 'everyone',
+							icon: GlobeAltIcon,
+						},
+						{
+							label: 'Abonnés',
+							value: 'followers',
+							icon: UserGroupIcon,
+						},
+						{ label: 'Amis', value: 'friends', icon: HeartIcon },
+						{ label: 'Privé', value: 'me', icon: EyeSlashIcon },
+					]"
+					scale="small"
+					class="max-md:hidden"
+				/>
+				<InlineSelect
+					v-model="payload.birthdayVisibility"
+					:options="[
+						{
+							value: 'everyone',
+							icon: GlobeAltIcon,
+						},
+						{
+							value: 'followers',
+							icon: UserGroupIcon,
+						},
+						{ value: 'friends', icon: HeartIcon },
+						{ value: 'me', icon: EyeSlashIcon },
+					]"
+					scale="small"
+					class="md:hidden"
+				/>
+			</div>
+
 			<p>
 				*La visibilité de vos publications ne sera pas impactée par les
 				paramètres de visibilité du profil. Seul leur apparition dans
@@ -228,60 +289,4 @@ const isBirthdayVisibilityMenuOpen = ref(false);
 			/>
 		</div>
 	</section>
-	<Menu
-		v-if="isProfileVisibilityMenuOpen"
-		@close="isProfileVisibilityMenuOpen = false"
-		:title="'Visibilité du profil'"
-		:actions="[
-			{
-				label: 'Public',
-				icon: GlobeAltIcon,
-				handler: () => {
-					payload.profileVisibility = 'everyone';
-				},
-			},
-			{
-				label: 'Privé',
-				icon: UserGroupIcon,
-				handler: () => {
-					payload.profileVisibility = 'followers';
-				},
-			},
-		]"
-	/>
-	<Menu
-		v-if="isBirthdayVisibilityMenuOpen"
-		@close="isBirthdayVisibilityMenuOpen = false"
-		:title="'Visibilité de mon anniversaire'"
-		:actions="[
-			{
-				label: 'Tout le monde',
-				icon: GlobeAltIcon,
-				handler: () => {
-					payload.birthdayVisibility = 'everyone';
-				},
-			},
-			{
-				label: 'Abonnés',
-				icon: UserGroupIcon,
-				handler: () => {
-					payload.birthdayVisibility = 'followers';
-				},
-			},
-			{
-				label: 'Amis',
-				icon: HeartIcon,
-				handler: () => {
-					payload.birthdayVisibility = 'friends';
-				},
-			},
-			{
-				label: 'Privé',
-				icon: EyeSlashIcon,
-				handler: () => {
-					payload.birthdayVisibility = 'me';
-				},
-			},
-		]"
-	/>
 </template>

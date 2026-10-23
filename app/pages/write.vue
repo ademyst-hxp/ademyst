@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
 
-import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+import {
+	EyeSlashIcon,
+	GlobeAltIcon,
+	HeartIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
+} from "@heroicons/vue/24/outline";
 
 import PostBox from "~/components/interactions/Post.vue";
-import Menu from "~/components/Menu.vue";
+
+import Box from "~/components/base/Box.vue";
+import InfoBox from "~/components/boxes/Info.vue";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
@@ -111,16 +119,6 @@ if (editPostId) {
 		});
 }
 
-const isVisibilityMenuOpen = ref(false);
-
-const visibilityLabels: Record<string, string> = {
-	outside: "Essai (extérieur)",
-	everyone: "Tout le monde",
-	followers: "Abonnés",
-	friends: "Amis",
-	me: "Privé",
-};
-
 const isInLimit = computed(() => {
 	return preparingPost.value.content.length <= 5000;
 });
@@ -170,74 +168,118 @@ const handlePublish = async () => {
 		<h1 class="text-2xl font-bold font-title text-center">
 			Écrire une publication
 		</h1>
-		<div class="flex flex-col gap-2">
-			<Input
-				v-model="isPrev"
-				label="Prévisualiser la publication"
-				type="checkbox"
-			/>
-			<p>
-				Visibilité:
-				<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
-				(<u
-					class="cursor-pointer text-primary underline"
-					@click="isVisibilityMenuOpen = true"
-					>Changer</u
-				>)
-			</p>
-		</div>
 	</Teleport>
 
-	<PostBox :data="preparingPost" :editable="!isPrev" />
-	<section class="flex flex-col gap-2">
+	<section class="flex flex-col gap-2 px-4">
+		<Input
+			v-model="preparingPost.content"
+			type="textarea"
+			placeholder="Exprimez-vous..."
+			class="-mx-4"
+		/>
+		<p v-if="!isInLimit" class="text-sm text-danger">
+			Vous avez dépassé la limite de 5000 caractères.
+		</p>
 		<Button
 			label="Publier"
 			variant="primary"
 			:disabled="!isGood"
 			:handler="handlePublish"
+			class="mx-auto"
 		/>
 	</section>
-	<Menu
-		v-if="isVisibilityMenuOpen"
-		@close="isVisibilityMenuOpen = false"
-		:title="'Visibilité de la publication'"
-		:actions="[
-			{
-				label: 'Essai',
-				description: 'Tout le monde sauf vos abonnés',
-				icon: RocketLaunchIcon,
-				handler: () => {
-					preparingPost.visibility = 'outside';
+
+	<hr class="rounded-full border border-surface-border mx-8 my-4" />
+
+	<section class="flex flex-col gap-2 px-4">
+		<h2 class="text-xl font-semibold font-title text-center">Visibilité</h2>
+		<InlineSelect
+			label="Visibilité"
+			v-model="preparingPost.visibility"
+			:options="[
+				{ label: 'Essai', value: 'outside', icon: RocketLaunchIcon },
+				{
+					label: 'Tout le monde',
+					value: 'everyone',
+					icon: GlobeAltIcon,
 				},
-			},
-			{
-				label: 'Tout le monde',
-				icon: GlobeAltIcon,
-				handler: () => {
-					preparingPost.visibility = 'everyone';
+				{ label: 'Abonnés', value: 'followers', icon: UserGroupIcon },
+				{ label: 'Amis', value: 'friends', icon: HeartIcon },
+				{ label: 'Privé', value: 'me', icon: EyeSlashIcon },
+			]"
+			class="mx-auto max-md:hidden"
+		/>
+		<InlineSelect
+			label="Visibilité"
+			v-model="preparingPost.visibility"
+			:options="[
+				{ value: 'outside', icon: RocketLaunchIcon },
+				{
+					value: 'everyone',
+					icon: GlobeAltIcon,
 				},
-			},
-			{
-				label: 'Abonnés',
-				icon: UserGroupIcon,
-				handler: () => {
-					preparingPost.visibility = 'followers';
-				},
-			},
-			{
-				label: 'Amis',
-				icon: HeartIcon,
-				handler: () => {
-					preparingPost.visibility = 'friends';
-				},
-			},
-			{
-				label: 'Privé',
-				icon: EyeSlashIcon,
-				handler: () => {
-					preparingPost.visibility = 'me';
-				},
-			},
-		]"
-	/>
+				{ value: 'followers', icon: UserGroupIcon },
+				{ value: 'friends', icon: HeartIcon },
+				{ value: 'me', icon: EyeSlashIcon },
+			]"
+			class="mx-auto md:hidden"
+		/>
+		<Box scale="sm" class="-mx-4">
+			<template v-if="preparingPost.visibility === 'outside'">
+				<h3 class="text-lg font-semibold">Essai</h3>
+				<p class="text-muted">
+					Les publications de type "Essai" sont visibles par tout le
+					monde sauf vos abonnés. Elles sont destinées à tester la
+					visibilité de vos publications en dehors de votre public
+					habituel.
+				</p>
+			</template>
+			<template v-if="preparingPost.visibility === 'everyone'">
+				<h3 class="text-lg font-semibold">Tout le monde</h3>
+				<p class="text-muted">
+					Votre publication sera visible par tout le monde, y compris
+					sans être connecté. Seuls les utilisateurs ayant un compte
+					Ademyst pourront interagir ou réagir à votre publication.
+				</p>
+			</template>
+			<template v-if="preparingPost.visibility === 'followers'">
+				<h3 class="text-lg font-semibold">Abonnés</h3>
+				<p class="text-muted">
+					Votre publication sera visible uniquement par vos abonnés.
+				</p>
+			</template>
+			<template v-if="preparingPost.visibility === 'friends'">
+				<h3 class="text-lg font-semibold">Amis</h3>
+				<p class="text-muted">
+					Votre publication sera visible par vos amis.
+				</p>
+			</template>
+			<template v-if="preparingPost.visibility === 'me'">
+				<h3 class="text-lg font-semibold">Privé</h3>
+				<p class="text-muted">
+					Votre publication sera visible uniquement par vous.
+				</p>
+			</template>
+			<InfoBox title="Vous pouvez changer d'avis" class="-mx-2">
+				Vous pourrez toujours changer la visibilité de votre publication
+				après l'avoir publiée.
+			</InfoBox>
+		</Box>
+	</section>
+
+	<hr class="rounded-full border border-surface-border mx-8 my-4" />
+
+	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold font-title text-center">
+			Prévisualisation
+		</h2>
+		<PostBox :data="preparingPost" />
+		<Button
+			label="Publier"
+			variant="primary"
+			:disabled="!isGood"
+			:handler="handlePublish"
+			class="mx-auto"
+		/>
+	</section>
 </template>
