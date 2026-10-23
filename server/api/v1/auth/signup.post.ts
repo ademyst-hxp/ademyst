@@ -1,7 +1,10 @@
 import { useDb } from "#server/db";
 import { accounts } from "#server/db/schema/accounts";
 import { profileLinks, profiles } from "#server/db/schema/profiles";
-import { appearanceSettings, privacySettings } from "#server/db/schema/settings";
+import {
+	appearanceSettings,
+	privacySettings,
+} from "#server/db/schema/settings";
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 
@@ -11,7 +14,60 @@ import { hashPassword } from "#server/utils/password";
 
 import type { H3Event } from "h3";
 
-import { giveBeamBadge, giveReferralBadge, giveSignupBadges } from "#server/jobs/signup";
+import {
+	giveBeamBadge,
+	giveReferralBadge,
+	giveSignupBadges,
+} from "#server/jobs/signup";
+
+type SignupPayload = {
+	email: string;
+	password: string;
+	username: string;
+	display_name: string | null;
+	birthday: Date;
+	token?: string;
+	referrer?: string;
+	termsOfServiceConsent: boolean;
+	privacyPolicyConsent: boolean;
+};
+
+function normalizePayload(value: unknown): SignupPayload | null {
+	if (typeof value !== "object" || value === null) return null;
+
+	const email = normalizeEmail((value as any).email);
+	const password = normalizePassword((value as any).password);
+	const username =
+		typeof (value as any).username === "string"
+			? (value as any).username.trim()
+			: null;
+	const displayName =
+		typeof (value as any).display_name === "string"
+			? (value as any).display_name.trim()
+			: null;
+	const token =
+		typeof (value as any).token === "string"
+			? (value as any).token.trim()
+			: null;
+	const referrer = normalizeCode((value as any).referrer);
+	const birthday = (value as any).birthday
+		? new Date((value as any).birthday)
+		: null;
+
+	if (!email || !password || !username || !birthday) return null;
+
+	return {
+		email,
+		password,
+		username,
+		display_name: displayName || undefined,
+		birthday,
+		token: token || undefined,
+		referrer: referrer || undefined,
+		termsOfServiceConsent: (value as any).termsOfServiceConsent === true,
+		privacyPolicyConsent: (value as any).privacyPolicyConsent === true,
+	};
+}
 
 function normalizeEmail(value: unknown): string | null {
 	if (typeof value !== "string") return null;
@@ -48,18 +104,21 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const body = await readBody(event);
 
-	const email = normalizeEmail(body?.email);
-	const password = normalizePassword(body?.password);
-	const referrer = normalizeCode(body?.referrer);
+	const payload = normalizePayload(body);
 
-	// The sudo token is mandatory and is used to retrieve the Beam profile.
-	const token = typeof body?.token === "string" ? body.token.trim() : null;
+	if (!payload) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid signup payload",
+		});
+	}
+
+	const { email, password, username, token, referrer } = payload;
 
 	const termsOfServiceConsent = body?.termsOfServiceConsent === true;
-
 	const privacyPolicyConsent = body?.privacyPolicyConsent === true;
 
-	if (!email || !password || !token) {
+	if (!email || !password || !username) {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid signup payload",
@@ -74,19 +133,9 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	/*
-	 * No account/profile is created before this succeeds.
-	 *
-	 * This guarantees that a signup always has a valid Beam
-	 * verification associated with it.
-	 */
-	const beamProfile = await verifyBeamProfile(token);
+	const beamProfile = await verifyBeamProfile(username, token);
 
-	/*
-	 * The local profile name is always taken from the verified
-	 * Beam profile.
-	 */
-	const name = beamProfile.name;
+	const name = beamProfile?.name || username;
 
 	const [emailMatch] = await db
 		.select({ id: accounts.id })
@@ -117,10 +166,11 @@ export default defineEventHandler(async (event: H3Event) => {
 	const passwordHash = await hashPassword(password);
 	const profileId = generateHexId();
 
-	const displayName = beamProfile.display_name || null;
-
-	const birthday = beamProfile.birthday
-		? new Date(beamProfile.birthday).toISOString().split("T")[0]
+	const displayName = beamProfile?.display_name || null;
+	const bio = beamProfile?.description || null;
+	const pronouns = beamProfile?.pronouns || null;
+	const birthday = beamProfile?.birthday
+		? new Date(beamProfile?.birthday).toISOString().split("T")[0]
 		: null;
 
 	const result = await db.transaction(async (tx) => {
@@ -157,8 +207,8 @@ export default defineEventHandler(async (event: H3Event) => {
 				accountId: account.id,
 				name,
 				displayName,
-				bio: beamProfile.description || null,
-				pronouns: beamProfile.pronouns || null,
+				bio,
+				pronouns,
 				birthday,
 				level: 2,
 			})
@@ -175,14 +225,16 @@ export default defineEventHandler(async (event: H3Event) => {
 			});
 		}
 
-		await tx.insert(profileLinks).values({
-			profileId: profile.id,
-			name: beamProfile.display_name || beamProfile.name,
-			type: "beam",
-			url: `https://beam.ejnalo.me/${beamProfile.name}`,
-			resourceId: beamProfile.id,
-			resourceName: beamProfile.name,
-		});
+		if (beamProfile) {
+			await tx.insert(profileLinks).values({
+				profileId: profile.id,
+				name: beamProfile?.display_name || beamProfile?.name,
+				type: "beam",
+				url: `https://beam.ejnalo.me/@${beamProfile?.name}`,
+				resourceId: beamProfile?.id,
+				resourceName: beamProfile?.name,
+			});
+		}
 
 		/* Parrainage */
 
@@ -218,14 +270,16 @@ export default defineEventHandler(async (event: H3Event) => {
 		};
 	});
 
-	try {
-		await giveBeamBadge(
-			event,
-			result.profile!.id,
-			new Date(beamProfile.creation_date),
-		);
-	} catch (error) {
-		console.error("Error occurred while giving Beam badge:", error);
+	if (beamProfile) {
+		try {
+			await giveBeamBadge(
+				event,
+				result.profile!.id,
+				new Date(beamProfile.creation_date),
+			);
+		} catch (error) {
+			console.error("Error occurred while giving Beam badge:", error);
+		}
 	}
 
 	try {

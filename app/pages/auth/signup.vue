@@ -14,6 +14,7 @@ const step = ref<number>(0);
 
 const regex = {
 	email: /\S+@\S+\.\S+/,
+	username: /^[a-z][a-z0-9_]{2,15}$/,
 	password: /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/,
 	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
 	referrer: /^[A-Fa-f0-9]{6,10}$/,
@@ -23,17 +24,23 @@ const referrer = useRoute().query.referrer as string | undefined;
 
 const payload = ref<{
 	email: string;
+	username: string;
+	displayName: string;
 	password: string;
 	confirm_password: string;
-	token: string;
+	birthday: string;
+	token: string | null;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
 	referrer: string | null;
 }>({
 	email: "",
+	username: "",
+	displayName: "",
 	password: "",
 	confirm_password: "",
-	token: "",
+	birthday: "",
+	token: null,
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
 	referrer: referrer ?? null,
@@ -42,6 +49,10 @@ const payload = ref<{
 const valid = computed(() => ({
 	email:
 		payload.value.email.length > 0 && regex.email.test(payload.value.email),
+	username:
+		payload.value.username.length > 0 &&
+		regex.username.test(payload.value.username),
+	displayName: payload.value.displayName.length < 32,
 	password:
 		payload.value.password.length >= 8 &&
 		regex.password.test(payload.value.password),
@@ -49,8 +60,11 @@ const valid = computed(() => ({
 		payload.value.password === payload.value.confirm_password,
 	termsOfServiceConsent: payload.value.termsOfServiceConsent,
 	privacyPolicyConsent: payload.value.privacyPolicyConsent,
+	birthday: new Date(payload.value.birthday).toString() !== "Invalid Date",
 	token:
-		payload.value.token.length > 0 && regex.sudo.test(payload.value.token),
+		payload.value.token !== null &&
+		payload.value.token.length > 0 &&
+		regex.sudo.test(payload.value.token),
 	referrer:
 		payload.value.referrer !== null &&
 		regex.referrer.test(payload.value.referrer),
@@ -95,7 +109,7 @@ const handleSignup = async () => {
 		await refresh();
 
 		if (session.value) {
-			step.value = 2;
+			step.value = 4;
 		}
 	} catch (error) {
 		signupError.value = getApiErrorMessage(
@@ -136,7 +150,7 @@ const claimReferralLink = async () => {
 	referralError.value = null;
 
 	if (!payload.value.referrer) {
-		step.value = 3;
+		step.value = 5;
 		await askEmailConfirmation();
 		return;
 	}
@@ -147,7 +161,7 @@ const claimReferralLink = async () => {
 		});
 
 		await refresh();
-		step.value = 3;
+		step.value = 5;
 		await askEmailConfirmation();
 	} catch (error) {
 		referralError.value = getApiErrorMessage(
@@ -160,7 +174,7 @@ const claimReferralLink = async () => {
 
 const skipReferral = async () => {
 	referralError.value = null;
-	step.value = 3;
+	step.value = 5;
 	await askEmailConfirmation();
 };
 
@@ -343,6 +357,89 @@ useHead({
 		<form
 			v-if="step === 1"
 			class="flex flex-col gap-6"
+			@submit.prevent="step = 2"
+		>
+			<h2 class="text-xl font-semibold font-title">
+				Informations sur le profil
+			</h2>
+			<Input
+				v-model="payload.username"
+				label="Nom d'utilisateur"
+				type="text"
+				placeholder="john_doe"
+				:validate="regex.username"
+				required
+			>
+				<template #indications>
+					Le nom d'utilisateur est unique et sert à vous identifier.
+					Vous pourrez le changer plus tard dans les paramètres de
+					votre compte.
+				</template>
+				<template #error>
+					Le nom d'utilisateur doit contenir uniquement des lettres,
+					chiffres et underscores (_). Il doit commencer par une
+					lettre et avoir entre 2 et 15 caractères.
+				</template>
+			</Input>
+			<Input
+				v-model="payload.displayName"
+				label="Nom d'affichage"
+				type="text"
+				placeholder="John Doe"
+				required
+			>
+				<template #indications>
+					Le nom d'affichage est le nom que les autres utilisateurs
+					verront. Il peut contenir n'importe quels caractères et doit
+					avoir moins de 32 caractères.
+				</template>
+				<template #error>Le nom d'affichage est incorrect.</template>
+			</Input>
+			<Input
+				v-model="payload.birthday"
+				label="Date de naissance"
+				type="date"
+				placeholder="1990-01-01"
+				required
+			/>
+			<div class="flex justify-center items-center gap-4 w-full">
+				<Button
+					label="Lier mon compte Beam"
+					size="medium"
+					submit
+					:disabled="
+						!(
+							valid.email &&
+							valid.username &&
+							valid.displayName &&
+							valid.password &&
+							valid.password_confirmation
+						)
+					"
+				/>
+				<Button
+					label="Continuer sans lier"
+					size="medium"
+					:handler="
+						() => {
+							step = 3;
+						}
+					"
+					:disabled="
+						!(
+							valid.email &&
+							valid.username &&
+							valid.displayName &&
+							valid.password &&
+							valid.password_confirmation
+						)
+					"
+				/>
+			</div>
+		</form>
+		<form
+			v-if="step === 2"
+			class="flex flex-col gap-6"
 			@submit.prevent="handleSignup"
 		>
 			<h2 class="text-xl font-semibold font-title">
@@ -426,6 +523,8 @@ useHead({
 					:disabled="
 						!(
 							valid.email &&
+							valid.username &&
+							valid.displayName &&
 							valid.password &&
 							valid.password_confirmation &&
 							valid.termsOfServiceConsent &&
@@ -437,7 +536,72 @@ useHead({
 			</div>
 		</form>
 		<form
-			v-if="step === 2"
+			v-if="step === 3"
+			class="flex flex-col gap-6"
+			@submit.prevent="handleSignup"
+		>
+			<h2 class="text-xl font-semibold font-title">Consentement</h2>
+			<p v-if="signupError" class="text-center text-danger">
+				{{ signupError }}
+			</p>
+			<Input
+				v-model="payload.termsOfServiceConsent"
+				label="Accepter les conditions d'utilisation"
+				type="checkbox"
+				required
+			>
+				<template #error>
+					Vous devez accepter les conditions d'utilisation.
+				</template>
+			</Input>
+			<Input
+				v-model="payload.privacyPolicyConsent"
+				label="Accepter la politique de confidentialité"
+				type="checkbox"
+				required
+			>
+				<template #error>
+					Vous devez accepter la politique de confidentialité.
+				</template>
+			</Input>
+			<p class="text-surface-text-muted text-sm">
+				En vous inscrivant, vous acceptez nos
+				<Button
+					label="conditions d'utilisation"
+					variant="link"
+					handler="/legal/terms-of-service"
+					class="inline"
+				/>
+				et notre
+				<Button
+					label="politique de confidentialité"
+					variant="link"
+					handler="/legal/privacy-policy"
+					class="inline"
+				/>
+				.
+			</p>
+			<div class="flex justify-center items-center gap-4 w-full">
+				<Button
+					label="M'inscrire"
+					size="medium"
+					submit
+					:disabled="
+						!(
+							valid.email &&
+							valid.username &&
+							valid.displayName &&
+							valid.password &&
+							valid.password_confirmation &&
+							valid.termsOfServiceConsent &&
+							valid.privacyPolicyConsent
+						)
+					"
+				/>
+			</div>
+		</form>
+		<form
+			v-if="step === 4"
 			class="flex flex-col gap-6"
 			@submit.prevent="claimReferralLink"
 		>
@@ -477,7 +641,7 @@ useHead({
 				/>
 			</div>
 		</form>
-		<div v-if="step === 3" class="flex flex-col gap-6">
+		<div v-if="step === 5" class="flex flex-col gap-6">
 			<template v-if="confirmationSent">
 				<h2 class="text-xl font-bold font-title">
 					E-mail de confirmation envoyé
