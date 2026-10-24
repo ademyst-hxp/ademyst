@@ -194,9 +194,9 @@ function onEnter(event: KeyboardEvent) {
 		<span v-if="label" class="text-sm text-muted px-4">
 			{{ label }} <span v-if="required" class="text-danger">*</span>
 		</span>
-		<div class="flex items-center gap-1 text-base" :class="rootClass">
+		<div class="flex items-center gap-1 text-base h-full" :class="rootClass">
 			<textarea
-				class="grow outline-none h-36 resize-none"
+				class="grow outline-none h-full min-w-0 w-full resize-none"
 				:value="modelValue as string"
 				:placeholder="placeholder"
 				:disabled="disabled"
@@ -230,7 +230,7 @@ function onEnter(event: KeyboardEvent) {
 			<component
 				:is="props.icon"
 				v-if="props.icon"
-				class="w-5 h-5 text-muted"
+				class="shrink-0 w-5 h-5 text-muted"
 			/>
 			<input
 				:type="
@@ -251,12 +251,12 @@ function onEnter(event: KeyboardEvent) {
 			/>
 			<EyeIcon
 				v-if="type === 'password' && isPwdVisible"
-				class="cursor-pointer w-5 h-5 text-muted"
+				class="shrink-0 cursor-pointer w-5 h-5 text-muted"
 				@click="isPwdVisible = !isPwdVisible"
 			/>
 			<EyeSlashIcon
 				v-else-if="type === 'password'"
-				class="cursor-pointer w-5 h-5 text-muted"
+				class="shrink-0 cursor-pointer w-5 h-5 text-muted"
 				@click="isPwdVisible = !isPwdVisible"
 			/>
 		</div>

@@ -85,6 +85,10 @@
 	--text-9xl: calc(var(--text-base) * 8);
 }
 
+* {
+	min-width: 0;
+}
+
 html {
 	font-family: var(--font-sans);
 	background-image: linear-gradient(
