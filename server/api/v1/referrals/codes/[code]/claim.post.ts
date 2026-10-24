@@ -3,6 +3,7 @@ import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 import { eq } from "drizzle-orm";
 
 import { retrieveCleanReferralCode } from "~~/server/utils/converters/referrals";
+import { giveReferralBadge } from "~~/server/jobs/signup";
 
 import type { H3Event } from "h3";
 
@@ -48,9 +49,21 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	await db.insert(referrals).values({
-		code: result.code,
-		referredId: identity.profileId,
+	await db.transaction(async (tx) => {
+		try {
+			await tx.insert(referrals).values({
+				code: result.code,
+				referredId: identity.profileId,
+			});
+
+			await giveReferralBadge(tx, result.code);
+		} catch {
+			tx.rollback();
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Failed to claim referral code",
+			});
+		}
 	});
 
 	const cleanReferral = await retrieveCleanReferralCode(

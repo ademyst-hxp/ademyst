@@ -6,7 +6,7 @@ import {
 	privacySettings,
 } from "#server/db/schema/settings";
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
-import { and, eq, isNull, lt, or } from "drizzle-orm";
+import { and, eq, isNull, gt, or } from "drizzle-orm";
 
 import { verifyBeamProfile } from "#server/utils/beam";
 import { generateHexId } from "#server/utils/ids";
@@ -248,7 +248,7 @@ export default defineEventHandler(async (event: H3Event) => {
 						eq(referralCodes.enabled, true),
 						or(
 							isNull(referralCodes.expiresAt),
-							lt(referralCodes.expiresAt, new Date()),
+							gt(referralCodes.expiresAt, new Date()),
 						),
 					),
 				)
