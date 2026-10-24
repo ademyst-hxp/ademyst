@@ -100,7 +100,7 @@ const familiesToPut: Omit<DbBadgeFamily, "updatedAt">[] = [
 		createdAt: new Date(),
 	},
 	{
-		id: "certification",
+		id: "certifications",
 		name: "Certifications",
 		description:
 			"Famille de badges correspondant aux différentes certifications des membres.",
@@ -168,7 +168,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Certifié(e)",
 		description:
 			"Ce badge est accordé aux comptes dont l'identité a été vérifiée.",
-		family: "certification",
+		family: "certifications",
 		rarity: "unclassified",
 		color: "#0081FA",
 		createdAt: new Date(),
@@ -178,7 +178,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Célébrité",
 		description:
 			"Ce badge est accordé aux membres ayant une grande influence sur l'opinion publique.",
-		family: "certification",
+		family: "certifications",
 		rarity: "unclassified",
 		color: "#AC910E",
 		createdAt: new Date(),
@@ -187,7 +187,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		id: "official",
 		name: "Personnalité Politique",
 		description: "Ce badge est accordé aux personnalités politiques.",
-		family: "certification",
+		family: "certifications",
 		rarity: "unclassified",
 		color: "#AABBCB",
 		createdAt: new Date(),
@@ -197,7 +197,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Élu de la République Française",
 		description:
 			"Ce badge est accordée aux élus de la République Française.",
-		family: "certification",
+		family: "certifications",
 		rarity: "unclassified",
 		color: "#061242",
 		createdAt: new Date(),
