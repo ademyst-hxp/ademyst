@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
 
 	return {
 		status: "ok",
-		posts: filteredWhispers,
+		whispers: filteredWhispers,
 		next: offset + limit,
 		hasNext: filteredWhispers.length === limit,
 	};
