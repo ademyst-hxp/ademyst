@@ -103,9 +103,13 @@ export async function giveReferralBadge(
 		.where(and(eq(referrals.code, code), eq(referrals.confirmed, true)))
 		.limit(1);
 
+	if (!referralCount) {
+		return;
+	}
+
 	const referrerId = invite.authorId;
 
-	if ((referralCount?.count ?? 0) < 1) return;
+	if (referralCount.count < 1) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,
@@ -116,7 +120,7 @@ export async function giveReferralBadge(
 		createdAt: new Date(),
 	});
 
-	if ((referralCount?.count ?? 0) < 5) return;
+	if (referralCount.count < 5) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,
@@ -127,7 +131,7 @@ export async function giveReferralBadge(
 		createdAt: new Date(),
 	});
 
-	if ((referralCount?.count ?? 0) < 20) return;
+	if (referralCount.count < 20) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,
@@ -138,7 +142,7 @@ export async function giveReferralBadge(
 		createdAt: new Date(),
 	});
 
-	if ((referralCount?.count ?? 0) < 50) return;
+	if (referralCount.count < 50) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,

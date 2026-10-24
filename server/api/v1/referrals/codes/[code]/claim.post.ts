@@ -49,11 +49,22 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	const user = await getUser(event, identity);
+
+	if (!user) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "No user found for account",
+		});
+	}
+
 	await db.transaction(async (tx) => {
 		try {
 			await tx.insert(referrals).values({
 				code: result.code,
 				referredId: identity.profileId,
+				confirmed: user.account.confirmedAt ? true : false,
+				createdAt: user.account.confirmedAt ? new Date() : undefined,
 			});
 
 			await giveReferralBadge(tx, result.code);
