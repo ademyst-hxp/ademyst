@@ -105,24 +105,24 @@ export async function giveReferralBadge(
 
 	const referrerId = invite.authorId;
 
-	if ((referralCount?.count ?? 0) < 5) return;
+	if ((referralCount?.count ?? 0) < 1) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,
 		badgeId: "parrain",
 		name: "Badge Parrain Offert",
-		reason: "Vous avez parrainé 5 personnes ou plus à la communauté.",
+		reason: "Vous avez parrainé au moins une personne.",
 		enabled: true,
 		createdAt: new Date(),
 	});
 
-	if ((referralCount?.count ?? 0) < 10) return;
+	if ((referralCount?.count ?? 0) < 5) return;
 
 	await db.insert(badgesEntitlements).values({
 		profileId: referrerId,
 		badgeId: "me_and_my_friends",
 		name: "Badge Mes Amis et Moi Offert",
-		reason: "Vous avez parrainé 10 personnes ou plus à la communauté.",
+		reason: "Vous avez parrainé 5 personnes ou plus.",
 		enabled: true,
 		createdAt: new Date(),
 	});
@@ -133,7 +133,7 @@ export async function giveReferralBadge(
 		profileId: referrerId,
 		badgeId: "the_ambassador",
 		name: "Badge Ambassadeur Offert",
-		reason: "Vous avez parrainé 20 personnes ou plus à la communauté.",
+		reason: "Vous avez parrainé 20 personnes ou plus.",
 		enabled: true,
 		createdAt: new Date(),
 	});
@@ -144,7 +144,7 @@ export async function giveReferralBadge(
 		profileId: referrerId,
 		badgeId: "the_user_trader",
 		name: "Badge Le Trafficant d'Utilisateurs Offert",
-		reason: "Vous avez parrainé 50 personnes ou plus à la communauté.",
+		reason: "Vous avez parrainé 50 personnes ou plus.",
 		enabled: true,
 		createdAt: new Date(),
 	});
