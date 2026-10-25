@@ -3,8 +3,22 @@ import type { FeedTab } from "~/composables/useFeed";
 
 import type { Whisper } from "~~/shared/models/interactions";
 
-import { ArrowPathIcon, ChatBubbleBottomCenterTextIcon, ClockIcon, NoSymbolIcon, PaperAirplaneIcon, PlusCircleIcon, UserIcon } from "@heroicons/vue/24/outline";
-import { EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+import {
+	ArrowPathIcon,
+	ChatBubbleBottomCenterTextIcon,
+	ClockIcon,
+	NoSymbolIcon,
+	PaperAirplaneIcon,
+	PlusCircleIcon,
+	UserIcon,
+} from "@heroicons/vue/24/outline";
+import {
+	EyeSlashIcon,
+	GlobeAltIcon,
+	HeartIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
+} from "@heroicons/vue/24/outline";
 
 import Popup from "~/components/base/Popup.vue";
 import PostBox from "~/components/interactions/Post.vue";
@@ -383,6 +397,20 @@ watch(
 	<!-- New Whisper -->
 	<Popup v-if="editingWhisper" @close="editingWhisper = false">
 		<h2 class="text-xl font-bold font-title">Exprimer une pensée</h2>
+		<InlineSelect
+			v-model="newWhisper.visibility"
+			:options="[
+				{ value: 'outside', icon: RocketLaunchIcon },
+				{
+					value: 'everyone',
+					icon: GlobeAltIcon,
+				},
+				{ value: 'followers', icon: UserGroupIcon },
+				{ value: 'friends', icon: HeartIcon },
+				{ value: 'me', icon: EyeSlashIcon },
+			]"
+			scale="small"
+		/>
 		<WhisperBox
 			:key="'whisper-' + newWhisper.id + '-edit'"
 			:data="newWhisper"
@@ -390,9 +418,8 @@ watch(
 		>
 			<template #actions>
 				<div
-					class="cursor-pointer flex items-center gap-1 text-surface-text hover:underline"
+					class="flex items-center gap-1 text-surface-text"
 					:style="{ color: newWhisper.textColor || undefined }"
-					@click="isVisibilityMenuOpen = true"
 				>
 					<Component
 						:is="visibilityOptions[newWhisper.visibility].icon"
@@ -408,6 +435,7 @@ watch(
 					:style="{ color: newWhisper.textColor || undefined }"
 					@click="handleNewWhisper"
 				>
+					Envoyer
 					<PaperAirplaneIcon class="w-6 h-6" />
 				</div>
 			</template>

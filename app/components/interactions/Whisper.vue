@@ -127,7 +127,7 @@ const textClass = computed(() =>
 
 			<div
 				v-if="!minified && slots.actions"
-				class="flex items-center gap-2"
+				class="flex items-center gap-2 w-full"
 			>
 				<slot name="actions" />
 			</div>
