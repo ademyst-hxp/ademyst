@@ -35,12 +35,8 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const whisper = await retrieveCleanWhisper(event, identity, candidate);
 
-	const storage = useDrive(event, "files");
-	const backgroundKey = `/whispers/${whisper.id}.webp`;
-
 	return {
 		status: "ok",
 		data: whisper,
-		hasBackground: await storage.exists(backgroundKey),
 	};
 });
