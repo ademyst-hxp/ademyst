@@ -37,81 +37,100 @@ const textClass = computed(() =>
 );
 </script>
 <template>
-	<Box
+	<div
 		:key="`whisper-${data.id}`"
-		:customColor="data.color || undefined"
-		class="shrink-0 bg-whispers-text text-whispers border-2 border-whispers justify-center"
+		:style="{
+			borderColor: data.color ? '#00000040' : undefined,
+			backgroundColor: data.color || undefined,
+			backgroundImage: data.image ? `url(${data.image})` : undefined,
+			backgroundSize: data.image ? 'cover' : undefined,
+			backgroundPosition: data.image ? 'center' : undefined,
+			aspectRatio: data.image ? '5/2' : undefined,
+		}"
+		class="shrink-0 bg-whispers-text text-whispers border-2 border-whispers overflow-hidden"
 		:class="
 			minified
-				? 'w-48 cursor-pointer transition-all duration-150 hover:scale-97'
-				: 'w-full sm:w-lg'
+				? 'rounded-3xl rounded-bl-2xl w-48 cursor-pointer transition-all duration-150 hover:scale-97'
+				: 'rounded-4xl rounded-bl-3xl w-full sm:w-lg'
 		"
 		:scale="minified ? 'sm' : 'md'"
 	>
-		<WhisperIcon
-			v-if="!minified"
-			class="self-center h-6 w-auto"
-			:style="{ color: data.textColor || 'inherit' }"
-		/>
-
 		<div
-			class="flex"
-			:class="
-				minified
-					? 'items-start gap-2'
-					: 'flex-col items-center -space-y-1'
-			"
-			:style="{ color: data.textColor || 'inherit' }"
+			class="flex items-center p-4 h-full"
+			:class="{
+				'bg-whispers-text/60': !!data.image,
+				'flex-col justify-center p-8': !minified,
+				'px-4 py-2': minified,
+			}"
 		>
-			<Avatar
-				v-if="minified"
-				size="sm"
-				class="shrink-0 mt-1.5"
-				:src="`/api/v1/users/${data.profile.name}/avatar.webp`"
+			<WhisperIcon
+				v-if="!minified"
+				class="self-center h-6 w-auto"
+				:style="{ color: data.textColor || 'inherit' }"
 			/>
 
 			<div
-				class="grow flex flex-col -space-y-1"
-				:class="minified ? '' : 'items-center'"
+				class="flex"
+				:class="
+					minified
+						? 'items-start gap-2'
+						: 'flex-col items-center -space-y-1'
+				"
+				:style="{ color: data.textColor || 'inherit' }"
 			>
-				<h3 v-if="minified" class="font-title opacity-75">
-					{{ author }}
-				</h3>
-
-				<textarea
-					v-if="editable"
-					v-model="data.content"
-					placeholder="Exprimez-vous..."
-					class="bg-transparent resize-none outline-none"
-					:class="[
-						minified
-							? 'w-full break-all wrap-anywhere line-clamp-1'
-							: 'w-fit text-xl text-center',
-						textClass,
-					]"
+				<Avatar
+					v-if="minified"
+					size="sm"
+					class="shrink-0 mt-1.5"
+					:src="`/api/v1/users/${data.profile.name}/avatar.webp`"
 				/>
 
-				<p
-					v-else
-					class="text-lg"
-					:class="[
-						minified
-							? 'break-all wrap-anywhere line-clamp-1'
-							: 'text-xl text-center',
-						textClass,
-					]"
+				<div
+					class="grow flex flex-col -space-y-1"
+					:class="minified ? '' : 'items-center'"
 				>
-					{{ data.content }}
-				</p>
+					<h3 v-if="minified" class="font-title opacity-75">
+						{{ author }}
+					</h3>
 
-				<span v-if="!minified" class="italic opacity-75 w-fit">
-					{{ signature }}
-				</span>
+					<textarea
+						v-if="editable"
+						v-model="data.content"
+						placeholder="Exprimez-vous..."
+						class="bg-transparent resize-none outline-none"
+						:class="[
+							minified
+								? 'w-full break-all wrap-anywhere line-clamp-1'
+								: 'w-fit text-xl text-center',
+							textClass,
+						]"
+					/>
+
+					<p
+						v-else
+						class="text-lg"
+						:class="[
+							minified
+								? 'break-all wrap-anywhere line-clamp-1'
+								: 'text-xl text-center',
+							textClass,
+						]"
+					>
+						{{ data.content }}
+					</p>
+
+					<span v-if="!minified" class="italic opacity-75 w-fit">
+						{{ signature }}
+					</span>
+				</div>
+			</div>
+
+			<div
+				v-if="!minified && slots.actions"
+				class="flex items-center gap-2 w-full"
+			>
+				<slot name="actions" />
 			</div>
 		</div>
-
-		<div v-if="!minified && slots.actions" class="flex items-center gap-2">
-			<slot name="actions" />
-		</div>
-	</Box>
+	</div>
 </template>

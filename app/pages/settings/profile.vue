@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { CheckBadgeIcon, ChevronLeftIcon, KeyIcon, ShieldCheckIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import {
+	CheckBadgeIcon,
+	ChevronLeftIcon,
+	KeyIcon,
+	ShieldCheckIcon,
+	XMarkIcon,
+} from "@heroicons/vue/24/outline";
 import SocialIcon from "~/components/profile/SocialIcon.vue";
 
 import Actions from "~/components/base/Actions.vue";
 import Box from "~/components/base/Box.vue";
+import Popup from "~/components/base/Popup.vue";
+
 import Avatar from "~/components/profile/Avatar.vue";
+import ProfileBox from "~/components/profile/ProfileBox.vue";
+
+import type { Profile } from "~~/shared/models/profiles";
 
 const { session, refresh } = useAuthSession();
 await refresh();
@@ -43,13 +54,17 @@ useHead({
 
 const name = ref(session?.value?.profile.name || "");
 
-const payload = ref({
-	displayName: session?.value?.profile.displayName || "",
-	pronouns: session?.value?.profile.pronouns || "",
-	bio: session?.value?.profile.bio || "",
-	location: session?.value?.profile.location || "",
-	corporation: session?.value?.profile.corporation || "",
-});
+const _profile = ref(session?.value?.profile || ({} as Profile));
+
+const payload = computed(() => ({
+	displayName:
+		_profile.value.displayName || session?.value?.profile.displayName || "",
+	pronouns: _profile.value.pronouns || session?.value?.profile.pronouns || "",
+	bio: _profile.value.bio || session?.value?.profile.bio || "",
+	location: _profile.value.location || session?.value?.profile.location || "",
+	corporation:
+		_profile.value.corporation || session?.value?.profile.corporation || "",
+}));
 
 const avatarFile = ref<File | null>(null);
 
@@ -131,6 +146,14 @@ const uploadAvatar = async () => {
 	}
 };
 
+const previewAvatar = computed(() => {
+	if (avatarFile.value) {
+		return URL.createObjectURL(avatarFile.value);
+	}
+
+	return `/api/v1/users/${session?.value?.profile.name}/avatar.webp`;
+});
+
 const linkPayload = ref("");
 
 const addLink = async () => {
@@ -199,7 +222,9 @@ const updateLink = async (linkId: string, updatedLink: any) => {
 	}
 };
 
-const isNameDialogOpen = ref(false);
+const isNameConfirmationOpen = ref(false);
+const isNameMenuOpen = ref(false);
+const isAvatarMenuOpen = ref(false);
 </script>
 <template>
 	<Teleport to="#header">
@@ -218,72 +243,82 @@ const isNameDialogOpen = ref(false);
 			</h1>
 		</nav>
 	</Teleport>
-
-	<section class="flex flex-col gap-4">
-		<Avatar
-			:size="192"
-			:src="`/api/v1/users/${session?.profile.name}/avatar.webp`"
-			class="mx-auto"
-		/>
-		<Input
-			v-model="avatarFile"
-			type="file"
-			label="Changer d'avatar"
-			accept="image/*"
-			@change="uploadAvatar"
-			class="mx-auto"
-		/>
+	<section class="flex flex-col gap-2">
+		<div class="flex gap-4 max-md:flex-col max-md:items-center">
+			<ProfileBox
+				v-model="_profile"
+				editable
+				class="w-1/2 max-md:hidden"
+			/>
+			<ProfileBox
+				v-model="_profile"
+				editable
+				layout="horizontal"
+				class="md:hidden"
+			/>
+			<div class="grow flex flex-col justify-center gap-4 w-full">
+				<div class="flex items-center gap-2">
+					<Input
+						v-model="name"
+						placeholder="Nom d'utilisateur"
+						class="grow"
+						disabled
+					/>
+					<Button
+						label="Modifier"
+						variant="white"
+						:handler="
+							() => {
+								isNameMenuOpen = true;
+							}
+						"
+					/>
+				</div>
+				<hr class="border-surface-border rounded-full mx-16" />
+				<Input
+					v-model="payload.pronouns"
+					label="Pronoms"
+					placeholder="Pronoms"
+					@enter="updateProfile"
+				/>
+				<div class="grid gap-2 sm:grid-cols-2">
+					<Input
+						v-model="payload.location"
+						label="Localisation"
+						placeholder="Localisation"
+						@enter="updateProfile"
+					/>
+					<Input
+						v-model="payload.corporation"
+						label="Entreprise / Organisation"
+						placeholder="Ademyst Co."
+						@enter="updateProfile"
+					/>
+				</div>
+				<div class="flex items-center gap-2 max-sm:flex-col">
+					<Button
+						label="Changer d'avatar"
+						variant="white"
+						:handler="() => (isAvatarMenuOpen = true)"
+					/>
+					<Button
+						label="Sauvegarder"
+						variant="primary"
+						:handler="updateProfile"
+					/>
+				</div>
+			</div>
+		</div>
 	</section>
-	<section class="grid grid-cols-1 gap-4 md:grid-cols-2">
+	<section class="flex flex-col gap-2">
 		<Input
-			v-model="name"
-			label="Nom d'utilisateur"
-			placeholder="Nom d'utilisateur"
-			@enter="isNameDialogOpen = true"
-			class="md:col-span-2"
-		/>
-		<p class="text-sm text-muted md:col-span-2">
-			Le nom d'utilisateur est unique et sera utilisé pour accéder à votre
-			profil. Une fois modifié, il est possible que votre ancien nom
-			d'utilisateur soit pris par un autre utilisateur. Aucune redirection
-			ne sera faite vers votre nouveau profil. Les mentions existantes
-			pointeront vers un profil inexistant, ou vers le profil qui portera
-			ce nom à son tour s'il en existe un.
-		</p>
-		<Input
-			v-model="payload.displayName"
-			label="Nom d'affichage"
-			placeholder="Nom d'affichage"
-			@enter="updateProfile"
-		/>
-		<Input
-			v-model="payload.pronouns"
-			label="Pronoms"
-			placeholder="Pronoms"
-			@enter="updateProfile"
-		/>
-		<Input
-			v-model="payload.location"
-			label="Localisation"
-			placeholder="Localisation"
-			@enter="updateProfile"
-		/>
-		<Input
-			v-model="payload.corporation"
-			label="Entreprise / Organisation"
-			placeholder="Ademyst Co."
-			@enter="updateProfile"
-		/>
-		<Input
-			class="md:col-span-2"
+			class="min-h-48 md:min-h-64"
 			type="textarea"
 			v-model="payload.bio"
 			label="Bio"
 			placeholder="Bio"
 			@enter="updateProfile"
 		/>
-	</section>
-	<section class="flex justify-center gap-2">
 		<Button
 			label="Sauvegarder"
 			variant="primary"
@@ -359,9 +394,51 @@ const isNameDialogOpen = ref(false);
 		/>
 	</section>
 
+	<Popup v-if="isNameMenuOpen" @close="isNameMenuOpen = false">
+		<Box class="items-center justify-center w-full sm:w-lg">
+			<Input
+				v-model="name"
+				label="Nom d'utilisateur"
+				placeholder="Nom d'utilisateur"
+				@enter="
+					() => {
+						isNameMenuOpen = false;
+						isNameConfirmationOpen = true;
+					}
+				"
+				class="w-full"
+			/>
+			<p class="text-sm text-muted">
+				Le nom d'utilisateur est unique et sera utilisé pour accéder à
+				votre profil.
+			</p>
+			<p class="text-sm text-muted">
+				Une fois modifié, il est possible que votre ancien nom
+				d'utilisateur soit pris par un autre utilisateur. Les mentions
+				existantes pointeront vers un profil inexistant, ou vers le
+				profil qui portera ce nom à son tour s'il en existe un.
+			</p>
+			<Button
+				label="Mettre à jour"
+				variant="primary"
+				:handler="
+					() => {
+						isNameMenuOpen = false;
+						isNameConfirmationOpen = true;
+					}
+				"
+			/>
+			<Button
+				label="Annuler"
+				variant="link"
+				:handler="() => (isNameMenuOpen = false)"
+			/>
+		</Box>
+	</Popup>
+
 	<Dialog
-		v-if="isNameDialogOpen"
-		@close="isNameDialogOpen = false"
+		v-if="isNameConfirmationOpen"
+		@close="isNameConfirmationOpen = false"
 		title="Modifier le nom de profil"
 		description="Le lien permettant d'accéder à votre profil sera modifié. Attention: votre ancien nom sera libre aussitôt qu'il sera modifié. L'ancien lien vers votre profil et les mentions existantes pointeront vers un profil inexistant, ou vers le profil qui portera ce nom à son tour."
 		:actions="[
@@ -369,7 +446,7 @@ const isNameDialogOpen = ref(false);
 				label: 'Annuler',
 				variant: 'link',
 				handler: () => {
-					isNameDialogOpen = false;
+					isNameConfirmationOpen = false;
 				},
 			},
 			{
@@ -379,4 +456,60 @@ const isNameDialogOpen = ref(false);
 			},
 		]"
 	/>
+
+	<Popup v-if="isAvatarMenuOpen" @close="isAvatarMenuOpen = false">
+		<Box class="items-center justify-center w-full sm:w-lg">
+			<Avatar :size="192" :src="previewAvatar" class="mx-auto" />
+			<div class="flex flex-col w-full text-center">
+				<p class="text-muted">Formats acceptés: PNG, JPEG, WEBP.</p>
+				<p class="text-danger">Taille maximale: 1Mo</p>
+			</div>
+			<Input
+				v-model="avatarFile"
+				type="file"
+				label="Changer d'avatar"
+				accept="image/*"
+				class="mx-auto"
+			/>
+			<div class="flex flex-col gap-2">
+				<div class="flex h-32 gap-2">
+					<img
+						:src="previewAvatar"
+						alt="Avatar actuel"
+						class="h-full w-auto aspect-4/5 shrink-0 rounded-2xl border border-surface-border object-cover"
+					/>
+					<img
+						:src="previewAvatar"
+						alt="Avatar actuel"
+						class="h-full w-auto aspect-square shrink-0 rounded-2xl border border-surface-border object-cover"
+					/>
+					<img
+						:src="previewAvatar"
+						alt="Avatar actuel"
+						class="h-full w-auto aspect-5/4 shrink-0 rounded-2xl border border-surface-border object-cover max-sm:hidden"
+					/>
+				</div>
+				<img
+					:src="previewAvatar"
+					alt="Avatar actuel"
+					class="w-full aspect-5/4 shrink-0 rounded-2xl border border-surface-border object-cover sm:hidden"
+				/>
+			</div>
+			<Button
+				label="Mettre à jour"
+				variant="primary"
+				:handler="
+					() => {
+						isAvatarMenuOpen = false;
+						uploadAvatar();
+					}
+				"
+			/>
+			<Button
+				label="Annuler"
+				variant="link"
+				:handler="() => (isAvatarMenuOpen = false)"
+			/>
+		</Box>
+	</Popup>
 </template>

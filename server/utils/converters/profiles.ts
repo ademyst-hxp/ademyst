@@ -157,6 +157,7 @@ export async function retrieveSeveralCleanProfiles(
 		relationships?: Awaited<ReturnType<typeof getSeveralRelationshipStatus>>;
 		privacy?: Awaited<ReturnType<typeof getSeveralPrivacySettings>>;
 	} = {},
+	giveUpIfNoAccess = false,
 ): Promise<Profile[]> {
 	const db = useDb(event);
 
@@ -309,6 +310,10 @@ export async function retrieveSeveralCleanProfiles(
 		const profilePrivacy = privacy[profile.accountId!];
 
 		const access = canAccess(profilePrivacy, relationship);
+
+		if (!access.profile && giveUpIfNoAccess) {
+			continue;
+		}
 
 		const { blocked, friended, ...r } = relationship;
 

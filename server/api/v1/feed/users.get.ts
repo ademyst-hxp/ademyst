@@ -45,6 +45,8 @@ export default defineEventHandler(async (event) => {
 		event,
 		identity,
 		rawProfiles,
+		{},
+		true
 	);
 
 	const uniqueProfiles = resolvedProfiles.filter(

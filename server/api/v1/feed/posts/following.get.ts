@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
 		event,
 		identity,
 		rawPosts.map((row) => row.posts),
+		true,
 	);
 
 	const filteredPosts = resolvedPosts.filter(

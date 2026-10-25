@@ -169,6 +169,26 @@ export async function processImage(
 	};
 }
 
+export async function processWhisperBackground(
+	input: ArrayBuffer | Uint8Array,
+	contentType: string,
+	images: ImagesBinding,
+): Promise<ProcessedImage> {
+	const metadata = await validateImage(input, contentType, images, "Image");
+
+	const buffer = await transformToWebp(input, images, 640, 360, 82);
+
+	const output = new Uint8Array(buffer);
+
+	return {
+		buffer,
+		width: metadata.width,
+		height: metadata.height,
+		size: output.byteLength,
+		contentType: "image/webp",
+	};
+}
+
 export async function processAvatar(
 	input: ArrayBuffer | Uint8Array,
 	contentType: string,

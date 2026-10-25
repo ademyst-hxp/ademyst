@@ -114,7 +114,6 @@ export const whispers = pgTable(
 			.references(() => profiles.id, { onDelete: "cascade" }),
 
 		content: text("content").notNull(),
-		image: text("image"), // URL to the image
 		color: varchar("color", { length: 7 }), // Hex code for the whisper color
 		textColor: varchar("text_color", { length: 7 }), // Hex code for the text color
 

@@ -33,7 +33,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const whisper = retrieveCleanWhisper(event, identity, candidate);
+	const whisper = await retrieveCleanWhisper(event, identity, candidate);
 
 	return {
 		status: "ok",
