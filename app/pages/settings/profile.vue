@@ -281,18 +281,20 @@ const isAvatarMenuOpen = ref(false);
 					placeholder="Pronoms"
 					@enter="updateProfile"
 				/>
-				<Input
-					v-model="payload.location"
-					label="Localisation"
-					placeholder="Localisation"
-					@enter="updateProfile"
-				/>
-				<Input
-					v-model="payload.corporation"
-					label="Entreprise / Organisation"
-					placeholder="Ademyst Co."
-					@enter="updateProfile"
-				/>
+				<div class="grid gap-2 sm:grid-cols-2">
+					<Input
+						v-model="payload.location"
+						label="Localisation"
+						placeholder="Localisation"
+						@enter="updateProfile"
+					/>
+					<Input
+						v-model="payload.corporation"
+						label="Entreprise / Organisation"
+						placeholder="Ademyst Co."
+						@enter="updateProfile"
+					/>
+				</div>
 				<div class="flex items-center gap-2 max-sm:flex-col">
 					<Button
 						label="Changer d'avatar"

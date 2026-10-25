@@ -109,7 +109,7 @@ const toggleFollow = async () => {
 					v-if="profile.badge"
 					:src="`/api/v1/badges/${profile.badge?.id}/icon.png`"
 					:alt="profile.badge?.name"
-					class="h-5 w-5"
+					class="shrink-0 h-5 w-5"
 				/>
 				<div class="grow" />
 				<template v-if="!editable">
