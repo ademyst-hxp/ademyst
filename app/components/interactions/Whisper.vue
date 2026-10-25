@@ -39,8 +39,8 @@ const textClass = computed(() =>
 <template>
 	<div
 		:key="`whisper-${data.id}`"
-		:customColor="data.color || (data.image ? '#00000080' : undefined)"
 		:style="{
+			backgroundColor: data.color || undefined,
 			backgroundImage: data.image ? `url(${data.image})` : undefined,
 			backgroundSize: data.image ? 'cover' : undefined,
 			backgroundPosition: data.image ? 'center' : undefined,
