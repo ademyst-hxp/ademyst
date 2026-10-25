@@ -1,6 +1,10 @@
 import { useDb } from "#server/db";
 import { attachments } from "~~/server/db/schema/drive";
-import { postReactions, posts, postsFlags } from "~~/server/db/schema/interactions";
+import {
+	postReactions,
+	posts,
+	postsFlags,
+} from "~~/server/db/schema/interactions";
 import { type Post as DbPost } from "~~/server/db/schema/interactions";
 import { type PostFlag as DbPostFlag } from "~~/server/db/schema/interactions";
 import { type PostReaction as DbPostReaction } from "~~/server/db/schema/interactions";
@@ -10,8 +14,17 @@ import { profiles } from "~~/server/db/schema/profiles";
 import { postReports } from "~~/server/db/schema/reports";
 import { and, count, eq, inArray, or } from "drizzle-orm";
 
-import { retrieveCleanProfile, retrieveSeveralCleanProfiles } from "~~/server/utils/converters/profiles";
-import { canAccessEntity, getPrivacySettings, getRelationshipStatus, getSeveralPrivacySettings, getSeveralRelationshipStatus } from "~~/server/utils/helpers/privacy";
+import {
+	retrieveCleanProfile,
+	retrieveSeveralCleanProfiles,
+} from "~~/server/utils/converters/profiles";
+import {
+	canAccessEntity,
+	getPrivacySettings,
+	getRelationshipStatus,
+	getSeveralPrivacySettings,
+	getSeveralRelationshipStatus,
+} from "~~/server/utils/helpers/privacy";
 import { calculateRatingScore } from "~~/shared/utils/interactions";
 
 import type { Post } from "~~/shared/models/interactions";
@@ -439,6 +452,7 @@ export async function retrieveCleanWhisper(
 	whisper: DbWhisper,
 ): Promise<Whisper> {
 	const db = useDb(event);
+	const storage = useDrive(event, "files");
 
 	const author = await db.query.profiles.findFirst({
 		where: (profile, { eq }) => eq(profile.id, whisper.profileId),
@@ -454,33 +468,24 @@ export async function retrieveCleanWhisper(
 
 	const privacy = await getPrivacySettings(event, author);
 
-	const access = await canAccessEntity(
-		privacy,
-		relationships,
-		whisper.visibility,
-	);
-
-	const image = whisper.image
-		? (
-				await db
-					.select()
-					.from(attachments)
-					.where(eq(attachments.id, whisper.image))
-			)[0]
-		: null;
+	const access = canAccessEntity(privacy, relationships, whisper.visibility);
 
 	const shouldTruncate = !access;
+
+	const backgroundKey = `/whispers/${whisper.id}.webp`;
+	const exists = await storage.exists(backgroundKey);
+
+	const image =
+		exists && !shouldTruncate
+			? await storage.signedUrl(backgroundKey)
+			: null;
 
 	return {
 		id: whisper.id,
 		profile,
 		content: shouldTruncate ? "" : whisper.content,
 
-		image: image
-			? convertAttachment(image, {
-					truncate: shouldTruncate,
-				})
-			: null,
+		image,
 
 		color: whisper.color,
 		textColor: whisper.textColor,
@@ -496,6 +501,7 @@ export async function retrieveSeveralCleanWhispers(
 	giveUpIfNoAccess = false,
 ): Promise<Whisper[]> {
 	const db = useDb(event);
+	const storage = useDrive(event, "files");
 
 	if (dbWhispers.length === 0) {
 		return [];
@@ -503,14 +509,6 @@ export async function retrieveSeveralCleanWhispers(
 
 	const authorIds = [
 		...new Set(dbWhispers.map((whisper) => whisper.profileId)),
-	];
-
-	const imageIds = [
-		...new Set(
-			dbWhispers
-				.map((whisper) => whisper.image)
-				.filter((id): id is string => id !== null),
-		),
 	];
 
 	const dbAuthors = await db
@@ -524,23 +522,36 @@ export async function retrieveSeveralCleanWhispers(
 		getSeveralPrivacySettings(event, dbAuthors),
 	]);
 
-	const [authorsList, dbImages] = await Promise.all([
-		retrieveSeveralCleanProfiles(event, identity, dbAuthors, {
+	const authorsList = await retrieveSeveralCleanProfiles(
+		event,
+		identity,
+		dbAuthors,
+		{
 			relationships: allRelationships,
 			privacy: allPrivacy,
-		}),
-
-		imageIds.length > 0
-			? db
-					.select()
-					.from(attachments)
-					.where(inArray(attachments.id, imageIds))
-			: Promise.resolve([]),
-	]);
+		},
+	);
 
 	const authors = new Map(authorsList.map((author) => [author.id, author]));
 
-	const images = new Map(dbImages.map((image) => [image.id, image]));
+	const images = new Map(
+		(await Promise.all(
+			dbWhispers.map(async (whisper) => {
+				const exists = await storage.exists(
+					`/whispers/${whisper.id}.webp`,
+				);
+
+				if (exists) {
+					return [
+						whisper.id,
+						await storage.signedUrl(`/whispers/${whisper.id}.webp`),
+					];
+				}
+
+				return [whisper.id, null];
+			}),
+		)) as [string, string | null][],
+	);
 
 	const result: (Whisper | null)[] = dbWhispers.map((whisper) => {
 		const author = authors.get(whisper.profileId);
@@ -565,9 +576,7 @@ export async function retrieveSeveralCleanWhispers(
 
 		const shouldTruncate = !access;
 
-		const image = whisper.image
-			? (images.get(whisper.image) ?? null)
-			: null;
+		const image = shouldTruncate ? null : (images.get(whisper.id) ?? null);
 
 		return {
 			id: whisper.id,
@@ -575,11 +584,7 @@ export async function retrieveSeveralCleanWhispers(
 
 			content: shouldTruncate ? "" : whisper.content,
 
-			image: image
-				? convertAttachment(image, {
-						truncate: shouldTruncate,
-					})
-				: null,
+			image,
 
 			color: whisper.color,
 			textColor: whisper.textColor,

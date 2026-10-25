@@ -70,7 +70,7 @@ export type Whisper = {
 	id: string;
 	profile: Profile;
 	content: string;
-	image: Attachment | null;
+	image: string | null;
 	color: string | null;
 	textColor: string | null;
 	visibility: WhisperVisibility;
