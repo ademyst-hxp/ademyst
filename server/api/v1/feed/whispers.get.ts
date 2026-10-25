@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
 		event,
 		identity,
 		rawWhispers,
+		true
 	);
 
 	const filteredWhispers = resolvedWhispers

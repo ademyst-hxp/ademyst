@@ -204,6 +204,7 @@ export async function retrieveSeveralCleanPosts(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	dbPosts: DbPost[],
+	giveUpIfNoAccess = false,
 ): Promise<Post[]> {
 	const db = useDb(event);
 
@@ -319,7 +320,7 @@ export async function retrieveSeveralCleanPosts(
 		answerCounts.map((row) => [row.parentId!, row.count]),
 	);
 
-	return dbPosts.map((post) => {
+	const result: (Post | null)[] = dbPosts.map((post) => {
 		const author = authors.get(post.profileId);
 
 		if (!author) {
@@ -331,6 +332,10 @@ export async function retrieveSeveralCleanPosts(
 		const privacy = allPrivacy[author.id]!;
 
 		const access = canAccessEntity(privacy, relationship, post.visibility);
+
+		if (!access && giveUpIfNoAccess) {
+			return null;
+		}
 
 		const reactions = reactionsMap.get(post.id) ?? [];
 
@@ -416,6 +421,8 @@ export async function retrieveSeveralCleanPosts(
 			},
 		};
 	});
+
+	return result.filter((item): item is NonNullable<typeof item> => !!item);
 }
 
 export function convertPostReaction(reaction: DbPostReaction): PostReaction {
@@ -486,6 +493,7 @@ export async function retrieveSeveralCleanWhispers(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	dbWhispers: DbWhisper[],
+	giveUpIfNoAccess = false,
 ): Promise<Whisper[]> {
 	const db = useDb(event);
 
@@ -534,7 +542,7 @@ export async function retrieveSeveralCleanWhispers(
 
 	const images = new Map(dbImages.map((image) => [image.id, image]));
 
-	return dbWhispers.map((whisper) => {
+	const result: (Whisper | null)[] = dbWhispers.map((whisper) => {
 		const author = authors.get(whisper.profileId);
 
 		if (!author) {
@@ -550,6 +558,10 @@ export async function retrieveSeveralCleanWhispers(
 			relationship,
 			whisper.visibility,
 		);
+
+		if (!access && giveUpIfNoAccess) {
+			return null;
+		}
 
 		const shouldTruncate = !access;
 
@@ -575,6 +587,8 @@ export async function retrieveSeveralCleanWhispers(
 			createdAt: whisper.createdAt,
 		};
 	});
+
+	return result.filter((item): item is NonNullable<typeof item> => !!item);
 }
 
 export function convertWhisperReaction(

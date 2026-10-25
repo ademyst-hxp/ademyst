@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
 		event,
 		identity,
 		rawPosts,
+		true,
 	);
 
 	const filteredPosts = resolvedPosts
