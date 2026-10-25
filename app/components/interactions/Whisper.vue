@@ -40,6 +40,7 @@ const textClass = computed(() =>
 	<div
 		:key="`whisper-${data.id}`"
 		:style="{
+			borderColor: data.color ? '#00000040' : undefined,
 			backgroundColor: data.color || undefined,
 			backgroundImage: data.image ? `url(${data.image})` : undefined,
 			backgroundSize: data.image ? 'cover' : undefined,
