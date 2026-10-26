@@ -12,6 +12,7 @@ import {
 import PostBox from "~/components/interactions/Post.vue";
 
 import Box from "~/components/base/Box.vue";
+import Table from "~/components/base/Table.vue";
 import InfoBox from "~/components/boxes/Info.vue";
 
 const { $api } = useNuxtApp();
@@ -60,8 +61,6 @@ useHead({
 		},
 	],
 });
-
-const isPrev = ref<boolean>(false);
 
 const preparingPost = ref<Post>({
 	id: "0",
@@ -175,7 +174,7 @@ const handlePublish = async () => {
 			v-model="preparingPost.content"
 			type="textarea"
 			placeholder="Exprimez-vous..."
-			class="-mx-4"
+			class="h-48 -mx-4"
 		/>
 		<p v-if="!isInLimit" class="text-sm text-danger">
 			Vous avez dépassé la limite de 5000 caractères.
@@ -270,10 +269,63 @@ const handlePublish = async () => {
 	<hr class="rounded-full border border-surface-border mx-8 my-4" />
 
 	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold font-title text-center">Flags</h2>
+
+		<Table
+			class="table-auto w-full border-collapse border border-surface-border"
+		>
+			<template #head>
+				<th>Flag</th>
+				<th>Activé</th>
+			</template>
+			<template #body>
+				<tr>
+					<th>NFE (contenu sensible)</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.NFE"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Contenu généré par IA</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.AI"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Contenu humoristique</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.joke"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Suicide ou auto-mutilation</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.suicide"
+						/>
+					</td>
+				</tr>
+			</template>
+		</Table>
+	</section>
+
+	<hr class="rounded-full border border-surface-border mx-8 my-4" />
+
+	<section class="flex flex-col gap-2">
 		<h2 class="text-xl font-semibold font-title text-center">
 			Prévisualisation
 		</h2>
-		<PostBox :data="preparingPost" />
+		<PostBox :data="preparingPost" disabled />
 		<Button
 			label="Publier"
 			variant="primary"
