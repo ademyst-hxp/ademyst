@@ -181,7 +181,7 @@ const getGradeLabel = (level: number | null): string => {
 		case 7:
 			return "Modérateur(trice)";
 		case 8:
-			return "�0quipe Ademyst";
+			return "Équipe Ademyst";
 		case 9:
 			return "Fondateur";
 		default:

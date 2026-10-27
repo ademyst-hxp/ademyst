@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
+import { VISIBILITY_OPTIONS } from "~~/shared/consts/labels";
 
-import { ArrowPathIcon, EyeSlashIcon, GlobeAltIcon, HeartIcon, RocketLaunchIcon, UserGroupIcon } from "@heroicons/vue/24/outline";
+import {
+	ArrowPathIcon,
+	EyeSlashIcon,
+	GlobeAltIcon,
+	HeartIcon,
+	RocketLaunchIcon,
+	UserGroupIcon,
+} from "@heroicons/vue/24/outline";
 
 import PostBox from "~/components/interactions/Post.vue";
 import Menu from "~/components/Menu.vue";
@@ -187,16 +195,6 @@ const preparingPost = ref<Post>({
 	},
 });
 
-const isVisibilityMenuOpen = ref(false);
-
-const visibilityLabels: Record<string, string> = {
-	outside: "Essai (extérieur)",
-	everyone: "Tout le monde",
-	followers: "Abonnés",
-	friends: "Amis",
-	me: "Privé",
-};
-
 const isInLimit = computed(() => {
 	return preparingPost.value.content.length <= 5000;
 });
@@ -228,29 +226,40 @@ const handlePublish = async () => {
 	</Teleport>
 
 	<section id="compose" class="flex flex-col gap-4 overflow-visible">
-		<PostBox :data="preparingPost" :editable="!isPrev" />
+		<h2 class="text-xl font-bold font-title text-center">
+			Répondre à la publication
+		</h2>
+		<PostBox v-if="isPrev" :data="preparingPost" disabled />
+		<Input
+			v-else
+			v-model="preparingPost.content"
+			label="Répondre à la publication"
+			placeholder="Répondre à la publication..."
+			type="textarea"
+			class="h-48"
+		/>
 		<div class="flex flex-col gap-2 px-8">
-			<Input
-				v-model="isPrev"
-				label="Prévisualiser la publication"
-				type="checkbox"
-			/>
-			<p>
-				Visibilité:
-				<b>{{ visibilityLabels[preparingPost.visibility] }}</b>
-				(<u
-					class="cursor-pointer text-primary underline"
-					@click="isVisibilityMenuOpen = true"
-					>Changer</u
-				>)
-			</p>
+			<Input v-model="isPrev" label="Prévisualiser" type="checkbox" />
 		</div>
-		<div class="flex flex-col gap-2 px-8">
+		<div class="flex justify-center items-center gap-2">
 			<Button
 				label="Publier"
 				variant="primary"
 				:disabled="!isGood"
 				:handler="handlePublish"
+			/>
+			<InlineSelect
+				v-model="preparingPost.visibility"
+				:options="
+					VISIBILITY_OPTIONS.map(
+						({ value, icon, description }) => ({
+							value,
+							icon,
+							description,
+						}),
+					)
+				"
+				scale="small"
 			/>
 		</div>
 	</section>
@@ -262,48 +271,4 @@ const handlePublish = async () => {
 	<div ref="sentinel" class="flex justify-center py-6 text-muted">
 		<ArrowPathIcon v-if="loadingMoreAnswers" class="w-6 h-6 animate-spin" />
 	</div>
-
-	<Menu
-		v-if="isVisibilityMenuOpen"
-		@close="isVisibilityMenuOpen = false"
-		:title="'Visibilité de la publication'"
-		:actions="[
-			{
-				label: 'Essai',
-				description: 'Tout le monde sauf vos abonnés',
-				icon: RocketLaunchIcon,
-				handler: () => {
-					preparingPost.visibility = 'outside';
-				},
-			},
-			{
-				label: 'Tout le monde',
-				icon: GlobeAltIcon,
-				handler: () => {
-					preparingPost.visibility = 'everyone';
-				},
-			},
-			{
-				label: 'Abonnés',
-				icon: UserGroupIcon,
-				handler: () => {
-					preparingPost.visibility = 'followers';
-				},
-			},
-			{
-				label: 'Amis',
-				icon: HeartIcon,
-				handler: () => {
-					preparingPost.visibility = 'friends';
-				},
-			},
-			{
-				label: 'Privé',
-				icon: EyeSlashIcon,
-				handler: () => {
-					preparingPost.visibility = 'me';
-				},
-			},
-		]"
-	/>
 </template>
