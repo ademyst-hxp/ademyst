@@ -1,4 +1,5 @@
 import { useDb } from "#server/db";
+import { and, eq } from "drizzle-orm";
 import { postReports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -30,6 +31,25 @@ export default defineEventHandler(async (event: H3Event) => {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid report payload",
+		});
+	}
+
+	const [existingReport] = await db
+		.select()
+		.from(postReports)
+		.where(
+			and(
+				eq(postReports.reporterId, identity.accountId),
+				eq(postReports.reportedPostId, postId),
+				eq(postReports.status, "pending"),
+			)
+		)
+		.limit(1);
+
+	if (existingReport) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "You have already reported this post",
 		});
 	}
 
