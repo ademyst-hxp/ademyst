@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
+import { VISIBILITY_OPTIONS } from "~~/shared/consts/labels";
 
 import {
 	EyeSlashIcon,
@@ -195,70 +196,56 @@ const handlePublish = async () => {
 		<InlineSelect
 			label="Visibilité"
 			v-model="preparingPost.visibility"
-			:options="[
-				{ label: 'Essai', value: 'outside', icon: RocketLaunchIcon },
-				{
-					label: 'Tout le monde',
-					value: 'everyone',
-					icon: GlobeAltIcon,
-				},
-				{ label: 'Abonnés', value: 'followers', icon: UserGroupIcon },
-				{ label: 'Amis', value: 'friends', icon: HeartIcon },
-				{ label: 'Privé', value: 'me', icon: EyeSlashIcon },
-			]"
+			:options="
+				VISIBILITY_OPTIONS.map(({ value, icon, label }) => ({
+					value,
+					icon,
+					label,
+				}))
+			"
 			class="mx-auto max-md:hidden"
 		/>
 		<InlineSelect
 			label="Visibilité"
 			v-model="preparingPost.visibility"
-			:options="[
-				{ value: 'outside', icon: RocketLaunchIcon },
-				{
-					value: 'everyone',
-					icon: GlobeAltIcon,
-				},
-				{ value: 'followers', icon: UserGroupIcon },
-				{ value: 'friends', icon: HeartIcon },
-				{ value: 'me', icon: EyeSlashIcon },
-			]"
+			:options="
+				VISIBILITY_OPTIONS.map(({ value, icon }) => ({
+					value,
+					icon,
+				}))
+			"
 			class="mx-auto md:hidden"
 		/>
 		<Box scale="sm" class="-mx-4">
-			<template v-if="preparingPost.visibility === 'outside'">
-				<h3 class="text-lg font-semibold">Essai</h3>
-				<p class="text-muted">
+			<h3 class="text-lg font-semibold">
+				{{
+					VISIBILITY_OPTIONS.find(
+						(option) => option.value === preparingPost.visibility,
+					)?.label || "Visibilité inconnue"
+				}}
+			</h3>
+			<p class="text-muted">
+				<template v-if="preparingPost.visibility === 'outside'">
 					Les publications de type "Essai" sont visibles par tout le
 					monde sauf vos abonnés. Elles sont destinées à tester la
 					visibilité de vos publications en dehors de votre public
 					habituel.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'everyone'">
-				<h3 class="text-lg font-semibold">Tout le monde</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'everyone'">
 					Votre publication sera visible par tout le monde, y compris
 					sans être connecté. Seuls les utilisateurs ayant un compte
 					Ademyst pourront interagir ou réagir à votre publication.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'followers'">
-				<h3 class="text-lg font-semibold">Abonnés</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'followers'">
 					Votre publication sera visible uniquement par vos abonnés.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'friends'">
-				<h3 class="text-lg font-semibold">Amis</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'friends'">
 					Votre publication sera visible par vos amis.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'me'">
-				<h3 class="text-lg font-semibold">Privé</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'me'">
 					Votre publication sera visible uniquement par vous.
-				</p>
-			</template>
+				</template>
+			</p>
 			<InfoBox title="Vous pouvez changer d'avis" class="-mx-2">
 				Vous pourrez toujours changer la visibilité de votre publication
 				après l'avoir publiée.
