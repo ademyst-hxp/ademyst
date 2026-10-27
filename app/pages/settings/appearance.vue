@@ -57,10 +57,10 @@ const { data: settings, refresh: refreshSettings } = await useAsyncData(
 		return $api<SettingsResponse>(`/settings/appearance`).then((res) => {
 			let r = res.settings;
 
-			payload.value = {
+			entries.value = {
 				scheme: r.theme as "light" | "dark" | "system",
 				highContrast: r.highContrast,
-				fontSize: r.fontSize,
+				fontSize: r.fontSize.toString(),
 				density: r.uiDensity,
 				alter: r.alter,
 			};
@@ -76,21 +76,34 @@ onMounted(async () => {
 });
 
 interface UpdateAppearanceSettingsRequest {
-	scheme?: "light" | "dark" | "system";
-	highContrast?: boolean;
-	fontSize?: number;
-	density?: "compact" | "comfortable";
-	alter?: boolean;
+	scheme: "light" | "dark" | "system";
+	highContrast: boolean;
+	fontSize: number;
+	density: "compact" | "comfortable";
+	alter: boolean;
 }
 
-const payload = ref<UpdateAppearanceSettingsRequest>({
+const entries = ref<
+	Omit<UpdateAppearanceSettingsRequest, "fontSize"> & {
+		fontSize: string;
+	}
+>({
 	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as
 		"light" | "dark" | "system",
 	highContrast:
 		settings.value?.highContrast || defaultAppearanceSettings.highContrast,
-	fontSize: settings.value?.fontSize || defaultAppearanceSettings.fontSize,
+	fontSize: (
+		settings.value?.fontSize || defaultAppearanceSettings.fontSize
+	).toString(),
 	density: settings.value?.uiDensity || defaultAppearanceSettings.uiDensity,
 	alter: settings.value?.alter || defaultAppearanceSettings.alter,
+});
+
+const payload = computed<UpdateAppearanceSettingsRequest>(() => {
+	return {
+		...entries.value,
+		fontSize: parseInt(entries.value.fontSize, 10),
+	};
 });
 
 const saveSettings = async () => {
@@ -219,67 +232,51 @@ const saveSettings = async () => {
 		<h2 class="text-xl font-semibold font-title">Police et taille</h2>
 		<div class="flex items-center gap-2">
 			<p class="font-medium">Taille de la police :</p>
-			<Button
-				:variant="payload.fontSize == 14 ? 'primary' : 'secondary'"
-				size="small"
-				label="Petite"
-				:handler="
-					() => {
-						payload.fontSize = 14;
-						saveSettings();
-					}
-				"
+			<InlineSelect
+				v-model="entries.fontSize"
+				:options="[
+					{ value: '12', label: '12px' },
+					{ value: '16', label: '16px' },
+					{ value: '20', label: '20px' },
+				]"
+				scale="small"
+				@change="saveSettings()"
+				class="md:hidden"
 			/>
-			<Button
-				:variant="payload.fontSize == 16 ? 'primary' : 'secondary'"
-				size="small"
-				label="Moyenne"
-				:handler="
-					() => {
-						payload.fontSize = 16;
-						saveSettings();
-					}
-				"
-			/>
-			<Button
-				:variant="payload.fontSize == 18 ? 'primary' : 'secondary'"
-				size="small"
-				label="Grande"
-				:handler="
-					() => {
-						payload.fontSize = 18;
-						saveSettings();
-					}
-				"
+			<InlineSelect
+				v-model="entries.fontSize"
+				:options="[
+					{ value: '12', label: 'Petite' },
+					{ value: '16', label: 'Moyenne' },
+					{ value: '20', label: 'Grande' },
+				]"
+				scale="small"
+				@change="saveSettings()"
+				class="max-md:hidden"
 			/>
 		</div>
 		<div class="flex items-center gap-2">
 			<p class="font-medium">Densité de l'interface:</p>
+			<InlineSelect
+				v-model="entries.density"
+				:options="[
+					{ value: 'compact', label: 'Compacte' },
+					{ value: 'comfortable', label: 'Confortable' },
+				]"
+				scale="small"
+				@change="saveSettings()"
+			/>
+		</div>
+		<div class="flex items-center gap-2">
 			<Button
-				:variant="
-					payload.density == 'compact' ? 'primary' : 'secondary'
-				"
-				size="small"
-				label="Compacte"
-				:handler="
-					() => {
-						payload.density = 'compact';
-						saveSettings();
-					}
-				"
+				label="Enregistrer"
+				variant="primary"
+				:handler="saveSettings"
 			/>
 			<Button
-				:variant="
-					payload.density == 'comfortable' ? 'primary' : 'secondary'
-				"
-				size="small"
-				label="Confortable"
-				:handler="
-					() => {
-						payload.density = 'comfortable';
-						saveSettings();
-					}
-				"
+				label="Réinitialiser"
+				variant="secondary"
+				:handler="refreshSettings"
 			/>
 		</div>
 	</section>
