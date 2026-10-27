@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ratingScoreDetails } from "~~/shared/utils/interactions";
+import { LEVELS } from "~~/shared/consts/labels";
 
 import type { Post } from "~~/shared/models/interactions";
 import type { PostReport } from "~~/shared/models/reports";
@@ -163,30 +164,9 @@ const getRawPenalty = (amount: number | null, treshold: number): string => {
 const getGradeLabel = (level: number | null): string => {
 	if (level === null || level === undefined) return "Inconnu";
 
-	switch (level) {
-		case 0:
-			return "Banni(e)";
-		case 1:
-			return "Shadow";
-		case 2:
-			return "Restreint(e)";
-		case 3:
-			return "Membre";
-		case 4:
-			return "Premium";
-		case 5:
-			return "Vérifié(e)";
-		case 6:
-			return "Aide Modération";
-		case 7:
-			return "Modérateur(trice)";
-		case 8:
-			return "Équipe Ademyst";
-		case 9:
-			return "Fondateur";
-		default:
-			return "Inconnu";
-	}
+	return level in LEVELS
+		? LEVELS[level as keyof typeof LEVELS].label
+		: "Inconnu";
 };
 </script>
 <template>
