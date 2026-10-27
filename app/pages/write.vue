@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
 import { VISIBILITY_OPTIONS } from "~~/shared/consts/labels";
-
-import {
-	EyeSlashIcon,
-	GlobeAltIcon,
-	HeartIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-} from "@heroicons/vue/24/outline";
+import { getPostSpecs } from "~~/shared/utils/interactions";
 
 import PostBox from "~/components/interactions/Post.vue";
 
@@ -119,8 +112,12 @@ if (editPostId) {
 		});
 }
 
+const limit = computed(
+	() => getPostSpecs(session.value!.profile.level).max_length,
+);
+
 const isInLimit = computed(() => {
-	return preparingPost.value.content.length <= 5000;
+	return preparingPost.value.content.length <= limit.value;
 });
 
 const isGood = computed(() => {
@@ -177,15 +174,20 @@ const handlePublish = async () => {
 			placeholder="Exprimez-vous..."
 			class="h-48 -mx-4"
 		/>
-		<p v-if="!isInLimit" class="text-sm text-danger">
-			Vous avez dépassé la limite de 5000 caractères.
+		<p
+			class="text-sm"
+			:class="{
+				'text-muted': isInLimit,
+				'text-danger': !isInLimit,
+			}"
+		>
+			{{ preparingPost.content.length }} / {{ limit }} caractères
 		</p>
 		<Button
 			label="Publier"
 			variant="primary"
 			:disabled="!isGood"
 			:handler="handlePublish"
-			class="mx-auto"
 		/>
 	</section>
 

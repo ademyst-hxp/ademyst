@@ -195,8 +195,12 @@ const preparingPost = ref<Post>({
 	},
 });
 
+const limit = computed(
+	() => getPostSpecs(session.value!.profile.level).max_length,
+);
+
 const isInLimit = computed(() => {
-	return preparingPost.value.content.length <= 5000;
+	return preparingPost.value.content.length <= limit.value;
 });
 
 const isGood = computed(() => {
@@ -230,14 +234,24 @@ const handlePublish = async () => {
 			Répondre à la publication
 		</h2>
 		<PostBox v-if="isPrev" :data="preparingPost" disabled />
-		<Input
-			v-else
-			v-model="preparingPost.content"
-			label="Répondre à la publication"
-			placeholder="Répondre à la publication..."
-			type="textarea"
-			class="h-48"
-		/>
+		<template v-else>
+			<Input
+				v-model="preparingPost.content"
+				label="Répondre à la publication"
+				placeholder="Répondre à la publication..."
+				type="textarea"
+				class="h-48"
+			/>
+			<p
+				class="text-sm"
+				:class="{
+					'text-muted': isInLimit,
+					'text-danger': !isInLimit,
+				}"
+			>
+				{{ preparingPost.content.length }} / {{ limit }} caractères
+			</p>
+		</template>
 		<div class="flex flex-col gap-2 px-8">
 			<Input v-model="isPrev" label="Prévisualiser" type="checkbox" />
 		</div>
@@ -251,13 +265,11 @@ const handlePublish = async () => {
 			<InlineSelect
 				v-model="preparingPost.visibility"
 				:options="
-					VISIBILITY_OPTIONS.map(
-						({ value, icon, description }) => ({
-							value,
-							icon,
-							description,
-						}),
-					)
+					VISIBILITY_OPTIONS.map(({ value, icon, description }) => ({
+						value,
+						icon,
+						description,
+					}))
 				"
 				scale="small"
 			/>

@@ -1,6 +1,13 @@
+import {
+	POST_CHAR_LIMITS,
+	POST_IMAGE_LIMITS,
+	WHISPER_CHAR_LIMITS,
+} from "~~/shared/consts/specs";
+
 import type { PostFlagType } from "~~/shared/models/interactions";
 
 
+// Score de classement
 export const calculateRatingScore = (
 	date: Date | string,
 	content: string,
@@ -90,5 +97,22 @@ export const ratingScoreDetails = (
 		flagMultiplier,
 		reactionScore,
 		repostScore,
+	};
+};
+
+
+// Specs
+export const getPostSpecs = (
+	level?: number,
+): { max_length: number; max_images: number } => {
+	return {
+		max_length: POST_CHAR_LIMITS[level || 0] || POST_CHAR_LIMITS[0]!,
+		max_images: POST_IMAGE_LIMITS[level || 0] || POST_IMAGE_LIMITS[0]!,
+	};
+};
+
+export const getWhisperSpecs = (level: number): { max_length: number } => {
+	return {
+		max_length: WHISPER_CHAR_LIMITS[level] || WHISPER_CHAR_LIMITS[0]!,
 	};
 };

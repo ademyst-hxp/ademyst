@@ -12,6 +12,7 @@ import {
 	normalizeOptionalText,
 	normalizeVisibility,
 } from "~~/server/utils/normalizers/interactions";
+import { getPostSpecs } from "~~/shared/utils/interactions";
 
 import type { PostFlag } from "~~/shared/models/interactions";
 
@@ -110,14 +111,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	const body = await readBody(event);
-	const specs = {
-		max_length:
-			user.profile.level >= 5
-				? 5000
-				: user.profile.level >= 4
-					? 2000
-					: 1000,
-	};
+	const specs = getPostSpecs(user.profile.level);
 
 	const { parentId, content, visibility, flag_entries } = validatePayload(
 		body,

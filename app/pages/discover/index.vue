@@ -3,6 +3,7 @@ import type { FeedTab } from "~/composables/useFeed";
 
 import type { Whisper } from "~~/shared/models/interactions";
 import { VISIBILITY_OPTIONS, VISIBILITIES } from "~~/shared/consts/labels";
+import { getWhisperSpecs } from "~~/shared/utils/interactions";
 
 import {
 	ArrowPathIcon,
@@ -12,13 +13,6 @@ import {
 	PaperAirplaneIcon,
 	PlusCircleIcon,
 	UserIcon,
-} from "@heroicons/vue/24/outline";
-import {
-	EyeSlashIcon,
-	GlobeAltIcon,
-	HeartIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
 } from "@heroicons/vue/24/outline";
 
 import Popup from "~/components/base/Popup.vue";
@@ -136,9 +130,17 @@ const newWhisper = ref<Whisper>({
 	createdAt: new Date(),
 });
 
+const limit = computed(
+	() => getWhisperSpecs(session.value!.profile.level).max_length,
+);
+
+const isInLimit = computed(() => {
+	return newWhisper.value.content.length <= limit.value;
+});
+
 const handleNewWhisper = async () => {
 	if (!newWhisper.value.content.trim()) return;
-	if (newWhisper.value.content.length > 200) return;
+	if (!isInLimit.value) return;
 
 	await $api("/whispers/new", {
 		method: "POST",
@@ -376,13 +378,11 @@ watch(
 		<InlineSelect
 			v-model="newWhisper.visibility"
 			:options="
-				VISIBILITY_OPTIONS.map(
-					({ value, icon, description }) => ({
-						value,
-						icon,
-						description,
-					}),
-				)
+				VISIBILITY_OPTIONS.map(({ value, icon, description }) => ({
+					value,
+					icon,
+					description,
+				}))
 			"
 			scale="small"
 		/>
@@ -405,6 +405,15 @@ watch(
 					</span>
 				</div>
 				<div class="grow"></div>
+				<p
+					class="text-sm"
+					:class="{
+						'opacity-75': isInLimit,
+						'text-danger': !isInLimit,
+					}"
+				>
+					{{ newWhisper.content.length }}/{{ limit }}
+				</p>
 				<div
 					class="cursor-pointer flex items-center gap-1 text-surface-text hover:underline"
 					:style="{ color: newWhisper.textColor || undefined }"
