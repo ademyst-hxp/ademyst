@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
 		status: "ok",
 		entitlements: await retrieveSeveralCleanBadgeEntitlements(
 			event,
+			identity,
 			entitlements,
 		),
 	};

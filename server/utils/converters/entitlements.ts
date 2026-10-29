@@ -1,18 +1,26 @@
 import { useDb } from "~~/server/db";
 import type { BadgeEntitlement as DbBadgeEntitlement } from "~~/server/db/schema/entitlements";
 import type { LevelEntitlement as DbLevelEntitlement } from "~~/server/db/schema/entitlements";
+import { profiles } from "~~/server/db/schema/profiles";
 import { badges, levels } from "~~/server/db/schema/shop";
 import { eq, inArray } from "drizzle-orm";
 
+import type { Profile } from "~~/shared/models/profiles";
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
 import type { LevelEntitlement } from "~~/shared/models/entitlements";
 import type { Badge, Level } from "~~/shared/models/shop";
 import type { H3Event } from "h3";
 
-import { retrieveCleanBadge, retrieveCleanLevel, retrieveSeveralCleanBadges, retrieveSeveralCleanLevels } from "./shop";
+import {
+	retrieveCleanBadge,
+	retrieveCleanLevel,
+	retrieveSeveralCleanBadges,
+	retrieveSeveralCleanLevels,
+} from "./shop";
 
 export async function retrieveCleanBadgeEntitlement(
 	event: H3Event,
+	identity: Identity | null | undefined,
 	entitlement: DbBadgeEntitlement,
 ): Promise<BadgeEntitlement> {
 	const db = useDb(event);
@@ -30,9 +38,29 @@ export async function retrieveCleanBadgeEntitlement(
 		});
 	}
 
+	const [profile] = await db
+		.select()
+		.from(profiles)
+		.where(eq(profiles.id, entitlement.profileId))
+		.limit(1);
+
+	if (!profile) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Profile not found",
+		});
+	}
+
+	const cleanProfile: Profile = await retrieveCleanProfile(
+		event,
+		identity,
+		profile,
+	);
+
 	return {
 		id: entitlement.id,
 		badge: await retrieveCleanBadge(event, badge),
+		profile: cleanProfile,
 		name: entitlement.name,
 		reason: entitlement.reason,
 		revoked: entitlement.revoked,
@@ -44,6 +72,7 @@ export async function retrieveCleanBadgeEntitlement(
 
 export async function retrieveSeveralCleanBadgeEntitlements(
 	event: H3Event,
+	identity: Identity | null | undefined,
 	entitlements: DbBadgeEntitlement[],
 ): Promise<BadgeEntitlement[]> {
 	const db = useDb(event);
@@ -66,6 +95,28 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 		);
 	}
 
+	const _profiles = await db
+		.select()
+		.from(profiles)
+		.where(
+			inArray(
+				profiles.id,
+				entitlements.map((e) => e.profileId),
+			),
+		);
+
+	const profilesMap = new Map<string, Profile>();
+
+	const _profiles_clean = await retrieveSeveralCleanProfiles(
+		event,
+		identity,
+		_profiles,
+	);
+
+	for (const profile of _profiles_clean) {
+		profilesMap.set(profile.id, profile);
+	}
+
 	const result: BadgeEntitlement[] = [];
 
 	for (const entitlement of entitlements) {
@@ -78,9 +129,19 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 			});
 		}
 
+		const profile = profilesMap.get(entitlement.profileId);
+
+		if (!profile) {
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Profile not found",
+			});
+		}
+
 		result.push({
 			id: entitlement.id,
 			badge,
+			profile,
 			name: entitlement.name,
 			reason: entitlement.reason,
 			revoked: entitlement.revoked,
@@ -95,6 +156,7 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 
 export async function retrieveCleanLevelEntitlement(
 	event: H3Event,
+	identity: Identity | null | undefined,
 	entitlement: DbLevelEntitlement,
 ): Promise<LevelEntitlement> {
 	const db = useDb(event);
@@ -112,9 +174,29 @@ export async function retrieveCleanLevelEntitlement(
 		});
 	}
 
+	const [profile] = await db
+		.select()
+		.from(profiles)
+		.where(eq(profiles.id, entitlement.profileId))
+		.limit(1);
+
+	if (!profile) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: "Profile not found",
+		});
+	}
+
+	const cleanProfile: Profile = await retrieveCleanProfile(
+		event,
+		identity,
+		profile,
+	);
+
 	return {
 		id: entitlement.id,
 		level: await retrieveCleanLevel(event, level),
+		profile: cleanProfile,
 		name: entitlement.name,
 		reason: entitlement.reason,
 		revoked: entitlement.revoked,
@@ -126,6 +208,7 @@ export async function retrieveCleanLevelEntitlement(
 
 export async function retrieveSeveralCleanLevelEntitlements(
 	event: H3Event,
+	identity: Identity | null | undefined,
 	entitlements: DbLevelEntitlement[],
 ): Promise<LevelEntitlement[]> {
 	const db = useDb(event);
@@ -148,6 +231,28 @@ export async function retrieveSeveralCleanLevelEntitlements(
 		);
 	}
 
+	const _profiles = await db
+		.select()
+		.from(profiles)
+		.where(
+			inArray(
+				profiles.id,
+				entitlements.map((e) => e.profileId),
+			),
+		);
+
+	const profilesMap = new Map<string, Profile>();
+
+	const _profiles_clean = await retrieveSeveralCleanProfiles(
+		event,
+		identity,
+		_profiles,
+	);
+
+	for (const profile of _profiles_clean) {
+		profilesMap.set(profile.id, profile);
+	}
+
 	const result: LevelEntitlement[] = [];
 
 	for (const entitlement of entitlements) {
@@ -160,9 +265,19 @@ export async function retrieveSeveralCleanLevelEntitlements(
 			});
 		}
 
+		const profile = profilesMap.get(entitlement.profileId.toString());
+
+		if (!profile) {
+			throw createError({
+				statusCode: 500,
+				statusMessage: "Profile not found",
+			});
+		}
+
 		result.push({
 			id: entitlement.id,
 			level,
+			profile,
 			name: entitlement.name,
 			reason: entitlement.reason,
 			revoked: entitlement.revoked,
