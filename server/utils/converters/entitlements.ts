@@ -1,9 +1,17 @@
 import { useDb } from "~~/server/db";
-import type { BadgeEntitlement as DbBadgeEntitlement } from "~~/server/db/schema/entitlements";
-import type { LevelEntitlement as DbLevelEntitlement } from "~~/server/db/schema/entitlements";
+import type { Profile as DbProfile } from "~~/server/db/schema/profiles";
+import type {
+	BadgeEntitlement as DbBadgeEntitlement,
+	LevelEntitlement as DbLevelEntitlement,
+} from "~~/server/db/schema/entitlements";
+import type {
+	Badge as DbBadge,
+	Level as DbLevel,
+} from "~~/server/db/schema/shop";
+
 import { profiles } from "~~/server/db/schema/profiles";
 import { badges, levels } from "~~/server/db/schema/shop";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
 
 import type { Profile } from "~~/shared/models/profiles";
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
@@ -22,14 +30,20 @@ export async function retrieveCleanBadgeEntitlement(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	entitlement: DbBadgeEntitlement,
+	preloaded: {
+		badge?: DbBadge;
+		profile?: DbProfile;
+	} = {},
 ): Promise<BadgeEntitlement> {
 	const db = useDb(event);
 
-	const [badge] = await db
-		.select()
-		.from(badges)
-		.where(eq(badges.id, entitlement.badgeId))
-		.limit(1);
+	const [badge] = preloaded.badge
+		? [preloaded.badge]
+		: await db
+				.select()
+				.from(badges)
+				.where(eq(badges.id, entitlement.badgeId))
+				.limit(1);
 
 	if (!badge) {
 		throw createError({
@@ -38,11 +52,13 @@ export async function retrieveCleanBadgeEntitlement(
 		});
 	}
 
-	const [profile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, entitlement.profileId))
-		.limit(1);
+	const [profile] = preloaded.profile
+		? [preloaded.profile]
+		: await db
+				.select()
+				.from(profiles)
+				.where(eq(profiles.id, entitlement.profileId))
+				.limit(1);
 
 	if (!profile) {
 		throw createError({
@@ -74,6 +90,10 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	entitlements: DbBadgeEntitlement[],
+	preloaded: {
+		badges?: DbBadge[];
+		profiles?: DbProfile[];
+	} = {},
 ): Promise<BadgeEntitlement[]> {
 	const db = useDb(event);
 
@@ -82,7 +102,12 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 	const badgesList = await db
 		.select()
 		.from(badges)
-		.where(inArray(badges.id, badgeIds));
+		.where(
+			and(
+				inArray(badges.id, badgeIds),
+				notInArray(badges.id, preloaded.badges?.map((b) => b.id) ?? []),
+			),
+		);
 
 	const cleanBadges = await retrieveSeveralCleanBadges(event, badgesList);
 
@@ -99,9 +124,15 @@ export async function retrieveSeveralCleanBadgeEntitlements(
 		.select()
 		.from(profiles)
 		.where(
-			inArray(
-				profiles.id,
-				entitlements.map((e) => e.profileId),
+			and(
+				inArray(
+					profiles.id,
+					entitlements.map((e) => e.profileId),
+				),
+				notInArray(
+					profiles.id,
+					preloaded.profiles?.map((p) => p.id) ?? [],
+				),
 			),
 		);
 
@@ -158,14 +189,20 @@ export async function retrieveCleanLevelEntitlement(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	entitlement: DbLevelEntitlement,
+	preloaded: {
+		level?: DbLevel;
+		profile?: DbProfile;
+	} = {},
 ): Promise<LevelEntitlement> {
 	const db = useDb(event);
 
-	const [level] = await db
-		.select()
-		.from(levels)
-		.where(eq(levels.id, entitlement.levelId))
-		.limit(1);
+	const [level] = preloaded.level
+		? [preloaded.level]
+		: await db
+				.select()
+				.from(levels)
+				.where(eq(levels.id, entitlement.levelId))
+				.limit(1);
 
 	if (!level) {
 		throw createError({
@@ -174,11 +211,13 @@ export async function retrieveCleanLevelEntitlement(
 		});
 	}
 
-	const [profile] = await db
-		.select()
-		.from(profiles)
-		.where(eq(profiles.id, entitlement.profileId))
-		.limit(1);
+	const [profile] = preloaded.profile
+		? [preloaded.profile]
+		: await db
+				.select()
+				.from(profiles)
+				.where(eq(profiles.id, entitlement.profileId))
+				.limit(1);
 
 	if (!profile) {
 		throw createError({
@@ -210,6 +249,10 @@ export async function retrieveSeveralCleanLevelEntitlements(
 	event: H3Event,
 	identity: Identity | null | undefined,
 	entitlements: DbLevelEntitlement[],
+	preloaded: {
+		levels?: Level[];
+		profiles?: DbProfile[];
+	} = {},
 ): Promise<LevelEntitlement[]> {
 	const db = useDb(event);
 
@@ -218,7 +261,14 @@ export async function retrieveSeveralCleanLevelEntitlements(
 	const levelsList = await db
 		.select()
 		.from(levels)
-		.where(inArray(levels.id, levelIds));
+		.where(
+			and(
+				inArray(levels.id, levelIds),
+				notInArray(levels.id, preloaded.levels?.map((l) => l.id) ?? []),
+			),
+		);
+
+	levelsList.push(...(preloaded.levels ?? []));
 
 	const cleanLevels = await retrieveSeveralCleanLevels(event, levelsList);
 
@@ -235,11 +285,19 @@ export async function retrieveSeveralCleanLevelEntitlements(
 		.select()
 		.from(profiles)
 		.where(
-			inArray(
-				profiles.id,
-				entitlements.map((e) => e.profileId),
+			and(
+				inArray(
+					profiles.id,
+					entitlements.map((e) => e.profileId),
+				),
+				notInArray(
+					profiles.id,
+					preloaded.profiles?.map((p) => p.id) ?? [],
+				),
 			),
 		);
+
+	_profiles.push(...(preloaded.profiles ?? []));
 
 	const profilesMap = new Map<string, Profile>();
 
