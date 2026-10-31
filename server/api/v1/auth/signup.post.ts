@@ -290,6 +290,9 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	return {
 		account: result.account,
-		profile: result.profile,
+		profile: {
+			...result.profile,
+			level: 2,
+		},
 	};
 });
