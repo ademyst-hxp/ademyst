@@ -3,8 +3,23 @@ import { convertToLitteralDuration } from "~/utils/date";
 
 import type { Post } from "~~/shared/models/interactions";
 
-import { BookmarkIcon, ChartBarIcon, ChatBubbleLeftRightIcon, ChatBubbleOvalLeftEllipsisIcon, ClipboardDocumentIcon, FlagIcon, HeartIcon, PaperAirplaneIcon, PencilIcon, ScaleIcon, TrashIcon } from "@heroicons/vue/24/outline";
-import { EllipsisVerticalIcon, HeartIcon as HeartSolidIcon } from "@heroicons/vue/24/solid";
+import {
+	BookmarkIcon,
+	ChartBarIcon,
+	ChatBubbleLeftRightIcon,
+	ChatBubbleOvalLeftEllipsisIcon,
+	ClipboardDocumentIcon,
+	FlagIcon,
+	HeartIcon,
+	PaperAirplaneIcon,
+	PencilIcon,
+	ScaleIcon,
+	TrashIcon,
+} from "@heroicons/vue/24/outline";
+import {
+	EllipsisVerticalIcon,
+	HeartIcon as HeartSolidIcon,
+} from "@heroicons/vue/24/solid";
 
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
@@ -14,10 +29,10 @@ import ProfileRow from "../profile/ProfileRow.vue";
 const props = withDefaults(
 	defineProps<{
 		data: Post;
-		editable?: boolean;
+		disabled?: boolean;
 	}>(),
 	{
-		editable: false,
+		disabled: false,
 	},
 );
 
@@ -200,15 +215,7 @@ const rendered = computed(() => {
 				</RouterLink>
 			</p>
 		</div>
-		<Input
-			v-if="editable"
-			v-model="post.content"
-			class="-mx-2"
-			placeholder="Éditez votre publication..."
-			type="textarea"
-		/>
 		<div
-			v-else
 			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
 			:class="post.parentId ? 'max-h-96' : 'max-h-144'"
 			v-html="rendered || '<em>Vide.</em>'"
@@ -237,32 +244,36 @@ const rendered = computed(() => {
 
 		<div
 			class="flex items-center gap-4"
-			:class="editable ? 'opacity-50' : ''"
+			:class="disabled ? 'cursor-disabled opacity-50' : ''"
 		>
 			<div
 				class="flex items-center gap-1"
 				@click="
-					() => {
-						(post.interaction.liked ? unlikePost : likePost)(
-							post.id,
-							() => {
-								post.interaction.liked =
-									!post.interaction.liked;
-								post.stats.reactions.like += post.interaction
-									.liked
-									? 1
-									: -1;
-							},
-							() => {
-								post.interaction.liked =
-									!post.interaction.liked;
-								post.stats.reactions.like += post.interaction
-									.liked
-									? 1
-									: -1;
-							},
-						);
-					}
+					disabled
+						? null
+						: () => {
+								(post.interaction.liked
+									? unlikePost
+									: likePost)(
+									post.id,
+									() => {
+										post.interaction.liked =
+											!post.interaction.liked;
+										post.stats.reactions.like += post
+											.interaction.liked
+											? 1
+											: -1;
+									},
+									() => {
+										post.interaction.liked =
+											!post.interaction.liked;
+										post.stats.reactions.like += post
+											.interaction.liked
+											? 1
+											: -1;
+									},
+								);
+							}
 				"
 			>
 				<HeartSolidIcon
@@ -276,7 +287,9 @@ const rendered = computed(() => {
 			</div>
 			<div
 				class="flex items-center gap-1"
-				@click="$router.push(`/posts/${post.id}#compose`)"
+				@click="
+					disabled ? null : $router.push(`/posts/${post.id}#compose`)
+				"
 			>
 				<ChatBubbleOvalLeftEllipsisIcon
 					class="h-6 w-6 cursor-pointer"
@@ -286,7 +299,10 @@ const rendered = computed(() => {
 				}}</span>
 			</div>
 			<div class="grow" />
-			<div class="flex items-center gap-1" @click="copyLinkToClipboard">
+			<div
+				class="flex items-center gap-1"
+				@click="disabled ? null : copyLinkToClipboard"
+			>
 				<PaperAirplaneIcon class="h-6 w-6 cursor-pointer" />
 			</div>
 			<!--div class="flex items-center gap-1">
@@ -300,7 +316,13 @@ const rendered = computed(() => {
 		title="Supprimer la publication ?"
 		description="Cette action est irréversible."
 		v-if="isDeleteMenuOpen"
-		@close="isDeleteMenuOpen = false"
+		@close="
+			disabled
+				? null
+				: () => {
+						isDeleteMenuOpen = false;
+					}
+		"
 		:actions="[
 			{
 				label: 'Annuler',

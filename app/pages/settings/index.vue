@@ -122,6 +122,7 @@ useHead({
 	<section class="flex flex-col gap-2">
 		<h2 class="text-xl font-semibold font-title px-8">Autres</h2>
 		<Actions
+			scale="sm"
 			:actions="[
 				{
 					label: 'Inviter tes amis',

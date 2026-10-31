@@ -8,6 +8,7 @@ import { generateHexId } from "#server/utils/ids";
 import { retrieveCleanWhisper } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
+import { getWhisperSpecs } from "~~/shared/utils/interactions";
 
 import type { H3Event } from "h3";
 
@@ -15,9 +16,27 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
+	const user = await getUser(event, identity);
+
+	if (!user) {
+		throw createError({
+			statusCode: 403,
+			statusMessage: "User not found",
+		});
+	}
 
 	const body = await readBody(event);
+	const specs = getWhisperSpecs(user.profile.level);
+
 	const content = normalizeOptionalText(body?.content) ?? "";
+
+	if (content.length > specs.max_length) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `Whisper content exceeds maximum length of ${specs.max_length} characters`,
+		});
+	}
+
 	const visibility = normalizeVisibility(body?.visibility) ?? "everyone";
 	const textColor = body?.textColor ?? null;
 	const color = body?.color ?? null;

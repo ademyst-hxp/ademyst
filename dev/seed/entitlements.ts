@@ -4,6 +4,8 @@ import type { BadgeFamily as DbBadgeFamily } from "../../server/db/schema/shop";
 import type { Level as DbLevel } from "../../server/db/schema/shop";
 import { drizzle } from "drizzle-orm/postgres-js";
 
+import { LEVELS } from "../../shared/consts/labels";
+
 import postgres from "postgres";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -22,73 +24,12 @@ const client = postgres(databaseUrl, {
 const db = drizzle(client);
 
 const levelsToPut: Omit<DbLevel, "updatedAt">[] = [
-	{
-		id: 0,
-		name: "Banni",
-		description:
-			"Ce compte ne peut plus interagir avec la communauté. Il peut uniquement lire les publications visible par tout le monde, et changer ses paramètres de compte.",
+	...Object.entries(LEVELS).map(([level, { label, description }]) => ({
+		id: parseInt(level, 10),
+		name: label,
+		description: description || null,
 		createdAt: new Date(),
-	},
-	{
-		id: 1,
-		name: "Restreint",
-		description:
-			"Ce compte est en mode lecture seule. Il peut encore lire des publications et interagir avec, mais ne peut pas publier de contenu ni suivre de nouveaux comptes.",
-		createdAt: new Date(),
-	},
-	{
-		id: 2,
-		name: "Invisible",
-		description:
-			"Ce compte est invisible du grand public. Aucune de ses publications n'apparaîtra dans les fils de recommandation. Il peut toujours publier du contenu et interagir avec la communauté, et suivre de nouveaux comptes.",
-		createdAt: new Date(),
-	},
-	{
-		id: 3,
-		name: "Membre",
-		description: "Ce compte est sain et sans grade particulier.",
-		createdAt: new Date(),
-	},
-	{
-		id: 4,
-		name: "Membre Premium",
-		description:
-			"Ce compte a accès à des fonctionnalités supplémentaires, à d'autres de manière prioritaire et peut publier du contenu plus long.",
-		createdAt: new Date(),
-	},
-	{
-		id: 5,
-		name: "Membre Vérifié",
-		description:
-			"L'entité possédant ce compte a été vérifiée par l'équipe d'Ademyst. Celui-ci possède les avantages d'un compte Premium, publier du contenu plus long et avoir une visibilité accrue et traçable dans les fils de recommandation.",
-		createdAt: new Date(),
-	},
-	{
-		id: 6,
-		name: "Aide à la Modération",
-		description:
-			"Ce compte aide la modération des contenus. Il a un accès aux signalements effectués par la communauté et peut modérer certains contenus. Il ne peut pas prononcer de sanctions concernant directement un compte.",
-		createdAt: new Date(),
-	},
-	{
-		id: 7,
-		name: "Modérateur",
-		description:
-			"Ce compte a des responsabilités de modération dans la communauté. Il peut accéder aux signalements et prononcer des sanctions lorsque nécessaire.",
-		createdAt: new Date(),
-	},
-	{
-		id: 8,
-		name: "Équipe",
-		description: "Niveau correspondant aux membres de l'équipe d'Ademyst.",
-		createdAt: new Date(),
-	},
-	{
-		id: 9,
-		name: "Fondateur",
-		description: "Niveau correspondant au fondateur d'Ademyst.",
-		createdAt: new Date(),
-	},
+	})),
 ];
 
 const familiesToPut: Omit<DbBadgeFamily, "updatedAt">[] = [

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { NuxtError } from "#app";
+import Icon from "~/assets/icon.svg";
 
 const props = defineProps<{ error: NuxtError }>();
 

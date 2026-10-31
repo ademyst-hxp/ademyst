@@ -1,17 +1,12 @@
 <script setup lang="ts">
 import type { Post } from "~~/shared/models/interactions";
-
-import {
-	EyeSlashIcon,
-	GlobeAltIcon,
-	HeartIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
-} from "@heroicons/vue/24/outline";
+import { VISIBILITY_OPTIONS } from "~~/shared/consts/labels";
+import { getPostSpecs } from "~~/shared/utils/interactions";
 
 import PostBox from "~/components/interactions/Post.vue";
 
 import Box from "~/components/base/Box.vue";
+import Table from "~/components/base/Table.vue";
 import InfoBox from "~/components/boxes/Info.vue";
 
 const { $api } = useNuxtApp();
@@ -60,8 +55,6 @@ useHead({
 		},
 	],
 });
-
-const isPrev = ref<boolean>(false);
 
 const preparingPost = ref<Post>({
 	id: "0",
@@ -119,8 +112,12 @@ if (editPostId) {
 		});
 }
 
+const limit = computed(
+	() => getPostSpecs(session.value!.profile.level).max_length,
+);
+
 const isInLimit = computed(() => {
-	return preparingPost.value.content.length <= 5000;
+	return preparingPost.value.content.length <= limit.value;
 });
 
 const isGood = computed(() => {
@@ -175,17 +172,22 @@ const handlePublish = async () => {
 			v-model="preparingPost.content"
 			type="textarea"
 			placeholder="Exprimez-vous..."
-			class="-mx-4"
+			class="h-48 -mx-4"
 		/>
-		<p v-if="!isInLimit" class="text-sm text-danger">
-			Vous avez dépassé la limite de 5000 caractères.
+		<p
+			class="text-sm"
+			:class="{
+				'text-muted': isInLimit,
+				'text-danger': !isInLimit,
+			}"
+		>
+			{{ preparingPost.content.length }} / {{ limit }} caractères
 		</p>
 		<Button
 			label="Publier"
 			variant="primary"
 			:disabled="!isGood"
 			:handler="handlePublish"
-			class="mx-auto"
 		/>
 	</section>
 
@@ -196,70 +198,56 @@ const handlePublish = async () => {
 		<InlineSelect
 			label="Visibilité"
 			v-model="preparingPost.visibility"
-			:options="[
-				{ label: 'Essai', value: 'outside', icon: RocketLaunchIcon },
-				{
-					label: 'Tout le monde',
-					value: 'everyone',
-					icon: GlobeAltIcon,
-				},
-				{ label: 'Abonnés', value: 'followers', icon: UserGroupIcon },
-				{ label: 'Amis', value: 'friends', icon: HeartIcon },
-				{ label: 'Privé', value: 'me', icon: EyeSlashIcon },
-			]"
+			:options="
+				VISIBILITY_OPTIONS.map(({ value, icon, label }) => ({
+					value,
+					icon,
+					label,
+				}))
+			"
 			class="mx-auto max-md:hidden"
 		/>
 		<InlineSelect
 			label="Visibilité"
 			v-model="preparingPost.visibility"
-			:options="[
-				{ value: 'outside', icon: RocketLaunchIcon },
-				{
-					value: 'everyone',
-					icon: GlobeAltIcon,
-				},
-				{ value: 'followers', icon: UserGroupIcon },
-				{ value: 'friends', icon: HeartIcon },
-				{ value: 'me', icon: EyeSlashIcon },
-			]"
+			:options="
+				VISIBILITY_OPTIONS.map(({ value, icon }) => ({
+					value,
+					icon,
+				}))
+			"
 			class="mx-auto md:hidden"
 		/>
 		<Box scale="sm" class="-mx-4">
-			<template v-if="preparingPost.visibility === 'outside'">
-				<h3 class="text-lg font-semibold">Essai</h3>
-				<p class="text-muted">
+			<h3 class="text-lg font-semibold">
+				{{
+					VISIBILITY_OPTIONS.find(
+						(option) => option.value === preparingPost.visibility,
+					)?.label || "Visibilité inconnue"
+				}}
+			</h3>
+			<p class="text-muted">
+				<template v-if="preparingPost.visibility === 'outside'">
 					Les publications de type "Essai" sont visibles par tout le
 					monde sauf vos abonnés. Elles sont destinées à tester la
 					visibilité de vos publications en dehors de votre public
 					habituel.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'everyone'">
-				<h3 class="text-lg font-semibold">Tout le monde</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'everyone'">
 					Votre publication sera visible par tout le monde, y compris
 					sans être connecté. Seuls les utilisateurs ayant un compte
 					Ademyst pourront interagir ou réagir à votre publication.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'followers'">
-				<h3 class="text-lg font-semibold">Abonnés</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'followers'">
 					Votre publication sera visible uniquement par vos abonnés.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'friends'">
-				<h3 class="text-lg font-semibold">Amis</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'friends'">
 					Votre publication sera visible par vos amis.
-				</p>
-			</template>
-			<template v-if="preparingPost.visibility === 'me'">
-				<h3 class="text-lg font-semibold">Privé</h3>
-				<p class="text-muted">
+				</template>
+				<template v-if="preparingPost.visibility === 'me'">
 					Votre publication sera visible uniquement par vous.
-				</p>
-			</template>
+				</template>
+			</p>
 			<InfoBox title="Vous pouvez changer d'avis" class="-mx-2">
 				Vous pourrez toujours changer la visibilité de votre publication
 				après l'avoir publiée.
@@ -270,10 +258,63 @@ const handlePublish = async () => {
 	<hr class="rounded-full border border-surface-border mx-8 my-4" />
 
 	<section class="flex flex-col gap-2">
+		<h2 class="text-xl font-semibold font-title text-center">Flags</h2>
+
+		<Table
+			class="table-auto w-full border-collapse border border-surface-border"
+		>
+			<template #head>
+				<th>Flag</th>
+				<th>Activé</th>
+			</template>
+			<template #body>
+				<tr>
+					<th>NFE (contenu sensible)</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.NFE"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Contenu généré par IA</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.AI"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Contenu humoristique</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.joke"
+						/>
+					</td>
+				</tr>
+				<tr>
+					<th>Suicide ou auto-mutilation</th>
+					<td>
+						<Input
+							type="checkbox"
+							v-model="preparingPost.flags.suicide"
+						/>
+					</td>
+				</tr>
+			</template>
+		</Table>
+	</section>
+
+	<hr class="rounded-full border border-surface-border mx-8 my-4" />
+
+	<section class="flex flex-col gap-2">
 		<h2 class="text-xl font-semibold font-title text-center">
 			Prévisualisation
 		</h2>
-		<PostBox :data="preparingPost" />
+		<PostBox :data="preparingPost" disabled />
 		<Button
 			label="Publier"
 			variant="primary"

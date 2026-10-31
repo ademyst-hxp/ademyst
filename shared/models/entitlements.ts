@@ -1,10 +1,11 @@
-import type { Badge } from "./shop";
-import type { Level } from "./shop";
+import type { Profile } from "./profiles";
+import type { Badge, Level } from "./shop";
 
 
 export type BadgeEntitlement = {
 	id: string;
 	badge: Badge;
+	profile: Profile;
 	name: string;
 	reason: string;
 	revoked: boolean;
@@ -16,6 +17,7 @@ export type BadgeEntitlement = {
 export type LevelEntitlement = {
 	id: string;
 	level: Level;
+	profile: Profile;
 	name: string;
 	reason: string;
 	revoked: boolean;
