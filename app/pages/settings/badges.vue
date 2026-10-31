@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import type { BadgeEntitlement } from "~~/shared/models/entitlements";
 import type { Badge } from "~~/shared/models/shop";
+import { LEVELS } from "~~/shared/consts/labels";
 
-import { ChevronLeftIcon, InformationCircleIcon, SparklesIcon, UserIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import {
+	ChevronLeftIcon,
+	InformationCircleIcon,
+	SparklesIcon,
+	UserIcon,
+	XMarkIcon,
+} from "@heroicons/vue/24/outline";
 
 import Actions from "~/components/base/Actions.vue";
 import Box from "~/components/base/Box.vue";
@@ -155,36 +162,15 @@ const focusedEntitlement = ref<BadgeEntitlement | null>(null);
 			<div>
 				<p>Mon niveau:</p>
 				<h2 class="text-xl font-semibold font-title">
-					<template v-if="session?.profile.level === 0"
-						>Banni</template
-					>
-					<template v-else-if="session?.profile.level === 1"
-						>En sourdine</template
-					>
-					<template v-else-if="session?.profile.level === 2"
-						>Restreint</template
-					>
-					<template v-else-if="session?.profile.level === 3"
-						>Membre</template
-					>
-					<template v-else-if="session?.profile.level === 4"
-						>Premium</template
-					>
-					<template v-else-if="session?.profile.level === 5"
-						>Certifié</template
-					>
-					<template v-else-if="session?.profile.level === 6"
-						>Aide à la modération</template
-					>
-					<template v-else-if="session?.profile.level === 7"
-						>Modérateur</template
-					>
-					<template v-else-if="session?.profile.level === 8"
-						>Équipe Ademyst</template
-					>
-					<template v-else-if="session?.profile.level === 9"
-						>Fondateur</template
-					>
+					{{
+						session?.profile.level &&
+						session?.profile.level in LEVELS
+							? LEVELS[
+									session?.profile
+										?.level as keyof typeof LEVELS
+								].label
+							: "Inconnu"
+					}}
 				</h2>
 			</div>
 		</Box>

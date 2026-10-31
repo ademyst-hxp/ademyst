@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defaultPrivacySettings } from "~~/shared/models/settings";
 import { type PrivacySettings } from "~~/shared/models/settings";
+import { VISIBILITY_OPTIONS } from "~~/shared/consts/labels";
 
 import {
 	ChevronLeftIcon,
@@ -151,39 +152,27 @@ const saveSettings = async () => {
 			<div class="flex items-center gap-2">
 				<strong class="flex items-center gap-2">
 					<IdentificationIcon class="w-5 h-5" />
-					Profil
+					Profil*
 				</strong>
 				<InlineSelect
 					label="Visibilité du profil*"
 					v-model="payload.profileVisibility"
-					:options="[
-						{
-							label: 'Public',
-							value: 'everyone',
-							icon: GlobeAltIcon,
-						},
-						{
-							label: 'Privé',
-							value: 'followers',
-							icon: UserGroupIcon,
-						},
-					]"
+					:options="VISIBILITY_OPTIONS.filter(({ value }) =>
+						['everyone', 'followers'].includes(
+							value,
+						),
+					)"
 					scale="small"
 					class="max-md:hidden"
 				/>
 				<InlineSelect
 					label="Visibilité du profil*"
 					v-model="payload.profileVisibility"
-					:options="[
-						{
-							value: 'everyone',
-							icon: GlobeAltIcon,
-						},
-						{
-							value: 'followers',
-							icon: UserGroupIcon,
-						},
-					]"
+					:options="VISIBILITY_OPTIONS.filter(({ value }) =>
+						['everyone', 'followers'].includes(
+							value,
+						),
+					).map(({ value, icon }) => ({ value, icon }))"
 					scale="small"
 					class="md:hidden"
 				/>
@@ -195,37 +184,21 @@ const saveSettings = async () => {
 				</strong>
 				<InlineSelect
 					v-model="payload.birthdayVisibility"
-					:options="[
-						{
-							label: 'Tout le monde',
-							value: 'everyone',
-							icon: GlobeAltIcon,
-						},
-						{
-							label: 'Abonnés',
-							value: 'followers',
-							icon: UserGroupIcon,
-						},
-						{ label: 'Amis', value: 'friends', icon: HeartIcon },
-						{ label: 'Privé', value: 'me', icon: EyeSlashIcon },
-					]"
+					:options="VISIBILITY_OPTIONS.filter(({ value }) =>
+						['everyone', 'followers', 'friends', 'me'].includes(
+							value,
+						),
+					)"
 					scale="small"
 					class="max-md:hidden"
 				/>
 				<InlineSelect
 					v-model="payload.birthdayVisibility"
-					:options="[
-						{
-							value: 'everyone',
-							icon: GlobeAltIcon,
-						},
-						{
-							value: 'followers',
-							icon: UserGroupIcon,
-						},
-						{ value: 'friends', icon: HeartIcon },
-						{ value: 'me', icon: EyeSlashIcon },
-					]"
+					:options="VISIBILITY_OPTIONS.filter(({ value }) =>
+						['everyone', 'followers', 'friends', 'me'].includes(
+							value,
+						),
+					).map(({ value, icon }) => ({ value, icon }))"
 					scale="small"
 					class="md:hidden"
 				/>
@@ -236,6 +209,18 @@ const saveSettings = async () => {
 				paramètres de visibilité du profil. Seul leur apparition dans
 				les différents fils sera affectée.
 			</p>
+		</div>
+		<div class="flex gap-2">
+			<Button
+				label="Enregistrer"
+				variant="primary"
+				:handler="saveSettings"
+			/>
+			<Button
+				label="Réinitialiser"
+				variant="secondary"
+				:handler="refreshSettings"
+			/>
 		</div>
 	</section>
 	<section class="flex flex-col gap-4">

@@ -1,4 +1,5 @@
 import { useDb } from "#server/db";
+import { and, eq } from "drizzle-orm";
 import { whisperReports } from "#server/db/schema/reports";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -29,6 +30,25 @@ export default defineEventHandler(async (event: H3Event) => {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid report payload",
+		});
+	}
+
+	const [existingReport] = await db
+		.select()
+		.from(whisperReports)
+		.where(
+			and(
+				eq(whisperReports.reporterId, identity.accountId),
+				eq(whisperReports.reportedWhisperId, whisperId),
+				eq(whisperReports.status, "pending"),
+			)
+		)
+		.limit(1);
+
+	if (existingReport) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "You have already reported this whisper",
 		});
 	}
 

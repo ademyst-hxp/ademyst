@@ -2,6 +2,8 @@
 import type { FeedTab } from "~/composables/useFeed";
 
 import type { Whisper } from "~~/shared/models/interactions";
+import { VISIBILITY_OPTIONS, VISIBILITIES } from "~~/shared/consts/labels";
+import { getWhisperSpecs } from "~~/shared/utils/interactions";
 
 import {
 	ArrowPathIcon,
@@ -11,13 +13,6 @@ import {
 	PaperAirplaneIcon,
 	PlusCircleIcon,
 	UserIcon,
-} from "@heroicons/vue/24/outline";
-import {
-	EyeSlashIcon,
-	GlobeAltIcon,
-	HeartIcon,
-	RocketLaunchIcon,
-	UserGroupIcon,
 } from "@heroicons/vue/24/outline";
 
 import Popup from "~/components/base/Popup.vue";
@@ -110,31 +105,6 @@ useHead({
 
 const focusedWhisper = ref<Whisper | null>(null);
 
-const isVisibilityMenuOpen = ref(false);
-const visibilityOptions = ref({
-	outside: {
-		label: "Essai",
-		description: "Tout le monde sauf vos abonnés",
-		icon: RocketLaunchIcon,
-	},
-	everyone: {
-		label: "Tout le monde",
-		icon: GlobeAltIcon,
-	},
-	followers: {
-		label: "Abonnés",
-		icon: UserGroupIcon,
-	},
-	friends: {
-		label: "Amis",
-		icon: HeartIcon,
-	},
-	me: {
-		label: "Privé",
-		icon: EyeSlashIcon,
-	},
-});
-
 const whisperColors = ref<{ background: string; text: string }[]>([
 	{ background: "#fbd1d1", text: "#eb3030" },
 	{ background: "#ffeacf", text: "#ffa732" },
@@ -160,9 +130,17 @@ const newWhisper = ref<Whisper>({
 	createdAt: new Date(),
 });
 
+const limit = computed(
+	() => getWhisperSpecs(session.value!.profile.level).max_length,
+);
+
+const isInLimit = computed(() => {
+	return newWhisper.value.content.length <= limit.value;
+});
+
 const handleNewWhisper = async () => {
 	if (!newWhisper.value.content.trim()) return;
-	if (newWhisper.value.content.length > 200) return;
+	if (!isInLimit.value) return;
 
 	await $api("/whispers/new", {
 		method: "POST",
@@ -399,16 +377,13 @@ watch(
 		<h2 class="text-xl font-bold font-title">Exprimer une pensée</h2>
 		<InlineSelect
 			v-model="newWhisper.visibility"
-			:options="[
-				{ value: 'outside', icon: RocketLaunchIcon },
-				{
-					value: 'everyone',
-					icon: GlobeAltIcon,
-				},
-				{ value: 'followers', icon: UserGroupIcon },
-				{ value: 'friends', icon: HeartIcon },
-				{ value: 'me', icon: EyeSlashIcon },
-			]"
+			:options="
+				VISIBILITY_OPTIONS.map(({ value, icon, description }) => ({
+					value,
+					icon,
+					description,
+				}))
+			"
 			scale="small"
 		/>
 		<WhisperBox
@@ -422,14 +397,23 @@ watch(
 					:style="{ color: newWhisper.textColor || undefined }"
 				>
 					<Component
-						:is="visibilityOptions[newWhisper.visibility].icon"
+						:is="VISIBILITIES[newWhisper.visibility].icon"
 						class="w-6 h-6"
 					/>
 					<span>
-						{{ visibilityOptions[newWhisper.visibility].label }}
+						{{ VISIBILITIES[newWhisper.visibility].label }}
 					</span>
 				</div>
 				<div class="grow"></div>
+				<p
+					class="text-sm"
+					:class="{
+						'opacity-75': isInLimit,
+						'text-danger': !isInLimit,
+					}"
+				>
+					{{ newWhisper.content.length }}/{{ limit }}
+				</p>
 				<div
 					class="cursor-pointer flex items-center gap-1 text-surface-text hover:underline"
 					:style="{ color: newWhisper.textColor || undefined }"
@@ -489,49 +473,4 @@ watch(
 			</div>
 		</div>
 	</Popup>
-
-	<!-- Menu de visibilité -->
-	<Menu
-		v-if="isVisibilityMenuOpen"
-		@close="isVisibilityMenuOpen = false"
-		:title="'Visibilité de votre pensée'"
-		:actions="[
-			{
-				label: 'Essai',
-				description: 'Tout le monde sauf vos abonnés',
-				icon: RocketLaunchIcon,
-				handler: () => {
-					newWhisper.visibility = 'outside';
-				},
-			},
-			{
-				label: 'Tout le monde',
-				icon: GlobeAltIcon,
-				handler: () => {
-					newWhisper.visibility = 'everyone';
-				},
-			},
-			{
-				label: 'Abonnés',
-				icon: UserGroupIcon,
-				handler: () => {
-					newWhisper.visibility = 'followers';
-				},
-			},
-			{
-				label: 'Amis',
-				icon: HeartIcon,
-				handler: () => {
-					newWhisper.visibility = 'friends';
-				},
-			},
-			{
-				label: 'Privé',
-				icon: EyeSlashIcon,
-				handler: () => {
-					newWhisper.visibility = 'me';
-				},
-			},
-		]"
-	/>
 </template>

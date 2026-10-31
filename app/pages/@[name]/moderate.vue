@@ -4,6 +4,7 @@ import type { Profile } from "~~/shared/models/profiles";
 import type { ProfileReport } from "~~/shared/models/reports";
 import type { Sanction } from "~~/shared/models/sanctions";
 import type { Badge } from "~~/shared/models/shop";
+import { LEVELS } from "~~/shared/consts/labels";
 
 import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
 
@@ -154,30 +155,10 @@ const stats = computed(
 const levelLabel = computed(() => {
 	if (!profile.value) return "Inconnu";
 
-	switch (profile.value.level) {
-		case 0:
-			return "Banni";
-		case 1:
-			return "Restreint";
-		case 2:
-			return "Invisible";
-		case 3:
-			return "Membre";
-		case 4:
-			return "Premium";
-		case 5:
-			return "Vérifié";
-		case 6:
-			return "Assist. Modération";
-		case 7:
-			return "Modérateur";
-		case 8:
-			return "Haut Gradé";
-		case 9:
-			return "�0quipe Ademyst";
-		default:
-			return "Inconnu";
-	}
+	const level = profile.value.level;
+	return level in LEVELS
+		? LEVELS[level as keyof typeof LEVELS].label
+		: "Inconnu";
 });
 
 const tab = ref<

@@ -1,6 +1,7 @@
 import { useDb } from "#server/db";
 import { accounts, sessions } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
+import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 import { eq } from "drizzle-orm";
 
 import { signAccessToken, signRefreshToken } from "#server/utils/jwt";
@@ -80,6 +81,14 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
+	const _entitlements = await db
+		.select()
+		.from(levelsEntitlements)
+		.where(eq(levelsEntitlements.profileId, profile.id))
+		.limit(1);
+
+	const level = getLevelFromEntitlements(_entitlements);
+
 	const payload = {
 		sub: account.id,
 		profileId: profile.id,
@@ -125,6 +134,7 @@ export default defineEventHandler(async (event) => {
 			id: profile.id,
 			name: profile.name,
 			displayName: profile.displayName,
+			level,
 		},
 	};
 });

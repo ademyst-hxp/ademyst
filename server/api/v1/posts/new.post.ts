@@ -1,23 +1,65 @@
 import { useDb } from "#server/db";
 import { postNotifications } from "#server/db/schema/inbox";
-import { posts } from "#server/db/schema/interactions";
+import { posts, postsFlags } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 import { generateHexId } from "#server/utils/ids";
 import { normalizeId } from "#server/utils/normalizers/ids";
 import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
-import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
+import {
+	normalizeOptionalText,
+	normalizeVisibility,
+} from "~~/server/utils/normalizers/interactions";
+import { getPostSpecs } from "~~/shared/utils/interactions";
+
+import type { PostFlag } from "~~/shared/models/interactions";
 
 import type { H3Event } from "h3";
+
+type PostFlagType = Exclude<
+	PostFlag["type"],
+	"reported" | "spam" | "misinformation" | "suspicious"
+>;
+type FlagsPayload = Record<PostFlagType, boolean>;
+
+const validTypes: PostFlagType[] = ["NFE", "AI", "joke", "suicide"];
+
+function validateFlagsPayload(payload: any): FlagsPayload {
+	if (!payload) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing payload",
+		});
+	}
+
+	const flags: FlagsPayload = validTypes.reduce((acc, type) => {
+		if (typeof payload?.[type] !== "boolean") {
+			throw createError({
+				statusCode: 400,
+				statusMessage: `Invalid value for flag type "${type}"`,
+			});
+		}
+
+		acc[type] = Boolean(payload?.[type]);
+		return acc;
+	}, {} as FlagsPayload);
+
+	return flags;
+}
 
 const validatePayload = (
 	payload: any,
 	specs: {
 		max_length: number;
 	},
-): { parentId: string | null; content: string; visibility: PostVisibility } => {
+): {
+	parentId: string | null;
+	content: string;
+	visibility: PostVisibility;
+	flag_entries: FlagsPayload;
+} => {
 	if (!payload) {
 		throw createError({
 			statusCode: 400,
@@ -50,7 +92,9 @@ const validatePayload = (
 		});
 	}
 
-	return { parentId, content, visibility };
+	const flag_entries = validateFlagsPayload(payload?.flags);
+
+	return { parentId, content, visibility, flag_entries };
 };
 
 export default defineEventHandler(async (event: H3Event) => {
@@ -67,16 +111,12 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	const body = await readBody(event);
-	const specs = {
-		max_length:
-			user.profile.level >= 5
-				? 5000
-				: user.profile.level >= 4
-					? 2000
-					: 1000,
-	};
+	const specs = getPostSpecs(user.profile.level);
 
-	const { parentId, content, visibility } = validatePayload(body, specs);
+	const { parentId, content, visibility, flag_entries } = validatePayload(
+		body,
+		specs,
+	);
 
 	const id = generateHexId();
 
@@ -98,6 +138,45 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	// Handle flags
+	const rawFlags = await db
+		.select()
+		.from(postsFlags)
+		.where(eq(postsFlags.postId, createdPost.id));
+
+	const flagsToUpdate: Record<PostFlagType, "add" | "remove" | "nothing"> = {
+		...validTypes.reduce(
+			(acc, type) => {
+				if (
+					flag_entries[type] &&
+					!rawFlags.some((flag) => flag.type === type)
+				) {
+					acc[type] = "add";
+				} else if (
+					!flag_entries[type] &&
+					rawFlags.some((flag) => flag.type === type)
+				) {
+					acc[type] = "remove";
+				} else {
+					acc[type] = "nothing";
+				}
+
+				return acc;
+			},
+			{} as Record<PostFlagType, "add" | "remove" | "nothing">,
+		),
+	};
+
+	for (const type of validTypes) {
+		if (flagsToUpdate[type] === "add") {
+			await db.insert(postsFlags).values({
+				postId: createdPost.id,
+				type: type,
+			});
+		} // cannot remove
+	}
+
+	// Notify parent post author if the new post is a reply and the author is not the same as the replier
 	if (parentId && createdPost.profileId !== identity.profileId) {
 		const [parentPost] = await db
 			.select({ profileId: posts.profileId })
@@ -115,6 +194,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		}
 	}
 
+	// Notify followers of the author if the post is public (not "me" or "friends")
 	if (visibility !== "me" && visibility !== "friends") {
 		const followers = await db
 			.select({ profileId: follows.followerId })

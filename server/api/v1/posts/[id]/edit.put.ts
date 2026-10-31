@@ -1,5 +1,5 @@
 import { useDb } from "#server/db";
-import { posts } from "#server/db/schema/interactions";
+import { posts, postsFlags } from "#server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -7,17 +7,49 @@ import { retrieveCleanPost } from "~~/server/utils/converters/interactions";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
 
-import { PostVisibility } from "~~/shared/models/interactions";
+import { PostVisibility, PostFlag } from "~~/shared/models/interactions";
 
 import { createError, readBody } from "h3";
 import { type H3Event } from "h3";
+
+
+type PostFlagType = Exclude<
+	PostFlag["type"],
+	"reported" | "spam" | "misinformation" | "suspicious"
+>;
+type FlagsPayload = Record<PostFlagType, boolean>;
+
+const validTypes: PostFlagType[] = ["NFE", "AI", "joke", "suicide"];
+
+function validateFlagsPayload(payload: any): FlagsPayload {
+	if (!payload) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Missing payload",
+		});
+	}
+
+	const flags: FlagsPayload = validTypes.reduce((acc, type) => {
+		if (typeof payload?.[type] !== "boolean") {
+			throw createError({
+				statusCode: 400,
+				statusMessage: `Invalid value for flag type "${type}"`,
+			});
+		}
+
+		acc[type] = Boolean(payload?.[type]);
+		return acc;
+	}, {} as FlagsPayload);
+
+	return flags;
+}
 
 const validatePayload = (
 	payload: any,
 	specs: {
 		max_length: number;
 	},
-): { content: string | undefined; visibility: PostVisibility | undefined } => {
+): { content: string | undefined; visibility: PostVisibility | undefined; flag_entries: FlagsPayload } => {
 	if (!payload) {
 		throw createError({
 			statusCode: 400,
@@ -35,7 +67,9 @@ const validatePayload = (
 		});
 	}
 
-	return { content, visibility };
+	const flag_entries = validateFlagsPayload(payload?.flags);
+
+	return { content, visibility, flag_entries };
 };
 
 export default defineEventHandler(async (event: H3Event) => {
@@ -88,8 +122,48 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const { content, visibility } = validatePayload(body, specs);
+	const { content, visibility, flag_entries } = validatePayload(body, specs);
 
+
+	// Handle flags
+	const rawFlags = await db
+		.select()
+		.from(postsFlags)
+		.where(eq(postsFlags.postId, candidate.id));
+
+	const flagsToUpdate: Record<PostFlagType, "add" | "remove" | "nothing"> = {
+		...validTypes.reduce(
+			(acc, type) => {
+				if (
+					flag_entries[type] &&
+					!rawFlags.some((flag) => flag.type === type)
+				) {
+					acc[type] = "add";
+				} else if (
+					!flag_entries[type] &&
+					rawFlags.some((flag) => flag.type === type)
+				) {
+					acc[type] = "remove";
+				} else {
+					acc[type] = "nothing";
+				}
+
+				return acc;
+			},
+			{} as Record<PostFlagType, "add" | "remove" | "nothing">,
+		),
+	};
+
+	for (const type of validTypes) {
+		if (flagsToUpdate[type] === "add") {
+			await db.insert(postsFlags).values({
+				postId: candidate.id,
+				type: type,
+			});
+		} // cannot remove
+	}
+
+	// Update post content and visibility
 	let updatedAt = undefined;
 	if (content) updatedAt = new Date();
 
