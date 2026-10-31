@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Account } from "~~/shared/models/accounts";
 
-import { ArrowRightEndOnRectangleIcon, ArrowsRightLeftIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
+import { ArrowRightEndOnRectangleIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
 import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
 import Icon from "~/assets/icon.svg";
 
@@ -156,6 +156,14 @@ const path = computed(() => useRoute().path);
 				Écrire
 			</RouterLink>
 
+			<RouterLink
+				v-if="(session?.profile.level ?? 0) >= 6"
+				to="/moderation"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+			>
+				Espace Modération
+			</RouterLink>
+
 			<div class="grow" />
 
 			<RouterLink
@@ -225,13 +233,6 @@ const path = computed(() => useRoute().path);
 				label: 'Paramètres',
 				icon: Cog6ToothIcon,
 				handler: '/settings',
-			},
-			{
-				label: 'Changer de compte',
-				icon: ArrowsRightLeftIcon,
-				handler: () => {
-					isSwitchAccountMenuOpen = true;
-				},
 			},
 			{
 				label: 'Déconnexion',
