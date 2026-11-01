@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
-	const identity = await requireAuth(event);
+	const identity = await requireAuth(event, { min_level: 8 });
 
 	const entitlementId = event.context.params?.entitlementId;
 
@@ -29,34 +29,12 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	if (entitlement.profileId !== identity.profileId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage:
-				"You are not authorized to enable this entitlement",
-		});
-	}
-
-	if (entitlement.revoked) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Entitlement is revoked",
-		});
-	}
-
-	if (entitlement.enabled) {
-		throw createError({
-			statusCode: 204,
-			statusMessage: "Entitlement is already enabled",
-		});
-	}
-
-	await db
-		.update(badgesEntitlements)
-		.set({ enabled: true })
-		.where(eq(badgesEntitlements.id, entitlementId));
-
 	return {
 		status: "ok",
+		entitlement: await retrieveCleanBadgeEntitlement(
+			event,
+			identity,
+			entitlement,
+		),
 	};
 });

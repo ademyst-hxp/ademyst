@@ -64,9 +64,9 @@ type EntitlementResponse = {
 const { data: entitlements, refresh: refreshEntitlements } = await useAsyncData(
 	"entitlements",
 	async () => {
-		return $api<EntitlementResponse>(`/account/entitlements/badges`).then(
-			(res) => res.entitlements,
-		);
+		return $api<EntitlementResponse>(
+			`/users/${session.value?.profile.name}/badges`,
+		).then((res) => res.entitlements);
 	},
 );
 
@@ -90,8 +90,8 @@ const enableEntitlement = async (entitlement: BadgeEntitlement) => {
 	if (!session.value) return;
 
 	try {
-		const response = await $fetch(
-			`/api/v1/account/entitlements/badges/${entitlement.id}/enable`,
+		const response = await $api<EntitlementResponse>(
+			`/users/${session.value?.profile.name}/badges/${entitlement.badge.id}/enable`,
 			{
 				method: "POST",
 			},
@@ -112,8 +112,8 @@ const disableEntitlement = async (entitlement: BadgeEntitlement) => {
 	if (!session.value) return;
 
 	try {
-		const response = await $fetch(
-			`/api/v1/account/entitlements/badges/${entitlement.id}/disable`,
+		const response = await $api<EntitlementResponse>(
+			`/users/${session.value?.profile.name}/badges/${entitlement.badge.id}/disable`,
 			{
 				method: "POST",
 			},
