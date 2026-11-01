@@ -28,6 +28,12 @@ const limiters = {
 	// Login
 	login: new RateLimiterMemory({
 		points: 5,
+		duration: 60,
+	}),
+
+	// Sudo
+	sudo: new RateLimiterMemory({
+		points: 5,
 		duration: 15 * 60,
 	}),
 
@@ -55,6 +61,8 @@ export default defineEventHandler(async (event) => {
 		limiter = limiters.interact;
 	} else if (path.startsWith("/api/v1/users")) {
 		limiter = limiters.user_interact;
+	} else if (path.startsWith("/api/v1/auth/sudo") || path.startsWith("/api/v1/account")) {
+		limiter = limiters.sudo;
 	} else {
 		limiter = limiters.default;
 	}
