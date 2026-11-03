@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
 				whisper !== null,
 		)
 		.filter((whisper) => whisper.profile.level >= 3)
+		.filter((whisper) => whisper.createdAt.getTime() > Date.now() - 1000 * 60 * 60 * 24)
 		.sort((a, b) => {
 			return b.createdAt.getTime() - a.createdAt.getTime();
 		});
