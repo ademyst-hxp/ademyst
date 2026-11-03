@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
 	const [candidate] = await db
 		.select()
 		.from(badgesEntitlements)
-		.where(eq(badgesEntitlements.id, badgeId))
+		.where(eq(badgesEntitlements.badgeId, badgeId))
 		.limit(1);
 
 	if (!candidate) {

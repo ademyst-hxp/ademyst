@@ -85,6 +85,18 @@ export default defineEventHandler(async (event) => {
 
 	await requireAuth(event, { min_level: level >= 8 ? 9 : 8 });
 
+	// Team levels (6+) can only be assigned below the author's own level.
+	if (lvl.id >= 6) {
+		const author = await getUser(event, identity);
+
+		if (!author || lvl.id >= author.profile.level) {
+			throw createError({
+				statusCode: 403,
+				statusMessage: "Cannot assign this level",
+			});
+		}
+	}
+
 	const [candidate] = await db
 		.insert(levelsEntitlements)
 		.values({
