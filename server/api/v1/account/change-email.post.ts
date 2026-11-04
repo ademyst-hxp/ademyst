@@ -77,6 +77,13 @@ export default defineEventHandler(async (event) => {
 			});
 		}
 
+		if (tokenRow.email !== email) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Email does not match the token",
+			});
+		}
+
 		if (tokenRow.usedAt) {
 			throw createError({
 				statusCode: 400,

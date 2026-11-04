@@ -82,6 +82,7 @@ const handleEmailChange = async () => {
 				email: email.value,
 				password: password.value,
 				action: "change-email",
+				newEmail: newEmail.value,
 			},
 		});
 

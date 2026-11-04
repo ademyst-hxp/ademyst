@@ -7,7 +7,7 @@ import { retrieveCleanBadgeEntitlement } from "~~/server/utils/converters/entitl
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
-	const identity = await requireAuth(event);
+	const identity = await requireAuth(event, { min_level: 8 });
 
 	const entitlementId = event.context.params?.entitlementId;
 
@@ -28,13 +28,6 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 404,
 			statusMessage: "Entitlement not found",
-		});
-	}
-
-	if (entitlement.profileId !== identity.profileId) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "You are not authorized to see this entitlement",
 		});
 	}
 
