@@ -135,7 +135,7 @@ export default defineEventHandler(async (event) => {
 
 		await tx.insert(emailConfirmationTokens).values({
 			accountId: accountRow.id,
-			email: accountRow.email,
+			email,
 			token: confirmationToken,
 		});
 
@@ -144,7 +144,7 @@ export default defineEventHandler(async (event) => {
 
 		try {
 			await buildConfirmationEmail(
-				accountRow.email,
+				email,
 				confirmationToken,
 				userAgent,
 				ipAddress,
