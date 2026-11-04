@@ -198,6 +198,8 @@ export default defineEventHandler(async (event: H3Event) => {
 
 		await tx.insert(privacySettings).values({
 			accountId: account.id,
+			termsOfServiceConsent,
+			privacyPolicyConsent,
 		});
 
 		const [profile] = await tx
