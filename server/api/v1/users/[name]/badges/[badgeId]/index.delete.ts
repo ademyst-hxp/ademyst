@@ -9,7 +9,7 @@ import { and, eq } from "drizzle-orm";
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
 
-	const identity = await requireAuth(event, { min_level: 8 });
+	const identity = await requireAuth(event);
 
 	const name = event.context.params?.name;
 	const badgeId = event.context.params?.badgeId;
@@ -61,7 +61,9 @@ export default defineEventHandler(async (event) => {
 			.where(eq(levelsEntitlements.profileId, identity.profileId)),
 	);
 
-	await requireAuth(event, { min_level: level >= 8 ? 9 : 8 });
+	if (identity.profileId !== profile.id) {
+		await requireAuth(event, { min_level: level >= 8 ? 9 : 8 });
+	}
 
 	if (candidate.revoked) {
 		throw createError({
