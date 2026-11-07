@@ -1,4 +1,11 @@
+import { useDb } from "~~/server/db";
+import { sessions } from "~~/server/db/schema/accounts";
+
+import { eq } from "drizzle-orm";
+
 export default defineEventHandler(async (event) => {
+	const db = useDb(event);
+
 	const sessionToken = getCookie(event, "refreshToken");
 
 	if (!sessionToken) {
@@ -7,6 +14,8 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "Not authenticated",
 		});
 	}
+
+	await db.delete(sessions).where(eq(sessions.token, sessionToken));
 
 	deleteCookie(event, "refreshToken", {
 		httpOnly: true,
