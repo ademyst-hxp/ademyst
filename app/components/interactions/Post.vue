@@ -83,6 +83,22 @@ const copyLinkToClipboard = async () => {
 	}
 };
 
+const toggleLike = async () => {
+	if (props.disabled) return;
+
+	if (post.value.interaction.liked) {
+		await unlikePost(post.value.id);
+		post.value.interaction.liked = false;
+		post.value.stats.reactions.like =
+			(post.value.stats.reactions.like || 1) - 1;
+	} else {
+		await likePost(post.value.id);
+		post.value.interaction.liked = true;
+		post.value.stats.reactions.like =
+			(post.value.stats.reactions.like || 0) + 1;
+	}
+};
+
 const actions = computed(() => {
 	const actions: {
 		label: string;
@@ -248,33 +264,7 @@ const rendered = computed(() => {
 		>
 			<div
 				class="flex items-center gap-1"
-				@click="
-					disabled
-						? null
-						: () => {
-								(post.interaction.liked
-									? unlikePost
-									: likePost)(
-									post.id,
-									() => {
-										post.interaction.liked =
-											!post.interaction.liked;
-										post.stats.reactions.like += post
-											.interaction.liked
-											? 1
-											: -1;
-									},
-									() => {
-										post.interaction.liked =
-											!post.interaction.liked;
-										post.stats.reactions.like += post
-											.interaction.liked
-											? 1
-											: -1;
-									},
-								);
-							}
-				"
+				@click="toggleLike"
 			>
 				<HeartSolidIcon
 					class="text-red-500 h-6 w-6 cursor-pointer"
