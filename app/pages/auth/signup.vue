@@ -60,7 +60,11 @@ const valid = computed(() => ({
 		payload.value.password === payload.value.confirm_password,
 	termsOfServiceConsent: payload.value.termsOfServiceConsent,
 	privacyPolicyConsent: payload.value.privacyPolicyConsent,
-	birthday: new Date(payload.value.birthday).toString() !== "Invalid Date",
+	birthday:
+		new Date(payload.value.birthday).toString() !== "Invalid Date" &&
+		new Date(payload.value.birthday) < new Date() &&
+		new Date(payload.value.birthday) > new Date("1900-01-01") &&
+		new Date(payload.value.birthday).getFullYear() - new Date().getFullYear() < -15,
 	token:
 		payload.value.token !== null &&
 		payload.value.token.length > 0 &&

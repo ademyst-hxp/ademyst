@@ -56,6 +56,27 @@ function normalizePayload(value: unknown): SignupPayload | null {
 
 	if (!email || !password || !username || !birthday) return null;
 
+	if (birthday && isNaN(new Date(birthday).getTime())) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid birthday",
+		});
+	}
+
+	if (new Date(birthday) > new Date()) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Birthday cannot be in the future",
+		});
+	}
+
+	if (new Date(birthday).getFullYear() - new Date().getFullYear() > -15) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "You must be at least 15 years old to sign up",
+		});
+	}
+
 	return {
 		email,
 		password,
@@ -166,12 +187,21 @@ export default defineEventHandler(async (event: H3Event) => {
 	const passwordHash = await hashPassword(password);
 	const profileId = generateHexId();
 
-	const displayName = beamProfile?.display_name || null;
+	const displayName = payload?.display_name || beamProfile?.display_name || null;
 	const bio = beamProfile?.description || null;
 	const pronouns = beamProfile?.pronouns || null;
-	const birthday = beamProfile?.birthday
-		? new Date(beamProfile?.birthday).toISOString().split("T")[0]
-		: null;
+	const birthday = (() => {
+		if (payload?.birthday) {
+			return new Date(payload.birthday).toISOString().split("T")[0];
+		} else if (beamProfile?.birthday) {
+			return new Date(beamProfile.birthday).toISOString().split("T")[0];
+		} else {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Birthday is required",
+			});
+		}
+	})();
 
 	const result = await db.transaction(async (tx) => {
 		const [account] = await tx

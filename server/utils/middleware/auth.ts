@@ -7,7 +7,7 @@ export const requireAuth = async (
 	ctx?: {
 		min_level?: number;
 	},
-): Promise<Identity> => {
+): Promise<UserIdentity> => {
 	const minLevel = ctx?.min_level ?? 1;
 
 	const identity = await getIdentity(event);
@@ -35,5 +35,5 @@ export const requireAuth = async (
 		});
 	}
 
-	return identity;
+	return user;
 };

@@ -2,6 +2,9 @@ import { useDb } from "#server/db";
 import { accountDeletionTokens, accounts } from "#server/db/schema/accounts";
 import { and, eq } from "drizzle-orm";
 
+import { useDrive } from "~~/server/utils/drive";
+import { EXPORT_BUCKET, purgeAccountExports } from "~~/server/utils/helpers/exports";
+
 import { createError, readBody } from "h3";
 
 function normalizeToken(value: unknown): string | null {
@@ -64,6 +67,13 @@ export default defineEventHandler(async (event) => {
 				statusMessage: "Account not found",
 			});
 		}
+
+		// La cascade SQL ne touche pas le bucket : les fichiers d'export doivent être supprimés explicitement
+		await purgeAccountExports(
+			tx,
+			useDrive(event, EXPORT_BUCKET),
+			tokenRow.accountId,
+		);
 
 		await tx.delete(accounts).where(eq(accounts.id, tokenRow.accountId));
 	});

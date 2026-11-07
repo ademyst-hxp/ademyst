@@ -1,5 +1,10 @@
 import { useDb } from "#server/db";
-import { accountModificationHistory, accounts, passwordResetTokens } from "#server/db/schema/accounts";
+import {
+	accountModificationHistory,
+	accounts,
+	passwordResetTokens,
+	sessions,
+} from "#server/db/schema/accounts";
 import { and, eq, isNull } from "drizzle-orm";
 
 import { hashPassword } from "#server/utils/password";
@@ -106,6 +111,10 @@ export default defineEventHandler(async (event) => {
 			.update(passwordResetTokens)
 			.set({ usedAt: new Date(), revoked: true })
 			.where(eq(passwordResetTokens.id, tokenRow.id));
+
+		await tx
+			.delete(sessions)
+			.where(eq(sessions.accountId, tokenRow.accountId));
 	});
 
 	try {

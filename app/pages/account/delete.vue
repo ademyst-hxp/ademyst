@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ArrowDownTrayIcon } from "@heroicons/vue/24/outline";
+
 import Box from "~/components/base/Box.vue";
 import Button from "~/components/Button.vue";
 import Avatar from "~/components/profile/Avatar.vue";
@@ -53,25 +55,22 @@ useHead({
 	<Teleport to="#header">
 		<h1 class="text-2xl font-bold text-center">Supprimer mon compte</h1>
 	</Teleport>
-	<!--section
-		class="bg-surface text-surface-text border border-surface-border rounded-3xl px-6 py-4"
-	>
-		<h2 class="text-lg font-semibold mb-2">Exporter mes données</h2>
+	<Box>
+		<h2 class="text-xl font-semibold font-title">Exporter mes données</h2>
 		<p class="text-surface-text-muted text-sm">
-			Si vous souhaitez récupérer les données collectées sur vous avant de
-			supprimer votre compte, vous pouvez vous rendre dans vos paramètres,
-			rubrique "Confidentialité & Vie Privée" pour les exporter. Vous
-			pourrez, après ça, supprimer votre compte de manière définitive une
-			fois que vous les aurez reçues.
+			Avant de supprimer votre compte, vous pouvez récupérer une copie des
+			données collectées sur vous. Elle s'ouvre dans un nouvel onglet, pour
+			que vous puissiez ensuite revenir ici et supprimer votre compte de
+			manière définitive.
 		</p>
 		<Button
-			:icon="AtSymbolIcon"
+			:icon="ArrowDownTrayIcon"
 			label="Exporter mes données"
-			variant="primary"
+			variant="secondary"
 			size="medium"
-			handler="/settings/privacy#export-data?intent=delete-account"
+			handler="@:/settings/privacy#export-data"
 		/>
-	</section-->
+	</Box>
 	<Box>
 		<h2 class="text-xl font-semibold font-title">
 			Procéder à la suppression

@@ -10,14 +10,6 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event);
-	const user = await getUser(event, identity);
-
-	if (!user) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
 
 	const postId = normalizeId(event.context.params?.id);
 
@@ -42,7 +34,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	if (!(
-		candidate.profileId === user.profile.id || user.profile.level >= 7
+		candidate.profileId === identity.profileId || identity.profile.level >= 7
 	)) {
 		throw createError({
 			statusCode: 403,

@@ -76,14 +76,6 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
-	const user = await getUser(event, identity);
-
-	if (!user) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
 
 	const body = await readBody(event);
 	const id = normalizeId(event.context.params?.id);
@@ -95,14 +87,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const specs = {
-		max_length:
-			user.profile.level >= 5
-				? 5000
-				: user.profile.level >= 4
-					? 2000
-					: 1000,
-	};
+	const specs = getPostSpecs(identity.profile.level);
 
 	let [candidate] = await db.select()
 		.from(posts)
@@ -115,7 +100,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	if (candidate.profileId !== user.profileId) {
+	if (candidate.profileId !== identity.profileId) {
 		throw createError({
 			statusCode: 403,
 			statusMessage: "You are not allowed to edit this post",
