@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { DocumentTextIcon, EnvelopeIcon, ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
+import {
+	DocumentTextIcon,
+	EnvelopeIcon,
+	ExclamationTriangleIcon,
+} from "@heroicons/vue/24/outline";
 
 definePageMeta({
 	title: "Ademyst: Conditions d'utilisation",
@@ -58,7 +62,9 @@ useHead({
 		<article
 			class="rounded-3xl bg-surface border border-surface-border p-6 md:p-10"
 		>
-			<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
+			<div
+				class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4"
+			>
 				<h2 class="font-title">1. Objet</h2>
 
 				<p>
@@ -89,6 +95,12 @@ useHead({
 					L'utilisateur s'engage à fournir des informations exactes et
 					à ne pas utiliser la plateforme sous l'identité d'une autre
 					personne.
+				</p>
+
+				<p>
+					L'utilisateur doit être âgé d'au moins 15 ans pour créer un
+					compte sur Ademyst. Les utilisateurs âgés de moins de 15 ans
+					ne sont pas autorisés à créer un compte.
 				</p>
 
 				<h2 class="font-title">3. Compte utilisateur</h2>
