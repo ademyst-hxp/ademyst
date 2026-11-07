@@ -23,14 +23,6 @@ export default defineEventHandler(async (event) => {
 	};
 
 	const identity = await requireAuth(event, { min_level: 8 });
-	const author = await getUser(event, identity);
-
-	if (!author) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Unauthorized",
-		});
-	}
 
 	if (!levelId) {
 		throw createError({
@@ -82,7 +74,7 @@ export default defineEventHandler(async (event) => {
 			),
 	);
 
-	if (targetLevel >= author.profile.level) {
+	if (targetLevel >= identity.profile.level) {
 		throw createError({
 			statusCode: 403,
 			statusMessage: "Cannot modify team members with level 8 or higher",

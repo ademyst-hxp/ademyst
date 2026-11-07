@@ -16,17 +16,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
-	const user = await getUser(event, identity);
-
-	if (!user) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "User not found",
-		});
-	}
 
 	const body = await readBody(event);
-	const specs = getWhisperSpecs(user.profile.level);
+	const specs = getWhisperSpecs(identity.profile.level);
 
 	const content = normalizeOptionalText(body?.content) ?? "";
 

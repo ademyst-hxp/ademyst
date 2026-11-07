@@ -101,17 +101,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
-	const user = await getUser(event, identity);
-
-	if (!user) {
-		throw createError({
-			statusCode: 401,
-			statusMessage: "Unauthorized",
-		});
-	}
 
 	const body = await readBody(event);
-	const specs = getPostSpecs(user.profile.level);
+	const specs = getPostSpecs(identity.profile.level);
 
 	const { parentId, content, visibility, flag_entries } = validatePayload(
 		body,

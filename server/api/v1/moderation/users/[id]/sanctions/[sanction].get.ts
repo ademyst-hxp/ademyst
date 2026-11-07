@@ -33,18 +33,9 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const identity = await requireAuth(event);
 
-	const request_issuer = await getUser(event, identity);
-
-	if (!request_issuer) {
-		throw createError({
-			statusCode: 403,
-			statusMessage: "Insufficient permissions",
-		});
-	}
-
 	if (
-		request_issuer.profile.level < 6 &&
-		request_issuer.profile.id !== normalizedId
+		identity.profile.level < 6 &&
+		identity.profile.id !== normalizedId
 	) {
 		throw createError({
 			statusCode: 403,

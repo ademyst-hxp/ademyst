@@ -87,9 +87,7 @@ export default defineEventHandler(async (event) => {
 
 	// Team levels (6+) can only be assigned below the author's own level.
 	if (lvl.id >= 6) {
-		const author = await getUser(event, identity);
-
-		if (!author || lvl.id >= author.profile.level) {
+		if (lvl.id >= identity.profile.level) {
 			throw createError({
 				statusCode: 403,
 				statusMessage: "Cannot assign this level",
