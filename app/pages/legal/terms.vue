@@ -55,8 +55,8 @@ useHead({
 				Conditions Générales d'Utilisation
 			</h2>
 
-			<p class="text-muted">Dernière mise à jour: 23 octobre 2026</p>
-			<p class="text-muted">Entrée en vigueur: 23 octobre 2026</p>
+			<p class="text-muted">Dernière mise à jour: 07 novembre 2026</p>
+			<p class="text-muted">Entrée en vigueur: 07 novembre 2026</p>
 		</header>
 
 		<article
