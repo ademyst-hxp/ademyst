@@ -16,6 +16,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import Actions from "~/components/base/Actions.vue";
+import DataExports from "~/components/account/DataExports.vue";
 import Info from "~/components/boxes/Info.vue";
 
 const { session, refresh: refreshSession } = useAuthSession();
@@ -252,6 +253,7 @@ const saveSettings = async () => {
 			/>
 		</div>
 	</section>
+	<DataExports />
 	<section class="flex flex-col gap-4">
 		<h2 class="text-xl font-semibold font-title">
 			Vous cherchiez peut-être...

@@ -311,6 +311,8 @@ useHead({
 				</li>
 			</ul>
 
+			<p>Vous pouvez télécharger une copie de vos données en allant dans vos paramètres de confidentialité, rub</p>
+
 			<p>
 				Pour exercer vos droits :
 				<strong>contact@ejnalo.me</strong>
