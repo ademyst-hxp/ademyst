@@ -107,6 +107,8 @@ export const getPostSpecs = (
 ): {
 	max_length: number;
 	max_images: number;
+	max_gifs: number;
+	max_videos: number;
 	max_audios: number;
 	max_links: number;
 } => {
@@ -115,6 +117,12 @@ export const getPostSpecs = (
 		max_images:
 			POST_MEDIA_LIMITS[level || 0]?.images ||
 			POST_MEDIA_LIMITS[0]?.images!,
+		max_gifs:
+			POST_MEDIA_LIMITS[level || 0]?.gifs ||
+			POST_MEDIA_LIMITS[0]?.gifs!,
+		max_videos:
+			POST_MEDIA_LIMITS[level || 0]?.videos ||
+			POST_MEDIA_LIMITS[0]?.videos!,
 		max_audios:
 			POST_MEDIA_LIMITS[level || 0]?.audios ||
 			POST_MEDIA_LIMITS[0]?.audios!,

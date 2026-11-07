@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { convertToLitteralDuration } from "~/utils/date";
 
+import { groupAttachments } from "~~/shared/utils/attachments";
+
 import type { Post } from "~~/shared/models/interactions";
 
 import {
@@ -24,6 +26,8 @@ import {
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
 import Warning from "../boxes/Warning.vue";
+import AttachmentBanner from "./AttachmentBanner.vue";
+import Media from "./Media.vue";
 import ProfileRow from "../profile/ProfileRow.vue";
 
 const props = withDefaults(
@@ -179,6 +183,19 @@ const isMenuOpen = ref(false);
 const isDeleteMenuOpen = ref(false);
 const isFriendOnlyPopupOpen = ref(false);
 
+// Médias (images, vidéos, GIFs) sous le texte ; le reste en bannières sous le post
+const attachments = computed(() => groupAttachments(post.value.attachments));
+
+const medias = computed(() => [
+	...attachments.value.media,
+	...attachments.value.gifs,
+]);
+
+const banners = computed(() => [
+	...attachments.value.links,
+	...attachments.value.others,
+]);
+
 const rendered = computed(() => {
 	return $md.render(props.data.content);
 });
@@ -232,12 +249,32 @@ const rendered = computed(() => {
 			</p>
 		</div>
 		<div
+			v-if="medias.length"
+			class="grid gap-1 -mx-2"
+			:class="medias.length > 1 ? 'grid-cols-2' : 'grid-cols-1'"
+		>
+			<Media
+				v-for="(media, index) in medias"
+				:key="media.id"
+				:data="media"
+				:force-ratio="medias.length > 1 ? '4:3' : undefined"
+				:class="
+					medias.length % 2 === 1 && index === 0 && medias.length > 1
+						? 'col-span-2'
+						: ''
+				"
+			/>
+		</div>
+		<div
 			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
 			:class="post.parentId ? 'max-h-96' : 'max-h-144'"
 			v-html="rendered || '<em>Vide.</em>'"
 			@click.self="$router.push(`/posts/${post.id}`)"
 		/>
-		<div class="flex flex-col gap-2" v-if="post.flags.NFE || post.flags.AI">
+		<div
+			class="flex flex-col gap-2"
+			v-if="post.flags.NFE || post.flags.AI || banners.length"
+		>
 			<div
 				v-if="post.flags.AI"
 				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
@@ -256,6 +293,12 @@ const rendered = computed(() => {
 					choquant pour un jeune public.
 				</p>
 			</div>
+			<AttachmentBanner
+				v-for="banner in banners"
+				:key="banner.id"
+				:data="banner"
+				class="-mx-2"
+			/>
 		</div>
 
 		<div

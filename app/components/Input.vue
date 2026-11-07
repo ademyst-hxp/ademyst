@@ -13,6 +13,7 @@ const props = withDefaults(
 		disabled?: boolean;
 		invalid?: boolean;
 		required?: boolean;
+		accept?: string;
 		min?: number;
 		max?: number;
 	}>(),
@@ -244,6 +245,7 @@ function onEnter(event: KeyboardEvent) {
 				:value="type === 'file' ? undefined : modelValue"
 				:placeholder="placeholder"
 				:disabled="disabled"
+				:accept="accept"
 				@input="onInput"
 				@focus="onFocus"
 				@blur="onBlur"
