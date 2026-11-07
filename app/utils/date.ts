@@ -11,13 +11,13 @@ export const convertToLitteralDuration = (start: Date, end: Date): string => {
 	if (years > 0) {
 		return `${years} an${years > 1 ? "s" : ""}`;
 	} else if (months > 0) {
-		return `${months} mois`;
+		return `${months}m`;
 	} else if (days > 0) {
-		return `${days} jour${days > 1 ? "s" : ""}`;
+		return `${days}j`;
 	} else if (hours > 0) {
-		return `${hours} heure${hours > 1 ? "s" : ""}`;
+		return `${hours}h`;
 	} else if (minutes > 0) {
-		return `${minutes} minute${minutes > 1 ? "s" : ""}`;
+		return `${minutes} min`;
 	} else {
 		return "À l'instant";
 	}
