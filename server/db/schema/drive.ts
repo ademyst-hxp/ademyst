@@ -22,10 +22,6 @@ export const attachments = pgTable("attachments", {
 		onDelete: "cascade",
 	}),
 
-	whisperId: varchar("whisper_id", { length: 10 }).references(() => whispers.id, {
-		onDelete: "cascade",
-	}),
-
 	link: text("link").notNull(),
 
 	visibility: attachmentVisibilityEnum("visibility")
