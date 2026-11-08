@@ -14,6 +14,7 @@ import { profiles } from "~~/server/db/schema/profiles";
 import { postReports } from "~~/server/db/schema/reports";
 import { and, count, eq, inArray, or } from "drizzle-orm";
 
+import { convertSeveralAttachments } from "~~/server/utils/converters/drive";
 import {
 	retrieveCleanProfile,
 	retrieveSeveralCleanProfiles,
@@ -86,6 +87,7 @@ export async function retrieveCleanPost(
 						.select()
 						.from(attachments)
 						.where(eq(attachments.postId, post.id))
+						.orderBy(attachments.createdAt)
 				: Promise.resolve([]),
 
 			db
@@ -164,7 +166,7 @@ export async function retrieveCleanPost(
 		visibility: post.visibility,
 		createdAt: post.createdAt,
 		updatedAt: post.updatedAt,
-		attachments: shouldTruncate ? [] : files,
+		attachments: shouldTruncate ? [] : convertSeveralAttachments(files),
 
 		flags: {
 			...flags.reduce(
@@ -260,7 +262,8 @@ export async function retrieveSeveralCleanPosts(
 		db
 			.select()
 			.from(attachments)
-			.where(inArray(attachments.postId, postIds)),
+			.where(inArray(attachments.postId, postIds))
+			.orderBy(attachments.createdAt),
 
 		db
 			.select({
@@ -386,7 +389,7 @@ export async function retrieveSeveralCleanPosts(
 			createdAt: post.createdAt,
 			updatedAt: post.updatedAt,
 
-			attachments: files,
+			attachments: convertSeveralAttachments(files),
 
 			flags: {
 				...flags.reduce(

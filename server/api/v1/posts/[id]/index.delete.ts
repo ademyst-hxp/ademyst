@@ -1,7 +1,9 @@
 import { useDb } from "~~/server/db";
+import { attachments } from "~~/server/db/schema/drive";
 import { posts } from "~~/server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
+import { deleteAttachmentFiles } from "#server/utils/helpers/attachments";
 import { normalizeId } from "#server/utils/normalizers/ids";
 
 import type { H3Event } from "h3";
@@ -42,7 +44,14 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	// Les lignes partent en cascade, pas les fichiers du bucket
+	const files = await db
+		.select()
+		.from(attachments)
+		.where(eq(attachments.postId, postId));
+
 	await db.delete(posts).where(eq(posts.id, postId));
+	await deleteAttachmentFiles(event, files);
 
 	return {
 		status: "ok",

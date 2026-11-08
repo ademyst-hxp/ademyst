@@ -11,6 +11,27 @@ export const attachmentVisibilityEnum = pgEnum("attachment_visibility", [
 	"me",
 ]);
 
+export const attachmentTypeEnum = pgEnum("attachment_type", [
+	"image",
+	"video",
+	"gif",
+	"audio",
+	"link",
+	"other",
+]);
+
+export const attachmentRatioEnum = pgEnum("attachment_ratio", [
+	"16:9",
+	"5:4",
+	"4:3",
+	"3:2",
+	"1:1",
+	"2:3",
+	"3:4",
+	"4:5",
+	"9:16",
+]);
+
 export const attachments = pgTable("attachments", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
@@ -22,10 +43,13 @@ export const attachments = pgTable("attachments", {
 		onDelete: "cascade",
 	}),
 
-	whisperId: varchar("whisper_id", { length: 10 }).references(() => whispers.id, {
-		onDelete: "cascade",
-	}),
+	type: attachmentTypeEnum("type").notNull().default("link"),
 
+	ratio: attachmentRatioEnum("ratio").notNull().default("1:1"),
+
+	altText: text("alt_text"),
+
+	// Clé du fichier dans le bucket "files" (hébergé) ou URL (GIF, lien externe)
 	link: text("link").notNull(),
 
 	visibility: attachmentVisibilityEnum("visibility")

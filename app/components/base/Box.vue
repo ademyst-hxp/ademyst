@@ -36,16 +36,16 @@ const root = computed<{
 
 	switch (props.scale) {
 		case "sm":
-			rootClass += " rounded-3xl";
+			rootClass += " rounded-2xl";
 			if (!props.layout.includes("divide")) {
-				rootClass += " gap-1 p-4 sm:p-6 sm:gap-1";
+				rootClass += " gap-2 p-4 sm:p-6 sm:gap-3";
 			}
 			break;
 		case "md":
 		default:
-			rootClass += " rounded-4xl";
+			rootClass += " rounded-3xl";
 			if (!props.layout.includes("divide")) {
-				rootClass += " gap-2 p-6 sm:p-8 sm:gap-4";
+				rootClass += " gap-3 p-4 sm:p-6 sm:gap-4";
 			}
 	}
 

@@ -1,6 +1,6 @@
 import {
 	POST_CHAR_LIMITS,
-	POST_IMAGE_LIMITS,
+	POST_MEDIA_LIMITS,
 	WHISPER_CHAR_LIMITS,
 } from "~~/shared/consts/specs";
 
@@ -104,10 +104,31 @@ export const ratingScoreDetails = (
 // Specs
 export const getPostSpecs = (
 	level?: number,
-): { max_length: number; max_images: number } => {
+): {
+	max_length: number;
+	max_images: number;
+	max_gifs: number;
+	max_videos: number;
+	max_audios: number;
+	max_links: number;
+} => {
 	return {
 		max_length: POST_CHAR_LIMITS[level || 0] || POST_CHAR_LIMITS[0]!,
-		max_images: POST_IMAGE_LIMITS[level || 0] || POST_IMAGE_LIMITS[0]!,
+		max_images:
+			POST_MEDIA_LIMITS[level || 0]?.images ||
+			POST_MEDIA_LIMITS[0]?.images!,
+		max_gifs:
+			POST_MEDIA_LIMITS[level || 0]?.gifs ||
+			POST_MEDIA_LIMITS[0]?.gifs!,
+		max_videos:
+			POST_MEDIA_LIMITS[level || 0]?.videos ||
+			POST_MEDIA_LIMITS[0]?.videos!,
+		max_audios:
+			POST_MEDIA_LIMITS[level || 0]?.audios ||
+			POST_MEDIA_LIMITS[0]?.audios!,
+		max_links:
+			POST_MEDIA_LIMITS[level || 0]?.links ||
+			POST_MEDIA_LIMITS[0]?.links!,
 	};
 };
 

@@ -1,4 +1,5 @@
 import { useDb } from "#server/db";
+import { attachments } from "#server/db/schema/drive";
 import { posts, postsFlags } from "#server/db/schema/interactions";
 import { eq } from "drizzle-orm";
 
@@ -167,6 +168,14 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusCode: 500,
 			statusMessage: "Failed to edit post",
 		});
+	}
+
+	// Les Attachments suivent la visibilité de leur publication
+	if (visibility) {
+		await db
+			.update(attachments)
+			.set({ visibility })
+			.where(eq(attachments.postId, id));
 	}
 
 	const post = await retrieveCleanPost(event, identity, editedPost);
