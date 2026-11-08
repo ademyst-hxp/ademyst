@@ -438,7 +438,9 @@ const handlePublish = async () => {
 				v-model="preparingPost.content"
 				type="textarea"
 				placeholder="Exprimez-vous..."
-				class="h-48 -mx-4"
+				class="h-72 -mx-4"
+				minlength="1"
+				:maxlength="limit"
 				rich
 			/>
 
