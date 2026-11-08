@@ -1,15 +1,14 @@
 import { useDb } from "#server/db";
 import { attachments } from "~~/server/db/schema/drive";
-import { and, eq, isNull } from "drizzle-orm";
 
 import { convertAttachment } from "~~/server/utils/converters/drive";
 import { useDrive } from "~~/server/utils/drive";
 import {
-	assertAttachmentSlots,
 	buildAttachmentKey,
 	normalizeAttachmentType,
 	normalizeExternalUrl,
 	normalizeMediaRatio,
+	purgeOrphanAttachments,
 } from "~~/server/utils/helpers/attachments";
 import { processAttachmentImage } from "~~/server/utils/helpers/files";
 import { requireAuth } from "~~/server/utils/middleware/auth";
@@ -22,7 +21,6 @@ import {
 	getAttachmentTypeFromMime,
 	getClosestRatio,
 } from "~~/shared/utils/attachments";
-import { getPostSpecs } from "~~/shared/utils/interactions";
 
 import type { AttachmentType, MediaRatio } from "~~/shared/models/drive";
 
@@ -48,7 +46,6 @@ export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
 	const identity = await requireAuth(event, { min_level: 2 });
-	const specs = getPostSpecs(identity.profile.level);
 
 	const isMultipart = (getRequestHeader(event, "content-type") ?? "")
 		.toLowerCase()
@@ -149,19 +146,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		ratio = normalizeMediaRatio(body?.ratio) ?? "16:9";
 	}
 
-	// Limite par niveau : on borne les orphelins du même type.
-	const pending = await db
-		.select({ id: attachments.id })
-		.from(attachments)
-		.where(
-			and(
-				eq(attachments.authorId, identity.profileId),
-				eq(attachments.type, type),
-				isNull(attachments.postId),
-			),
-		);
-
-	assertAttachmentSlots(type, pending.length, specs);
+	await purgeOrphanAttachments(event, identity.profileId);
 
 	if (upload) {
 		const storage = useDrive(event, "files");

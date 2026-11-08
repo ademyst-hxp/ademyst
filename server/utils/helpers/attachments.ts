@@ -1,7 +1,7 @@
 import { useDb } from "#server/db";
 import { attachments } from "~~/server/db/schema/drive";
 import { profiles } from "~~/server/db/schema/profiles";
-import { eq } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 import { useDrive } from "~~/server/utils/drive";
 import {
@@ -119,6 +119,52 @@ export async function canViewAttachment(
 	const privacy = await getPrivacySettings(event, author);
 
 	return canAccessEntity(privacy, relationship, attachment.visibility);
+}
+
+export const ORPHAN_ATTACHMENT_TTL_HOURS = 24;
+export const ORPHAN_ATTACHMENT_MAX = 30;
+
+export async function purgeOrphanAttachments(event: H3Event, authorId: string) {
+	const db = useDb(event);
+
+	const orphanOf = and(
+		eq(attachments.authorId, authorId),
+		isNull(attachments.postId),
+	);
+
+	// 1. Brouillons abandonnés (comparaison côté SQL, même horloge que defaultNow()).
+	const stale = await db
+		.delete(attachments)
+		.where(
+			and(
+				orphanOf,
+				sql`${attachments.createdAt} < now() - make_interval(hours => ${ORPHAN_ATTACHMENT_TTL_HOURS})`,
+			),
+		)
+		.returning();
+
+	// 2. Plafond de sécurité : on évince les plus anciens, jamais l'envoi courant.
+	const remaining = await db
+		.select()
+		.from(attachments)
+		.where(orphanOf)
+		.orderBy(asc(attachments.createdAt));
+
+	const overflow = remaining.slice(
+		0,
+		Math.max(0, remaining.length - (ORPHAN_ATTACHMENT_MAX - 1)),
+	);
+
+	if (overflow.length > 0) {
+		await db.delete(attachments).where(
+			inArray(
+				attachments.id,
+				overflow.map((row) => row.id),
+			),
+		);
+	}
+
+	await deleteAttachmentFiles(event, [...stale, ...overflow]);
 }
 
 // Supprime du bucket les fichiers hébergés (les GIFs et liens n'en ont pas).

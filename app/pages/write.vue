@@ -211,6 +211,8 @@ const {
 } = useAttachments();
 
 const uploads = ref<Attachment[]>([]); // envois en cours (squelettes)
+const createdPostId = ref<string | null>(null); // post créé dont le rattachement a échoué
+let published = false;
 const removedAttachmentIds = ref<string[]>([]); // à supprimer à la publication (édition)
 
 const groups = computed(() =>
@@ -356,6 +358,14 @@ const syncAttachments = async (postId: string) => {
 	}
 };
 
+onBeforeRouteLeave(() => {
+	if (published) return;
+
+	preparingPost.value.attachments
+		.filter((attachment) => !attachment.postId)
+		.forEach((attachment) => void deleteAttachment(attachment.id));
+});
+
 /* -------------------------------------------------------------------------- */
 /*  Publication                                                               */
 /* -------------------------------------------------------------------------- */
@@ -373,23 +383,26 @@ const handlePublish = async () => {
 	error.value = null;
 
 	try {
-		let postId = editPostId;
+		let postId = editPostId ?? createdPostId.value;
 
 		if (editPostId) {
 			await $api(`/posts/${editPostId}/edit`, {
 				method: "PUT",
 				body: preparingPost.value,
 			});
-		} else {
+		} else if (!postId) {
+			// Si le rattachement échoue, un nouvel essai ne recrée pas le post.
 			const response = await $api<{ data: Post }>("/posts/new", {
 				method: "POST",
 				body: preparingPost.value,
 			});
 			postId = response.data.id;
+			createdPostId.value = postId;
 		}
 
 		if (postId) await syncAttachments(postId);
 
+		published = true;
 		await navigateTo("/discover");
 	} catch (e: any) {
 		error.value =
