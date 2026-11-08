@@ -439,6 +439,7 @@ const handlePublish = async () => {
 				type="textarea"
 				placeholder="Exprimez-vous..."
 				class="h-48 -mx-4"
+				rich
 			/>
 
 			<!-- Pièces jointes (uniquement s'il y en a) -->
