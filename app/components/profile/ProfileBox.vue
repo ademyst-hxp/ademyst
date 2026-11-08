@@ -10,19 +10,17 @@ const { session } = useAuthSession();
 
 const props = withDefaults(
 	defineProps<{
-		modelValue: Profile;
+		data: Profile;
 		layout?: "vertical" | "horizontal";
 		minified?: boolean;
-		editable?: boolean;
 	}>(),
 	{
 		layout: "vertical",
 		minified: false,
-		editable: false,
 	},
 );
 
-const profile = ref<Profile>(props.modelValue);
+const profile = ref<Profile>(props.data);
 const relationships = computed(() => profile.value.relationships);
 const stats = computed(() => profile.value.stats);
 
@@ -51,15 +49,7 @@ const canUnfollow = computed(
 		!relationships.value.blocking,
 );
 
-watch(
-	() => props.modelValue,
-	(newData) => {
-		profile.value = newData;
-	},
-);
-
 const emits = defineEmits<{
-	(e: "update:modelValue"): void;
 	(e: "click"): void;
 }>();
 
@@ -94,17 +84,7 @@ const toggleFollow = async () => {
 			class="flex flex-col justify-end gap-1 bg-linear-to-b from-surface/0 via-surface/10 to-surface/60 text-surface-text border-2 border-surface-border rounded-4xl w-full h-full p-6"
 		>
 			<div class="flex items-center gap-2 text-2xl font-semibold">
-				<template v-if="editable">
-					<input
-						v-model="profile.displayName"
-						type="text"
-						placeholder="Nom d'affichage"
-						class="bg-transparent border-b border-white/15 text-lg font-semibold w-fit min-w-0 focus:outline-none focus:ring-2 focus:ring-primary"
-					/>
-				</template>
-				<template v-else>
-					{{ profile.displayName || `@${profile.name}` }}
-				</template>
+				{{ profile.displayName || `@${profile.name}` }}
 				<img
 					v-if="profile.badge"
 					:src="`/api/v1/badges/${profile.badge?.id}/icon.png`"
@@ -112,27 +92,25 @@ const toggleFollow = async () => {
 					class="shrink-0 h-5 w-5"
 				/>
 				<div class="grow" />
-				<template v-if="!editable">
-					<button
-						v-if="canFollow"
-						@click="toggleFollow"
-						class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
-					>
-						<PlusIcon class="h-4 w-4" />
-						Suivre
-					</button>
+				<button
+					v-if="canFollow"
+					@click="toggleFollow"
+					class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
+				>
+					<PlusIcon class="h-4 w-4" />
+					Suivre
+				</button>
 
-					<button
-						v-else-if="canUnfollow"
-						@click="toggleFollow"
-						class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
-					>
-						<UserMinusIcon class="h-4 w-4" />
-						Suivi(e)
-					</button>
-				</template>
+				<button
+					v-else-if="canUnfollow"
+					@click="toggleFollow"
+					class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
+				>
+					<UserMinusIcon class="h-4 w-4" />
+					Suivi(e)
+				</button>
 			</div>
-			<div v-if="!editable" class="flex items-center gap-2 opacity-75">
+			<div class="flex items-center gap-2 opacity-75">
 				<span
 					><span class="font-semibold">{{
 						toLitteral(stats.following)

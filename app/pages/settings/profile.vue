@@ -13,7 +13,7 @@ import Box from "~/components/base/Box.vue";
 import Popup from "~/components/base/Popup.vue";
 
 import Avatar from "~/components/profile/Avatar.vue";
-import ProfileBox from "~/components/profile/ProfileBox.vue";
+import ProfileBox from "~/components/profile/EditableProfile.vue";
 
 import type { Profile } from "~~/shared/models/profiles";
 
