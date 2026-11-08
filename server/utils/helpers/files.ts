@@ -124,6 +124,7 @@ async function transformToWebp(
 	width: number,
 	height: number,
 	quality: number,
+	fit: "scale-down" | "contain" | "cover" | "crop" | "pad" = "cover",
 ): Promise<ArrayBuffer> {
 	const result = await (
 		await images
@@ -131,7 +132,7 @@ async function transformToWebp(
 			.transform({
 				width,
 				height,
-				fit: "cover",
+				fit,
 			})
 			.output({
 				format: "image/webp",
@@ -157,6 +158,34 @@ export async function processImage(
 	const metadata = await validateImage(input, contentType, images, "Image");
 
 	const buffer = await transformToWebp(input, images, 4096, 4096, 82);
+
+	const output = new Uint8Array(buffer);
+
+	return {
+		buffer,
+		width: metadata.width,
+		height: metadata.height,
+		size: output.byteLength,
+		contentType: "image/webp",
+	};
+}
+
+// Image d'un Attachment : on garde les proportions (pas de recadrage).
+export async function processAttachmentImage(
+	input: ArrayBuffer | Uint8Array,
+	contentType: string,
+	images: ImagesBinding,
+): Promise<ProcessedImage> {
+	const metadata = await validateImage(input, contentType, images, "Image");
+
+	const buffer = await transformToWebp(
+		input,
+		images,
+		4096,
+		4096,
+		82,
+		"scale-down",
+	);
 
 	const output = new Uint8Array(buffer);
 
