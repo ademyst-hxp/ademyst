@@ -128,11 +128,11 @@ export const domains: Record<
 		pattern: /^\/([A-Za-z0-9_-]+)\/?$/i,
 	},
 
-	"pixiv.net": {
+	"pixiv.me": {
 		name: "pixiv",
 		title: "Pixiv",
 		icon: "https://cdn.simpleicons.org/pixiv",
-		slugType: "id",
+		slugType: "name",
 		pattern: /^\/users\/(\d+)\/?$/i,
 	},
 
@@ -140,7 +140,7 @@ export const domains: Record<
 		name: "bulle",
 		title: "Bulle",
 		icon: "https://www.bulle.media/favicon.ico",
-		slugType: "id",
+		slugType: "name",
 		pattern: /^\/u\/([A-Za-z0-9_-]+)\/?$/i,
 	},
 
@@ -148,7 +148,7 @@ export const domains: Record<
 		name: "darflen",
 		title: "Darflen",
 		icon: "https://static.darflen.com/img/favicons/favicon.ico",
-		slugType: "id",
+		slugType: "name",
 		pattern: /^\/users\/([A-Za-z0-9_-]+)\/?$/i,
 	},
 } as const;
