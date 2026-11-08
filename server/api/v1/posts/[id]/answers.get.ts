@@ -47,7 +47,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		.limit(limit)
 		.offset(offset);
 
-	const _posts = await retrieveSeveralCleanPosts(event, identity, candidates);
+	const _posts = await retrieveSeveralCleanPosts(event, identity, candidates, true);
 
 	return {
 		status: "ok",
