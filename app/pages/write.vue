@@ -656,7 +656,11 @@ const handlePublish = async () => {
 			</WarningBox>
 
 			<div class="flex justify-center gap-2">
-				<Button label="Retour" :handler="() => (tab = 'write')" />
+				<Button
+					label="Retour"
+					variant="white"
+					:handler="() => (tab = 'write')"
+				/>
 				<Button
 					:label="isEditing ? 'Enregistrer' : 'Publier'"
 					variant="primary"
