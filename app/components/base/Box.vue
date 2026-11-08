@@ -38,7 +38,7 @@ const root = computed<{
 		case "sm":
 			rootClass += " rounded-2xl";
 			if (!props.layout.includes("divide")) {
-				rootClass += " gap-2 p-4 sm:p-6 sm:gap-3";
+				rootClass += " gap-2 p-3 sm:p-4 sm:gap-3";
 			}
 			break;
 		case "md":
