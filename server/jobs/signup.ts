@@ -9,9 +9,6 @@ import { and, count, eq } from "drizzle-orm";
 import { H3Event } from "h3";
 
 const EARLY_BIRD_MAX_DATE = new Date("2026-10-31T23:59:59.999Z");
-const BEAM_BADGE_MAX_DATE = new Date(
-	useRuntimeConfig().public.beamVerificationDeadline,
-);
 
 export async function giveSignupBadges(
 	event: H3Event,
@@ -53,32 +50,6 @@ export async function giveSignupBadges(
 	}
 
 	await db.insert(badgesEntitlements).values(_badges_to_put);
-}
-
-export async function giveBeamBadge(
-	event: H3Event,
-	profileId: string,
-	profileSignupDate: Date,
-): Promise<void> {
-	const db = useDb(event);
-
-	if (profileSignupDate <= BEAM_BADGE_MAX_DATE) {
-		await db.insert(badgesEntitlements).values({
-			profileId: profileId,
-			badgeId: "first_hour",
-			name: "Badge Beam Offert",
-			reason:
-				"Vous avez rejoint la communauté avant le " +
-				BEAM_BADGE_MAX_DATE.toLocaleDateString("fr-FR", {
-					month: "long",
-					day: "numeric",
-					year: "numeric",
-				}) +
-				".",
-			enabled: true,
-			createdAt: new Date(),
-		});
-	}
 }
 
 // Runs on the caller's transaction: the request has a single connection, so

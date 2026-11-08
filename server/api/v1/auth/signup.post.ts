@@ -1,24 +1,20 @@
 import { useDb } from "#server/db";
 import { accounts } from "#server/db/schema/accounts";
-import { profileLinks, profiles } from "#server/db/schema/profiles";
+import { profiles } from "#server/db/schema/profiles";
 import {
 	appearanceSettings,
 	privacySettings,
 } from "#server/db/schema/settings";
 import { referralCodes, referrals } from "~~/server/db/schema/referrals";
+
 import { and, eq, isNull, gt, or } from "drizzle-orm";
 
-import { verifyBeamProfile } from "#server/utils/beam";
 import { generateHexId } from "#server/utils/ids";
 import { hashPassword } from "#server/utils/password";
 
 import type { H3Event } from "h3";
 
-import {
-	giveBeamBadge,
-	giveReferralBadge,
-	giveSignupBadges,
-} from "#server/jobs/signup";
+import { giveReferralBadge, giveSignupBadges } from "#server/jobs/signup";
 
 type SignupPayload = {
 	email: string;
@@ -26,51 +22,80 @@ type SignupPayload = {
 	username: string;
 	display_name: string | null;
 	birthday: Date;
-	token?: string;
 	referrer?: string;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
 };
 
 function normalizePayload(value: unknown): SignupPayload | null {
-	if (typeof value !== "object" || value === null) return null;
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		return null;
+	}
 
-	const email = normalizeEmail((value as any).email);
-	const password = normalizePassword((value as any).password);
+	const body = value as Record<string, unknown>;
+
+	const email = normalizeEmail(body.email);
+	const password = normalizePassword(body.password);
+
 	const username =
-		typeof (value as any).username === "string"
-			? (value as any).username.trim()
-			: null;
+		typeof body.username === "string"
+			? body.username.trim().toLowerCase()
+			: "";
+
 	const displayName =
-		typeof (value as any).display_name === "string"
-			? (value as any).display_name.trim()
-			: null;
-	const token =
-		typeof (value as any).token === "string"
-			? (value as any).token.trim()
-			: null;
-	const referrer = normalizeCode((value as any).referrer);
-	const birthday = (value as any).birthday
-		? new Date((value as any).birthday)
-		: null;
+		typeof body.display_name === "string" ? body.display_name.trim() : null;
 
-	if (!email || !password || !username || !birthday) return null;
+	const referrer = normalizeCode(body.referrer);
 
-	if (birthday && isNaN(new Date(birthday).getTime())) {
+	const birthday =
+		typeof body.birthday === "string" ||
+		typeof body.birthday === "number" ||
+		body.birthday instanceof Date
+			? new Date(body.birthday)
+			: null;
+
+	if (!email || !password || !username || !birthday) {
+		return null;
+	}
+
+	// Username validation.
+	if (!/^[a-z0-9_]{3,16}$/.test(username)) {
+		return null;
+	}
+
+	// Display name validation.
+	if (displayName !== null && displayName.length > 32) {
+		return null;
+	}
+
+	// Birthday validation.
+	if (isNaN(birthday.getTime())) {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Invalid birthday",
 		});
 	}
 
-	if (new Date(birthday) > new Date()) {
+	const today = new Date();
+
+	if (birthday > today) {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "Birthday cannot be in the future",
 		});
 	}
 
-	if (new Date(birthday).getFullYear() - new Date().getFullYear() > -15) {
+	let age = today.getFullYear() - birthday.getFullYear();
+
+	if (
+		today.getMonth() < birthday.getMonth() ||
+		(today.getMonth() === birthday.getMonth() &&
+			today.getDate() < birthday.getDate())
+	) {
+		age--;
+	}
+
+	if (age < 15) {
 		throw createError({
 			statusCode: 400,
 			statusMessage: "You must be at least 15 years old to sign up",
@@ -81,26 +106,32 @@ function normalizePayload(value: unknown): SignupPayload | null {
 		email,
 		password,
 		username,
-		display_name: displayName || undefined,
+		display_name: displayName || null,
 		birthday,
-		token: token || undefined,
 		referrer: referrer || undefined,
-		termsOfServiceConsent: (value as any).termsOfServiceConsent === true,
-		privacyPolicyConsent: (value as any).privacyPolicyConsent === true,
+		termsOfServiceConsent: body.termsOfServiceConsent === true,
+		privacyPolicyConsent: body.privacyPolicyConsent === true,
 	};
 }
 
 function normalizeEmail(value: unknown): string | null {
-	if (typeof value !== "string") return null;
+	if (typeof value !== "string") {
+		return null;
+	}
 
 	const email = value.trim().toLowerCase();
-	if (!email || !/^.+@.+\..+$/u.test(email)) return null;
+
+	if (!email || !/^.+@.+\..+$/u.test(email)) {
+		return null;
+	}
 
 	return email;
 }
 
 function normalizePassword(value: unknown): string | null {
-	if (typeof value !== "string") return null;
+	if (typeof value !== "string") {
+		return null;
+	}
 
 	if (value.length < 8) return null;
 	if (!/[A-Z]/u.test(value)) return null;
@@ -112,10 +143,15 @@ function normalizePassword(value: unknown): string | null {
 }
 
 function normalizeCode(value: unknown): string | null {
-	if (typeof value !== "string") return null;
+	if (typeof value !== "string") {
+		return null;
+	}
 
 	const code = value.trim().toUpperCase();
-	if (!code || !/^[A-Fa-f0-9]{6,10}$/u.test(code)) return null;
+
+	if (!code || !/^[A-F0-9]{6,10}$/u.test(code)) {
+		return null;
+	}
 
 	return code;
 }
@@ -123,8 +159,8 @@ function normalizeCode(value: unknown): string | null {
 export default defineEventHandler(async (event: H3Event) => {
 	const db = useDb(event);
 
+	// Parse and validate payload.
 	const body = await readBody(event);
-
 	const payload = normalizePayload(body);
 
 	if (!payload) {
@@ -134,18 +170,18 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const { email, password, username, token, referrer } = payload;
+	const {
+		email,
+		password,
+		username,
+		display_name,
+		birthday,
+		referrer,
+		termsOfServiceConsent,
+		privacyPolicyConsent,
+	} = payload;
 
-	const termsOfServiceConsent = body?.termsOfServiceConsent === true;
-	const privacyPolicyConsent = body?.privacyPolicyConsent === true;
-
-	if (!email || !password || !username) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid signup payload",
-		});
-	}
-
+	// Required consents.
 	if (!termsOfServiceConsent || !privacyPolicyConsent) {
 		throw createError({
 			statusCode: 400,
@@ -154,10 +190,7 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
-	const beamProfile = await verifyBeamProfile(username, token);
-
-	const name = beamProfile?.name || username;
-
+	// Check existing email.
 	const [emailMatch] = await db
 		.select({ id: accounts.id })
 		.from(accounts)
@@ -171,10 +204,11 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	// Check existing username.
 	const [nameMatch] = await db
 		.select({ id: profiles.id })
 		.from(profiles)
-		.where(eq(profiles.name, name))
+		.where(eq(profiles.name, username))
 		.limit(1);
 
 	if (nameMatch) {
@@ -184,138 +218,129 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	// Prepare account data.
 	const passwordHash = await hashPassword(password);
 	const profileId = generateHexId();
+	const birthdayValue = birthday.toISOString().split("T")[0];
 
-	const displayName = payload?.display_name || beamProfile?.display_name || null;
-	const bio = beamProfile?.description || null;
-	const pronouns = beamProfile?.pronouns || null;
-	const birthday = (() => {
-		if (payload?.birthday) {
-			return new Date(payload.birthday).toISOString().split("T")[0];
-		} else if (beamProfile?.birthday) {
-			return new Date(beamProfile.birthday).toISOString().split("T")[0];
-		} else {
-			throw createError({
-				statusCode: 400,
-				statusMessage: "Birthday is required",
-			});
-		}
-	})();
-
-	const result = await db.transaction(async (tx) => {
-		const [account] = await tx
-			.insert(accounts)
-			.values({
-				email,
-				passwordHash,
-			})
-			.returning({
-				id: accounts.id,
-				email: accounts.email,
-			});
-
-		if (!account) {
-			throw createError({
-				statusCode: 500,
-				statusMessage: "Failed to create account",
-			});
-		}
-
-		await tx.insert(appearanceSettings).values({
-			accountId: account.id,
-		});
-
-		await tx.insert(privacySettings).values({
-			accountId: account.id,
-			termsOfServiceConsent,
-			privacyPolicyConsent,
-		});
-
-		const [profile] = await tx
-			.insert(profiles)
-			.values({
-				id: profileId,
-				accountId: account.id,
-				name,
-				displayName,
-				bio,
-				pronouns,
-				birthday,
-				level: 2,
-			})
-			.returning({
-				id: profiles.id,
-				name: profiles.name,
-				displayName: profiles.displayName,
-			});
-
-		if (!profile) {
-			throw createError({
-				statusCode: 500,
-				statusMessage: "Failed to create profile",
-			});
-		}
-
-		if (beamProfile) {
-			await tx.insert(profileLinks).values({
-				profileId: profile.id,
-				name: beamProfile?.display_name || beamProfile?.name,
-				type: "beam",
-				url: `https://beam.ejnalo.me/@${beamProfile?.name}`,
-				resourceId: beamProfile?.id,
-				resourceName: beamProfile?.name,
-			});
-		}
-
-		/* Parrainage */
-
-		if (referrer) {
-			const [referralCode] = await tx
-				.select()
-				.from(referralCodes)
-				.where(
-					and(
-						eq(referralCodes.code, referrer),
-						eq(referralCodes.enabled, true),
-						or(
-							isNull(referralCodes.expiresAt),
-							gt(referralCodes.expiresAt, new Date()),
-						),
-					),
-				)
-				.limit(1);
-
-			if (referralCode) {
-				await tx.insert(referrals).values({
-					code: referralCode.code,
-					referredId: profile.id,
-				});
-
-				await giveReferralBadge(tx, referralCode.code);
-			}
-		}
-
-		return {
-			account,
-			profile,
+	// Create account and profile atomically.
+	let result: {
+		account: {
+			id: typeof accounts.$inferSelect.id;
+			email: typeof accounts.$inferSelect.email;
 		};
-	});
-
-	if (beamProfile) {
-		try {
-			await giveBeamBadge(
-				event,
-				result.profile!.id,
-				new Date(beamProfile.creation_date),
-			);
-		} catch (error) {
-			console.error("Error occurred while giving Beam badge:", error);
-		}
-	}
+		profile: {
+			id: typeof profiles.$inferSelect.id;
+			name: typeof profiles.$inferSelect.name;
+			displayName: typeof profiles.$inferSelect.displayName;
+		};
+	};
 
 	try {
-		await giveSignupBadges(event, result.profile!.id);
+		result = await db.transaction(async (tx) => {
+			const [account] = await tx
+				.insert(accounts)
+				.values({
+					email,
+					passwordHash,
+				})
+				.returning({
+					id: accounts.id,
+					email: accounts.email,
+				});
+
+			if (!account) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to create account",
+				});
+			}
+
+			await tx.insert(appearanceSettings).values({
+				accountId: account.id,
+			});
+
+			await tx.insert(privacySettings).values({
+				accountId: account.id,
+				termsOfServiceConsent,
+				privacyPolicyConsent,
+			});
+
+			const [profile] = await tx
+				.insert(profiles)
+				.values({
+					id: profileId,
+					accountId: account.id,
+					name: username,
+					displayName: display_name,
+					birthday: birthdayValue,
+					level: 2,
+				})
+				.returning({
+					id: profiles.id,
+					name: profiles.name,
+					displayName: profiles.displayName,
+				});
+
+			if (!profile) {
+				throw createError({
+					statusCode: 500,
+					statusMessage: "Failed to create profile",
+				});
+			}
+
+			// Referral.
+			if (referrer) {
+				const [referralCode] = await tx
+					.select()
+					.from(referralCodes)
+					.where(
+						and(
+							eq(referralCodes.code, referrer),
+							eq(referralCodes.enabled, true),
+							or(
+								isNull(referralCodes.expiresAt),
+								gt(referralCodes.expiresAt, new Date()),
+							),
+						),
+					)
+					.limit(1);
+
+				if (referralCode) {
+					await tx.insert(referrals).values({
+						code: referralCode.code,
+						referredId: profile.id,
+					});
+
+					await giveReferralBadge(tx, referralCode.code);
+				}
+			}
+
+			return {
+				account,
+				profile,
+			};
+		});
+	} catch (error: any) {
+		// Handle database uniqueness conflicts.
+		if (
+			error?.code === "23505" ||
+			error?.cause?.code === "23505" ||
+			error?.code === "SQLITE_CONSTRAINT_UNIQUE" ||
+			error?.cause?.code === "SQLITE_CONSTRAINT_UNIQUE"
+		) {
+			throw createError({
+				statusCode: 409,
+				statusMessage: "Email or profile name already in use",
+			});
+		}
+
+		throw error;
+	}
+
+	// Signup badges are handled outside the transaction.
+	try {
+		await giveSignupBadges(event, result.profile.id);
 	} catch (error) {
 		console.error("Error occurred while giving signup badges:", error);
 	}
