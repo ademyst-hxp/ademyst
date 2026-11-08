@@ -123,24 +123,24 @@ input, textarea, select, button {
 	@apply mt-2;
 }
 
-.post-content > h1 {
+.post-content h1 {
 	@apply text-2xl font-bold;
 }
 
-.post-content > h2 {
+.post-content h2 {
 	@apply text-xl font-bold;
 }
 
-.post-content > h3 {
+.post-content h3 {
 	@apply text-lg font-bold;
 }
 
-.post-content > h4 {
+.post-content h4 {
 	@apply font-bold;
 }
 
-.post-content > a {
-	@apply text-accent hover:underline;
+.post-content a {
+	@apply text-accent font-semibold hover:underline;
 }
 
 :root {
