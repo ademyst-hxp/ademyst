@@ -17,15 +17,20 @@ import {
 	PencilIcon,
 	ScaleIcon,
 	TrashIcon,
+	EyeSlashIcon,
 } from "@heroicons/vue/24/outline";
 import {
 	EllipsisVerticalIcon,
 	HeartIcon as HeartSolidIcon,
+	SparklesIcon,
+	ExclamationTriangleIcon,
 } from "@heroicons/vue/24/solid";
 
 import Box from "../base/Box.vue";
 import Popup from "../base/Popup.vue";
 import Warning from "../boxes/Warning.vue";
+
+import FlagLabel from "./labels/FlagLabel.vue";
 import AttachmentBanner from "./AttachmentBanner.vue";
 import Media from "./Media.vue";
 import ProfileRow from "../profile/ProfileRow.vue";
@@ -182,6 +187,7 @@ const actions = computed(() => {
 const isMenuOpen = ref(false);
 const isDeleteMenuOpen = ref(false);
 const isFriendOnlyPopupOpen = ref(false);
+const isWarningDismissed = ref(false);
 
 // Médias (images, vidéos, GIFs) sous le texte ; le reste en bannières sous le post
 const attachments = computed(() => groupAttachments(post.value.attachments));
@@ -229,86 +235,102 @@ const rendered = computed(() => {
 				class="h-5 w-5 cursor-pointer"
 			/>
 		</div>
-		<div
-			v-if="post.parentId"
-			class="flex items-center gap-1 text-surface-text-muted px-2 -mb-2"
-		>
-			<ChatBubbleLeftRightIcon class="h-4 w-4" />
-			<p class="text-sm">
-				En réponse à
-				<RouterLink
-					:to="`/posts/${post.parentId}`"
-					class="text-primary font-semibold hover:underline"
+		<template v-if="post.flags.NFE && !isWarningDismissed">
+			<div
+				class="flex flex-col justify-center items-center gap-2 bg-warning/15 border border-warning rounded-xl text-center p-8 -mx-2 md:p-16"
+			>
+				<ExclamationTriangleIcon class="text-warning h-12 w-12" />
+				<h2
+					class="text-2xl text-warning font-semibold font-title md:max-w-96"
 				>
-					{{
-						parentPost?.profile?.displayName ||
-						`@${parentPost?.profile?.name}` ||
-						"@ghost"
-					}}
-				</RouterLink>
-			</p>
-		</div>
-		<div
-			v-if="medias.length"
-			class="grid gap-1 -mx-2"
-			:class="medias.length > 1 ? 'grid-cols-2' : 'grid-cols-1'"
-		>
-			<Media
-				v-for="(media, index) in medias"
-				:key="media.id"
-				:data="media"
-				:force-ratio="medias.length > 1 ? '4:3' : undefined"
-				:class="
-					medias.length % 2 === 1 && index === 0 && medias.length > 1
-						? 'col-span-2'
-						: ''
-				"
-			/>
-		</div>
-		<div
-			class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
-			:class="post.parentId ? 'max-h-96' : 'max-h-144'"
-			v-html="rendered || '<em>Vide.</em>'"
-			@click.self="$router.push(`/posts/${post.id}`)"
-		/>
-		<div
-			class="flex flex-col gap-2"
-			v-if="post.flags.NFE || post.flags.AI || banners.length"
-		>
+					Contenu sensible
+				</h2>
+				<p class="text-sm md:max-w-96">
+					Cette publication est susceptible de contenir du contenu
+					inadapté à un public non averti. Vous pouvez choisir de la
+					lire ou de l'ignorer.
+				</p>
+				<Button
+					label="Afficher quand même"
+					variant="warning"
+					:handler="
+						() => {
+							isWarningDismissed = true;
+						}
+					"
+				/>
+			</div>
+		</template>
+		<template v-else>
+			<div
+				v-if="post.parentId"
+				class="flex items-center gap-1 text-surface-text-muted px-2 -mb-2"
+			>
+				<ChatBubbleLeftRightIcon class="h-4 w-4" />
+				<p class="text-sm">
+					En réponse à
+					<RouterLink
+						:to="`/posts/${post.parentId}`"
+						class="text-primary font-semibold hover:underline"
+					>
+						{{
+							parentPost?.profile?.displayName ||
+							`@${parentPost?.profile?.name}` ||
+							"@ghost"
+						}}
+					</RouterLink>
+				</p>
+			</div>
 			<div
 				v-if="post.flags.AI"
-				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
+				class="flex items-center gap-2 text-surface-text-muted px-2 -mb-2"
 			>
-				<p class="text-sm font-semibold">
-					Cette publication peut contenir du contenu généré par une
-					intelligence artificielle.
-				</p>
+				<FlagLabel
+					v-if="post.flags.AI"
+					label="Contenu généré par IA"
+					:icon="SparklesIcon"
+				/>
 			</div>
 			<div
-				v-if="post.flags.NFE"
-				class="flex items-center gap-2 bg-warning/20 text-warning border border-warning/40 rounded-xl p-4 -mx-2"
+				v-if="medias.length"
+				class="grid gap-1 -mx-2"
+				:class="medias.length > 1 ? 'grid-cols-2' : 'grid-cols-1'"
 			>
-				<p class="text-sm font-semibold">
-					Cette publication peut contenir des propos ou du contenu
-					choquant pour un jeune public.
-				</p>
+				<Media
+					v-for="(media, index) in medias"
+					:key="media.id"
+					:data="media"
+					:force-ratio="medias.length > 1 ? '4:3' : undefined"
+					:class="
+						medias.length % 2 === 1 &&
+						index === 0 &&
+						medias.length > 1
+							? 'col-span-2'
+							: ''
+					"
+				/>
 			</div>
-			<AttachmentBanner
-				v-for="banner in banners"
-				:key="banner.id"
-				:data="banner"
-				class="-mx-2"
+			<div
+				class="break-after-all wrap-break-word post-content -mx-2 overflow-x-visible overflow-y-auto"
+				:class="post.parentId ? 'max-h-96' : 'max-h-144'"
+				v-html="rendered || '<em>Vide.</em>'"
+				@click.self="$router.push(`/posts/${post.id}`)"
 			/>
-		</div>
+			<div class="flex flex-col gap-2" v-if="banners.length">
+				<AttachmentBanner
+					v-for="banner in banners"
+					:key="banner.id"
+					:data="banner"
+					class="-mx-2"
+				/>
+			</div>
+		</template>
 
 		<div
 			class="flex items-center gap-4"
 			:class="disabled ? 'cursor-disabled opacity-50' : ''"
 		>
-			<div
-				class="flex items-center gap-1"
-				@click="toggleLike"
-			>
+			<div class="flex items-center gap-1" @click="toggleLike">
 				<HeartSolidIcon
 					class="text-red-500 h-6 w-6 cursor-pointer"
 					v-if="post.interaction.liked"
@@ -330,6 +352,14 @@ const rendered = computed(() => {
 				<span class="text-lg">{{
 					toLitteral(post.stats.answers || 0)
 				}}</span>
+			</div>
+			<div
+				class="flex items-center gap-1"
+				v-if="post.flags.NFE && isWarningDismissed"
+				@click="isWarningDismissed = false"
+			>
+				<EyeSlashIcon class="h-6 w-6 cursor-pointer" />
+				<span class="text-lg">Masquer</span>
 			</div>
 			<div class="grow" />
 			<div
