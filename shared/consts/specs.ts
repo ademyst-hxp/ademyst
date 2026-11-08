@@ -23,14 +23,14 @@ export const POST_MEDIA_LIMITS: Record<number, {
 	// Les vidéos sont à 0 tant que les buckets n'en acceptent pas.
 	0: { images: 0, gifs: 0, videos: 0, audios: 0, links: 0 },
 	1: { images: 0, gifs: 0, videos: 0, audios: 0, links: 0 },
-	2: { images: 2, gifs: 1, videos: 0, audios: 1, links: 3 },
-	3: { images: 2, gifs: 1, videos: 0, audios: 1, links: 3 },
-	4: { images: 4, gifs: 1, videos: 0, audios: 2, links: 5 },
-	5: { images: 6, gifs: 1, videos: 0, audios: 2, links: 10 },
-	6: { images: 6, gifs: 1, videos: 0, audios: 2, links: 10 },
-	7: { images: 6, gifs: 1, videos: 0, audios: 2, links: 10 },
-	8: { images: 6, gifs: 1, videos: 0, audios: 2, links: 10 },
-	9: { images: 6, gifs: 1, videos: 0, audios: 2, links: 10 },
+	2: { images: 1, gifs: 0, videos: 0, audios: 0, links: 3 },
+	3: { images: 1, gifs: 0, videos: 0, audios: 0, links: 3 },
+	4: { images: 2, gifs: 0, videos: 0, audios: 0, links: 5 },
+	5: { images: 4, gifs: 0, videos: 0, audios: 0, links: 10 },
+	6: { images: 2, gifs: 0, videos: 0, audios: 0, links: 5 },
+	7: { images: 2, gifs: 0, videos: 0, audios: 0, links: 5 },
+	8: { images: 4, gifs: 0, videos: 0, audios: 0, links: 10 },
+	9: { images: 4, gifs: 0, videos: 0, audios: 0, links: 10 },
 } as const;
 
 /*
