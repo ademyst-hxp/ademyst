@@ -1,11 +1,23 @@
 <script setup lang="ts">
+// app/components/base/Input.vue
+import type { Component } from "vue";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/vue/24/solid";
+
+import type { TextareaAction, TextareaToolId } from "~/utils/textarea";
+import { describeAccept } from "~/utils/fileAccept";
+
+import CharCounter from "~/components/base/CharCounter.vue";
+import FieldWrapper from "~/components/base/FieldWrapper.vue";
+import InputFile from "~/components/base/InputFile.vue";
+import RichTextarea from "~/components/base/Textarea.vue";
+
+type InputValue = string | number | boolean | Date | File | null;
 
 const props = withDefaults(
 	defineProps<{
 		label?: string;
 		icon?: Component;
-		modelValue?: string | number | boolean | Date | File | null;
+		modelValue?: InputValue;
 		type?: string;
 		size?: "small" | "medium" | "large";
 		placeholder?: string;
@@ -14,8 +26,16 @@ const props = withDefaults(
 		invalid?: boolean;
 		required?: boolean;
 		accept?: string;
+		/** Bornes d'un champ numérique */
 		min?: number;
 		max?: number;
+		/** Bornes de longueur d'un champ texte (affichent un compteur) */
+		minLength?: number;
+		maxLength?: number;
+		/** type="textarea" uniquement : barre d'outils Markdown + actions */
+		rich?: boolean;
+		actions?: TextareaAction[];
+		tools?: TextareaToolId[];
 	}>(),
 	{
 		modelValue: "",
@@ -27,213 +47,321 @@ const props = withDefaults(
 		required: false,
 		min: undefined,
 		max: undefined,
+		minLength: undefined,
+		maxLength: undefined,
+		rich: false,
+		actions: () => [],
+		tools: undefined,
 	},
 );
 
 const emit = defineEmits<{
-	(
-		e: "update:modelValue",
-		value: string | number | boolean | Date | File | null,
-	): void;
+	(e: "update:modelValue", value: InputValue): void;
 	(e: "focus", event: FocusEvent): void;
 	(e: "blur", event: FocusEvent): void;
 	(e: "enter", value: string): void;
 }>();
 
-const focused = ref<boolean>(false);
-const valid = ref<boolean>(true);
-const missing = ref<boolean>(false);
-const outOfRange = ref<boolean>(false);
+const slots = useSlots();
+const fieldId = useId();
 
-const rootClass = computed(() => {
-	let value =
-		"bg-input text-input-text w-full text-medium font-medium outline-2 transition";
+/* -------------------------------------------------------------------------- */
+/*  État et validation                                                        */
+/* -------------------------------------------------------------------------- */
 
-	switch (props.size) {
-		case "small":
-			value += " px-3 py-2 text-sm rounded-lg";
-			break;
-		case "large":
-			value += " px-6 py-3 text-lg rounded-full";
-			break;
-		case "medium":
-		default:
-			value += " px-4 py-3 rounded-xl";
-	}
+const COUNTABLE_TYPES = new Set([
+	"text",
+	"password",
+	"email",
+	"url",
+	"tel",
+	"search",
+	"textarea",
+]);
 
-	if (props.disabled) {
-		value += " opacity-50 cursor-not-allowed";
-	} else {
-		value += " cursor-text";
-	}
-
-	if (!valid.value || missing.value || outOfRange.value) {
-		value += " outline-danger";
-	} else if (focused.value) {
-		value += " outline-input-focus-ring";
-	} else {
-		value += " outline-transparent";
-	}
-
-	return value;
-});
-
+const focused = ref(false);
+const valid = ref(true);
+const missing = ref(false);
+const rejectedFile = ref(false);
 const isPwdVisible = ref(false);
 
-const isValid = computed(() => {
-	if (props.required && !props.modelValue) return false;
+const isTextarea = computed(() => props.type === "textarea");
 
-	if (props.validate) {
-		return props.validate.test(props.modelValue as string);
+const hasValue = computed(() => {
+	const value = props.modelValue;
+	return (
+		value !== null && value !== undefined && value !== "" && value !== false
+	);
+});
+
+const textValue = computed(() =>
+	typeof props.modelValue === "string" ? props.modelValue : "",
+);
+
+const hasLimits = computed(
+	() =>
+		COUNTABLE_TYPES.has(props.type) &&
+		(props.minLength !== undefined || props.maxLength !== undefined),
+);
+
+const counter = useTextCounter(
+	() => textValue.value.length,
+	() => ({ min: props.minLength, max: props.maxLength }),
+);
+
+const rangeMessage = computed(() => {
+	if (props.type !== "number" || !hasValue.value) return null;
+
+	const value = Number(props.modelValue);
+	if (isNaN(value)) return null;
+
+	const { min, max } = props;
+	const tooLow = min !== undefined && value < min;
+	const tooHigh = max !== undefined && value > max;
+	if (!tooLow && !tooHigh) return null;
+
+	if (min !== undefined && max !== undefined) {
+		return `Ce champ doit être compris entre ${min} et ${max}.`;
+	}
+	return min !== undefined
+		? `Ce champ doit être supérieur à ${min}.`
+		: `Ce champ doit être inférieur à ${max}.`;
+});
+
+const isValid = computed(() => {
+	if (props.invalid) return false;
+	if (props.required && !hasValue.value) return false;
+	if (!hasValue.value) return true;
+
+	if (props.validate && !props.validate.test(String(props.modelValue))) {
+		return false;
 	}
 
 	if (props.type === "number") {
-		const value = Number(props.modelValue);
-
-		outOfRange.value =
-			(props.min !== undefined && value < props.min) ||
-			(props.max !== undefined && value > props.max);
-		if (isNaN(value)) return false;
-		if (props.min !== undefined && value < props.min) return false;
-		if (props.max !== undefined && value > props.max) return false;
+		if (isNaN(Number(props.modelValue)) || rangeMessage.value) return false;
 	}
 
-	return !props.invalid;
+	if (hasLimits.value && (counter.value.isShort || counter.value.isOver)) {
+		return false;
+	}
+
+	return true;
 });
 
-const isFilled = computed(() => {
-	return !!props.modelValue;
+const validateNow = () => {
+	valid.value = !hasValue.value || isValid.value;
+	missing.value = props.required && !hasValue.value;
+};
+
+const messages = computed(() => {
+	const list: string[] = [];
+
+	if (missing.value) list.push("Ce champ est obligatoire.");
+	if (!valid.value && rangeMessage.value) list.push(rangeMessage.value);
+
+	if (!valid.value && hasLimits.value && counter.value.isShort) {
+		list.push(`Minimum ${props.minLength} caractères.`);
+	}
+
+	if (rejectedFile.value) {
+		list.push(`Type de fichier refusé (${describeAccept(props.accept)}).`);
+	}
+
+	return list;
 });
 
-function onInput(event: Event) {
+// Le slot #error (ou le texte par défaut) n'apparaît que si rien d'autre n'explique l'erreur
+const showError = computed(
+	() => !valid.value && (!!slots.error || messages.value.length === 0),
+);
+
+const hasError = computed(
+	() =>
+		!valid.value ||
+		missing.value ||
+		props.invalid ||
+		rejectedFile.value ||
+		(hasLimits.value && counter.value.isOver),
+);
+
+/* -------------------------------------------------------------------------- */
+/*  Apparence                                                                 */
+/* -------------------------------------------------------------------------- */
+
+const SIZE_CLASSES = {
+	small: "px-3 py-2 text-sm rounded-lg",
+	medium: "px-4 py-3 text-base rounded-xl",
+	large: "px-6 py-3 text-lg rounded-full",
+} as const;
+
+const fieldClass = computed(() => [
+	"flex w-full gap-1 bg-input font-medium text-input-text outline-2 transition",
+	SIZE_CLASSES[props.size],
+	isTextarea.value ? "min-h-24 flex-1 items-stretch" : "items-center",
+	props.disabled ? "cursor-not-allowed opacity-50" : "cursor-text",
+	hasError.value
+		? "outline-danger"
+		: focused.value
+			? "outline-input-focus-ring"
+			: "outline-transparent",
+]);
+
+/* -------------------------------------------------------------------------- */
+/*  Événements                                                                */
+/* -------------------------------------------------------------------------- */
+
+const onInput = (event: Event) => {
 	const target = event.target as HTMLInputElement;
 
 	switch (props.type) {
 		case "number":
-			emit("update:modelValue", Number(target.value));
+			emit(
+				"update:modelValue",
+				target.value === "" ? null : Number(target.value),
+			);
 			break;
-
 		case "checkbox":
 			emit("update:modelValue", target.checked);
 			break;
-
-		case "file":
-			emit("update:modelValue", target.files?.[0] ?? null);
-			break;
-
 		default:
 			emit("update:modelValue", target.value);
-			break;
 	}
-}
+};
 
-function onFocus(event: FocusEvent) {
+const onFile = (file: File | null) => {
+	rejectedFile.value = false;
+	emit("update:modelValue", file);
+};
+
+const onFocus = (event: FocusEvent) => {
 	emit("focus", event);
 	valid.value = true;
-	focused.value = true;
 	missing.value = false;
-}
+	focused.value = true;
+};
 
-function onBlur(event: FocusEvent) {
+const onBlur = (event: FocusEvent) => {
 	emit("blur", event);
 	focused.value = false;
+	validateNow();
+};
 
-	if (props.modelValue) {
-		valid.value = isValid.value;
-	} else {
-		valid.value = true;
-	}
-}
-
-function onEnter(event: KeyboardEvent) {
-	const target = event.target as HTMLInputElement;
-
+const onEnter = (event: KeyboardEvent) => {
 	if (!isValid.value) {
 		valid.value = false;
+		missing.value = props.required && !hasValue.value;
 		return;
 	}
 
-	emit("enter", target.value);
+	emit(
+		"enter",
+		(event.target as HTMLInputElement | HTMLTextAreaElement).value,
+	);
+	validateNow();
+};
 
-	focused.value = false;
-
-	if (props.modelValue) {
-		valid.value = isValid.value;
-	} else {
-		valid.value = true;
+// Dans une zone de texte, Entrée fait un retour à la ligne : on valide avec Ctrl / ⌘ + Entrée
+const onTextareaKeydown = (event: KeyboardEvent) => {
+	if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+		event.preventDefault();
+		onEnter(event);
 	}
+};
 
-	missing.value = props.required && !isFilled.value;
-}
+const toggleSwitch = () => {
+	if (props.disabled) return;
+
+	const next = !props.modelValue;
+	emit("update:modelValue", next);
+	emit("enter", next.toString());
+};
 </script>
+
 <template>
+	<!-- Interrupteur -->
 	<div
-		v-if="type == 'checkbox'"
-		class="flex items-center cursor-pointer gap-2"
+		v-if="type === 'checkbox'"
+		role="switch"
 		tabindex="0"
-		@click="
-			() => {
-				if (!disabled) {
-					$emit('update:modelValue', !(modelValue as boolean));
-					$emit('enter', (!modelValue as boolean).toString());
-				}
-			}
-		"
+		:aria-checked="!!modelValue"
+		:aria-disabled="disabled"
+		class="flex cursor-pointer select-none items-center gap-2 outline-none"
+		:class="{ 'cursor-not-allowed opacity-50': disabled }"
+		@click="toggleSwitch"
+		@keydown.space.prevent="toggleSwitch"
+		@keydown.enter.prevent="toggleSwitch"
 	>
-		<div
-			class="flex items-center cursor-pointer bg-surface rounded-lg w-10 h-4"
-		>
-			<div
-				:class="(modelValue as boolean) ? 'w-full' : 'w-0'"
-				class="transform-all duration-200"
-			></div>
-			<div class="bg-primary shrink-0 rounded-full p-3"></div>
-		</div>
-		<span class="font-semibold text-muted">{{ label }}</span>
-	</div>
-	<div v-else-if="type == 'textarea'" class="flex flex-col gap-1 text-sm">
-		<span v-if="label" class="text-sm text-muted px-4">
-			{{ label }} <span v-if="required" class="text-danger">*</span>
+		<span class="relative h-4 w-10 shrink-0 rounded-lg bg-surface">
+			<span
+				class="absolute -top-1 left-0 h-6 w-6 rounded-full bg-primary transition-transform duration-200"
+				:class="modelValue ? 'translate-x-4' : 'translate-x-0'"
+			/>
 		</span>
-		<div class="flex items-center gap-1 text-base h-full" :class="rootClass">
+		<span v-if="label" class="font-semibold text-muted">{{ label }}</span>
+	</div>
+
+	<!-- Zone de texte enrichie -->
+	<RichTextarea
+		v-else-if="isTextarea && rich"
+		:model-value="textValue"
+		:label="label"
+		:placeholder="placeholder"
+		:disabled="disabled"
+		:invalid="invalid || !valid"
+		:required="required"
+		:min-length="minLength"
+		:max-length="maxLength"
+		:actions="actions"
+		:tools="tools"
+		@update:model-value="emit('update:modelValue', $event)"
+		@focus="emit('focus', $event)"
+		@blur="emit('blur', $event)"
+		@enter="emit('enter', $event)"
+	/>
+
+	<!-- Champs standards : texte, zone de texte simple, fichier -->
+	<FieldWrapper
+		v-else
+		:label="label"
+		:required="required"
+		:for-id="fieldId"
+		:messages="messages"
+		:show-error="showError"
+	>
+		<InputFile
+			v-if="type === 'file'"
+			:model-value="modelValue as File | null"
+			:input-id="fieldId"
+			:accept="accept"
+			:disabled="disabled"
+			:invalid="hasError"
+			:placeholder="placeholder || undefined"
+			@update:model-value="onFile"
+			@reject="rejectedFile = true"
+		/>
+
+		<div v-else-if="isTextarea" :class="fieldClass">
 			<textarea
-				class="grow outline-none h-full min-w-0 w-full resize-none"
-				:value="modelValue as string"
+				:id="fieldId"
+				class="h-full min-w-0 w-full grow resize-none bg-transparent outline-none"
+				:value="textValue"
 				:placeholder="placeholder"
 				:disabled="disabled"
 				@input="onInput"
 				@focus="onFocus"
 				@blur="onBlur"
-				@keydown.enter="onEnter"
+				@keydown="onTextareaKeydown"
 			/>
 		</div>
-		<div
-			v-if="missing"
-			class="flex flex-col gap-1 text-sm text-danger px-4"
-		>
-			Ce champ est obligatoire.
-		</div>
-		<div
-			v-if="$slots.error && !valid"
-			class="flex flex-col gap-1 text-sm text-danger px-4"
-		>
-			<slot name="error">Entrée invalide.</slot>
-		</div>
-		<div v-if="$slots.indications" class="flex flex-col gap-1 text-sm px-4">
-			<slot name="indications" />
-		</div>
-	</div>
-	<div v-else class="flex flex-col gap-1 text-sm">
-		<span v-if="label" class="text-sm text-muted px-4">
-			{{ label }} <span v-if="required" class="text-danger">*</span>
-		</span>
-		<div class="flex items-center gap-1 text-base" :class="rootClass">
+
+		<div v-else :class="fieldClass">
 			<component
-				:is="props.icon"
-				v-if="props.icon"
-				class="shrink-0 w-5 h-5 text-muted"
+				:is="icon"
+				v-if="icon"
+				class="h-5 w-5 shrink-0 text-muted"
 			/>
 			<input
+				:id="fieldId"
 				:type="
 					type === 'password'
 						? isPwdVisible
@@ -241,56 +369,47 @@ function onEnter(event: KeyboardEvent) {
 							: 'password'
 						: type
 				"
-				class="grow outline-none"
-				:value="type === 'file' ? undefined : modelValue"
+				class="min-w-0 grow bg-transparent outline-none"
+				:value="modelValue as string | number"
 				:placeholder="placeholder"
 				:disabled="disabled"
 				:accept="accept"
+				:min="type === 'number' ? min : undefined"
+				:max="type === 'number' ? max : undefined"
 				@input="onInput"
 				@focus="onFocus"
 				@blur="onBlur"
 				@keydown.enter="onEnter"
 			/>
-			<EyeIcon
-				v-if="type === 'password' && isPwdVisible"
-				class="shrink-0 cursor-pointer w-5 h-5 text-muted"
+			<button
+				v-if="type === 'password'"
+				type="button"
+				class="shrink-0 text-muted"
+				:aria-label="
+					isPwdVisible
+						? 'Masquer le mot de passe'
+						: 'Afficher le mot de passe'
+				"
 				@click="isPwdVisible = !isPwdVisible"
-			/>
-			<EyeSlashIcon
-				v-else-if="type === 'password'"
-				class="shrink-0 cursor-pointer w-5 h-5 text-muted"
-				@click="isPwdVisible = !isPwdVisible"
-			/>
+			>
+				<EyeIcon v-if="isPwdVisible" class="h-5 w-5" />
+				<EyeSlashIcon v-else class="h-5 w-5" />
+			</button>
 		</div>
-		<div
-			v-if="missing"
-			class="flex flex-col gap-1 text-sm text-danger px-4"
-		>
-			Ce champ est obligatoire.
-		</div>
-		<div
-			v-if="outOfRange"
-			class="flex flex-col gap-1 text-sm text-danger px-4"
-		>
-			Ce champ doit être
-			{{
-				min && max
-					? `compris entre ${min} et ${max}`
-					: min
-						? `supérieur à ${min}`
-						: max
-							? `inférieur à ${max}`
-							: ""
-			}}
-		</div>
-		<div
-			v-if="$slots.error && !valid"
-			class="flex flex-col gap-1 text-sm text-danger px-4"
-		>
-			<slot name="error">Entrée invalide.</slot>
-		</div>
-		<div v-if="$slots.indications" class="flex flex-col gap-1 text-sm px-4">
+
+		<template v-if="slots.error" #error>
+			<slot name="error" />
+		</template>
+		<template v-if="slots.indications" #indications>
 			<slot name="indications" />
-		</div>
-	</div>
+		</template>
+		<template v-if="hasLimits" #counter>
+			<CharCounter
+				:length="textValue.length"
+				:min="minLength"
+				:max="maxLength"
+				:format="isTextarea ? 'ratio' : 'remaining'"
+			/>
+		</template>
+	</FieldWrapper>
 </template>
