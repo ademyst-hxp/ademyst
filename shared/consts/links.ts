@@ -119,4 +119,36 @@ export const domains: Record<
 		slugType: "name",
 		pattern: /^\/@([A-Za-z0-9._]+)\/?$/i,
 	},
+
+	"discord.gg": {
+		name: "discord",
+		title: "Discord",
+		icon: "https://cdn.simpleicons.org/discord",
+		slugType: "id",
+		pattern: /^\/([A-Za-z0-9_-]+)\/?$/i,
+	},
+
+	"pixiv.net": {
+		name: "pixiv",
+		title: "Pixiv",
+		icon: "https://cdn.simpleicons.org/pixiv",
+		slugType: "id",
+		pattern: /^\/users\/(\d+)\/?$/i,
+	},
+
+	"bulle.media": {
+		name: "bulle",
+		title: "Bulle",
+		icon: "https://www.bulle.media/favicon.ico",
+		slugType: "id",
+		pattern: /^\/u\/([A-Za-z0-9_-]+)\/?$/i,
+	},
+
+	"darflen.com": {
+		name: "darflen",
+		title: "Darflen",
+		icon: "https://static.darflen.com/img/favicons/favicon.ico",
+		slugType: "id",
+		pattern: /^\/users\/([A-Za-z0-9_-]+)\/?$/i,
+	},
 } as const;
