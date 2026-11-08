@@ -30,7 +30,7 @@ const emits = defineEmits<{
 
 	<div
 		v-else
-		class="flex flex-col justify-end bg-cover bg-center rounded-4xl hover:scale-101 duration-200 ease-out transition-transform"
+		class="flex flex-col justify-end bg-cover bg-center rounded-4xl"
 		:class="{
 			'aspect-5/4': props.layout === 'horizontal',
 			'aspect-4/5': props.layout === 'vertical',
@@ -41,13 +41,13 @@ const emits = defineEmits<{
 		}"
 	>
 		<div
-			class="flex flex-col justify-end gap-2 bg-linear-to-b from-surface/0 via-surface/10 to-surface/60 text-surface-text border-2 border-surface-border rounded-4xl w-full h-full p-6"
+			class="flex flex-col justify-end gap-2 bg-linear-to-b from-black/0 via-black/10 to-black/60 text-white border-2 border-surface-border rounded-4xl w-full h-full p-6"
 		>
 			<div class="flex items-center gap-2">
 				<input
 					v-model="profile.displayName"
 					:placeholder="`@${profile.name}`"
-					class="min-w-0 grow bg-transparent text-2xl font-semibold outline-none placeholder:text-surface-text/60"
+					class="min-w-0 grow bg-transparent text-2xl font-semibold outline-none placeholder:text-white/60"
 					@click.stop
 				/>
 
@@ -59,13 +59,9 @@ const emits = defineEmits<{
 				/>
 			</div>
 
-			<textarea
-				v-model="profile.bio"
-				placeholder="Ajouter une biographie..."
-				rows="2"
-				class="w-full resize-none bg-transparent text-sm opacity-75 outline-none placeholder:text-surface-text/50"
-				@click.stop
-			/>
+			<p v-if="profile.bio" class="text-sm opacity-50 line-clamp-2">
+				{{ profile.bio }}
+			</p>
 		</div>
 	</div>
 </template>
