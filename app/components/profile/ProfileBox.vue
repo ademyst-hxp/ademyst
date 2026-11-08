@@ -65,14 +65,14 @@ const emits = defineEmits<{
 				</button>
 
 				<button
-					v-if="relationships.requesting"
+					v-else-if="relationships.requesting"
 					class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
 				>
 					En attente
 				</button>
 
 				<button
-					v-if="relationships.followed"
+					v-else-if="relationships.followed"
 					class="flex items-center justify-center gap-0.5 bg-white/10 text-white text-sm border border-white/25 rounded-full pl-2 pr-3 py-1 duration-200 hover:bg-white/15"
 				>
 					Vous suit
