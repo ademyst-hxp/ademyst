@@ -16,6 +16,12 @@ import type { H3Event } from "h3";
 
 import { giveReferralBadge, giveSignupBadges } from "#server/jobs/signup";
 
+// Ces valeurs doivent rester identiques à celles de la page d'inscription.
+const USERNAME_REGEX = /^[a-z][a-z0-9_]{2,15}$/;
+const DISPLAY_NAME_MAX_LENGTH = 32;
+const MIN_AGE = 15;
+const MIN_BIRTH_YEAR = 1900;
+
 type SignupPayload = {
 	email: string;
 	password: string;
@@ -27,6 +33,13 @@ type SignupPayload = {
 	privacyPolicyConsent: boolean;
 };
 
+function badRequest(message: string) {
+	return createError({
+		statusCode: 400,
+		statusMessage: message,
+	});
+}
+
 function normalizePayload(value: unknown): SignupPayload | null {
 	if (typeof value !== "object" || value === null || Array.isArray(value)) {
 		return null;
@@ -34,19 +47,45 @@ function normalizePayload(value: unknown): SignupPayload | null {
 
 	const body = value as Record<string, unknown>;
 
+	// Email validation.
 	const email = normalizeEmail(body.email);
+
+	if (!email) {
+		throw badRequest("Invalid email");
+	}
+
+	// Password validation.
 	const password = normalizePassword(body.password);
 
+	if (!password) {
+		throw badRequest("Invalid password");
+	}
+
+	// Username validation.
 	const username =
 		typeof body.username === "string"
 			? body.username.trim().toLowerCase()
 			: "";
 
+	if (!USERNAME_REGEX.test(username)) {
+		throw badRequest(
+			"Invalid username: 3 to 16 characters, lowercase letters, digits and underscores only, starting with a letter",
+		);
+	}
+
+	// Display name validation.
 	const displayName =
 		typeof body.display_name === "string" ? body.display_name.trim() : null;
 
+	if (displayName !== null && displayName.length > DISPLAY_NAME_MAX_LENGTH) {
+		throw badRequest(
+			`Display name must be at most ${DISPLAY_NAME_MAX_LENGTH} characters`,
+		);
+	}
+
 	const referrer = normalizeCode(body.referrer);
 
+	// Birthday validation.
 	const birthday =
 		typeof body.birthday === "string" ||
 		typeof body.birthday === "number" ||
@@ -54,52 +93,35 @@ function normalizePayload(value: unknown): SignupPayload | null {
 			? new Date(body.birthday)
 			: null;
 
-	if (!email || !password || !username || !birthday) {
-		return null;
-	}
-
-	// Username validation.
-	if (!/^[a-z0-9_]{3,16}$/.test(username)) {
-		return null;
-	}
-
-	// Display name validation.
-	if (displayName !== null && displayName.length > 32) {
-		return null;
-	}
-
-	// Birthday validation.
-	if (isNaN(birthday.getTime())) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Invalid birthday",
-		});
+	if (
+		!birthday ||
+		isNaN(birthday.getTime()) ||
+		birthday.getUTCFullYear() < MIN_BIRTH_YEAR
+	) {
+		throw badRequest("Invalid birthday");
 	}
 
 	const today = new Date();
 
 	if (birthday > today) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "Birthday cannot be in the future",
-		});
+		throw badRequest("Birthday cannot be in the future");
 	}
 
-	let age = today.getFullYear() - birthday.getFullYear();
+	// The birthday is stored as a UTC date (see toISOString below), so the age uses UTC too.
+	let age = today.getUTCFullYear() - birthday.getUTCFullYear();
 
 	if (
-		today.getMonth() < birthday.getMonth() ||
-		(today.getMonth() === birthday.getMonth() &&
-			today.getDate() < birthday.getDate())
+		today.getUTCMonth() < birthday.getUTCMonth() ||
+		(today.getUTCMonth() === birthday.getUTCMonth() &&
+			today.getUTCDate() < birthday.getUTCDate())
 	) {
 		age--;
 	}
 
-	if (age < 15) {
-		throw createError({
-			statusCode: 400,
-			statusMessage: "You must be at least 15 years old to sign up",
-		});
+	if (age < MIN_AGE) {
+		throw badRequest(
+			`You must be at least ${MIN_AGE} years old to sign up`,
+		);
 	}
 
 	return {
@@ -121,7 +143,7 @@ function normalizeEmail(value: unknown): string | null {
 
 	const email = value.trim().toLowerCase();
 
-	if (!email || !/^.+@.+\..+$/u.test(email)) {
+	if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(email)) {
 		return null;
 	}
 

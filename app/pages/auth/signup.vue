@@ -12,15 +12,23 @@ await refresh();
 
 const step = ref<number>(0);
 
+// Ces valeurs doivent rester identiques à celles de l'endpoint /api/v1/auth/signup.
+const MIN_AGE = 15;
+const MIN_BIRTH_YEAR = 1900;
+const DISPLAY_NAME_MAX_LENGTH = 32;
+
 const regex = {
-	email: /\S+@\S+\.\S+/,
+	email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+	// 3 à 16 caractères, commence par une lettre minuscule.
 	username: /^[a-z][a-z0-9_]{2,15}$/,
-	password: /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/,
+	// Au moins 8 caractères, une minuscule, une majuscule, un chiffre et un caractère spécial.
+	password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/,
 	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
 	referrer: /^[A-Fa-f0-9]{6,10}$/,
 };
 
-const referrer = useRoute().query.referrer as string | undefined;
+const queryReferrer = useRoute().query.referrer;
+const referrer = typeof queryReferrer === "string" ? queryReferrer : null;
 
 const payload = ref<{
 	email: string;
@@ -43,36 +51,101 @@ const payload = ref<{
 	token: null,
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
-	referrer: referrer ?? null,
+	referrer,
 });
 
-const valid = computed(() => ({
-	email:
-		payload.value.email.length > 0 && regex.email.test(payload.value.email),
-	username:
-		payload.value.username.length > 0 &&
-		regex.username.test(payload.value.username),
-	displayName: payload.value.displayName.length < 32,
-	password:
-		payload.value.password.length >= 8 &&
-		regex.password.test(payload.value.password),
-	password_confirmation:
-		payload.value.password === payload.value.confirm_password,
-	termsOfServiceConsent: payload.value.termsOfServiceConsent,
-	privacyPolicyConsent: payload.value.privacyPolicyConsent,
-	birthday:
-		new Date(payload.value.birthday).toString() !== "Invalid Date" &&
-		new Date(payload.value.birthday) < new Date() &&
-		new Date(payload.value.birthday) > new Date("1900-01-01") &&
-		new Date(payload.value.birthday).getFullYear() - new Date().getFullYear() < -15,
-	token:
-		payload.value.token !== null &&
-		payload.value.token.length > 0 &&
-		regex.sudo.test(payload.value.token),
-	referrer:
-		payload.value.referrer !== null &&
-		regex.referrer.test(payload.value.referrer),
-}));
+// Les pseudos sont toujours en minuscules et sans espaces (comme côté serveur).
+watch(
+	() => payload.value.username,
+	(value) => {
+		const normalized = value.toLowerCase().replace(/\s/g, "");
+
+		if (normalized !== value) {
+			payload.value.username = normalized;
+		}
+	},
+);
+
+// Calcule l'âge exact à partir d'une date "AAAA-MM-JJ". Renvoie null si la date est invalide.
+const getAge = (value: string): number | null => {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+	if (!match) {
+		return null;
+	}
+
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+
+	const date = new Date(Date.UTC(year, month - 1, day));
+
+	if (
+		year < MIN_BIRTH_YEAR ||
+		date.getUTCFullYear() !== year ||
+		date.getUTCMonth() !== month - 1 ||
+		date.getUTCDate() !== day
+	) {
+		return null;
+	}
+
+	const today = new Date();
+	let age = today.getFullYear() - year;
+
+	if (
+		today.getMonth() + 1 < month ||
+		(today.getMonth() + 1 === month && today.getDate() < day)
+	) {
+		age--;
+	}
+
+	return age;
+};
+
+const valid = computed(() => {
+	const age = getAge(payload.value.birthday);
+	const displayName = payload.value.displayName.trim();
+
+	return {
+		email: regex.email.test(payload.value.email),
+		username: regex.username.test(payload.value.username),
+		displayName:
+			displayName.length > 0 &&
+			displayName.length <= DISPLAY_NAME_MAX_LENGTH,
+		password: regex.password.test(payload.value.password),
+		password_confirmation:
+			payload.value.password === payload.value.confirm_password,
+		termsOfServiceConsent: payload.value.termsOfServiceConsent,
+		privacyPolicyConsent: payload.value.privacyPolicyConsent,
+		birthday: age !== null && age >= MIN_AGE,
+		token:
+			payload.value.token !== null &&
+			regex.sudo.test(payload.value.token),
+		referrer:
+			payload.value.referrer !== null &&
+			regex.referrer.test(payload.value.referrer),
+	};
+});
+
+const credentialsValid = computed(
+	() =>
+		valid.value.email &&
+		valid.value.password &&
+		valid.value.password_confirmation,
+);
+
+const profileValid = computed(
+	() =>
+		credentialsValid.value &&
+		valid.value.username &&
+		valid.value.displayName &&
+		valid.value.birthday,
+);
+
+const consentValid = computed(
+	() =>
+		valid.value.termsOfServiceConsent && valid.value.privacyPolicyConsent,
+);
 
 const signupError = ref<string | null>(null);
 const referralError = ref<string | null>(null);
@@ -97,23 +170,53 @@ const getApiErrorMessage = (error: unknown, fallback: string) => {
 	);
 };
 
+const backToProfile = () => {
+	signupError.value = null;
+	step.value = 1;
+};
+
 const handleSignup = async () => {
 	signupError.value = null;
 
-	try {
-		const { referrer: _referrer, ...signupPayload } = payload.value;
+	if (
+		!profileValid.value ||
+		!consentValid.value ||
+		(step.value === 2 && !valid.value.token)
+	) {
+		return;
+	}
 
+	// Mêmes normalisations que côté serveur, pour que la connexion automatique réussisse.
+	const email = payload.value.email.trim().toLowerCase();
+	const username = payload.value.username.trim().toLowerCase();
+
+	try {
 		await $fetch("/api/v1/auth/signup", {
 			method: "POST",
-			body: signupPayload,
+			body: {
+				email,
+				password: payload.value.password,
+				username,
+				display_name: payload.value.displayName.trim(),
+				birthday: payload.value.birthday,
+				token: payload.value.token,
+				termsOfServiceConsent: payload.value.termsOfServiceConsent,
+				privacyPolicyConsent: payload.value.privacyPolicyConsent,
+			},
 		});
 
-		await login(payload.value.email, payload.value.password);
+		payload.value.email = email;
+		payload.value.username = username;
+
+		await login(email, payload.value.password);
 
 		await refresh();
 
 		if (session.value) {
 			step.value = 4;
+		} else {
+			signupError.value =
+				"Compte créé, mais la connexion automatique a échoué. Connectez-vous pour continuer.";
 		}
 	} catch (error) {
 		signupError.value = getApiErrorMessage(
@@ -153,14 +256,22 @@ const askEmailConfirmation = async () => {
 const claimReferralLink = async () => {
 	referralError.value = null;
 
-	if (!payload.value.referrer) {
+	// Les codes sont stockés en majuscules côté serveur.
+	const code = payload.value.referrer?.trim().toUpperCase();
+
+	if (!code) {
 		step.value = 5;
 		await askEmailConfirmation();
 		return;
 	}
 
+	if (!regex.referrer.test(code)) {
+		referralError.value = "Le code de parrainage est invalide.";
+		return;
+	}
+
 	try {
-		await $api(`/referrals/codes/${payload.value.referrer}/claim`, {
+		await $api(`/referrals/codes/${encodeURIComponent(code)}/claim`, {
 			method: "POST",
 		});
 
@@ -348,13 +459,7 @@ useHead({
 					label="Suivant"
 					size="medium"
 					submit
-					:disabled="
-						!(
-							valid.email &&
-							valid.password &&
-							valid.password_confirmation
-						)
-					"
+					:disabled="!credentialsValid"
 				/>
 			</div>
 		</form>
@@ -380,9 +485,9 @@ useHead({
 					votre compte.
 				</template>
 				<template #error>
-					Le nom d'utilisateur doit contenir uniquement des lettres,
-					chiffres et underscores (_). Il doit commencer par une
-					lettre et avoir entre 2 et 15 caractères.
+					Le nom d'utilisateur doit contenir uniquement des lettres
+					minuscules, chiffres et underscores (_). Il doit commencer
+					par une lettre et avoir entre 3 et 16 caractères.
 				</template>
 			</Input>
 			<Input
@@ -390,36 +495,38 @@ useHead({
 				label="Nom d'affichage"
 				type="text"
 				placeholder="John Doe"
+				:invalid="payload.displayName.length > 0 && !valid.displayName"
 				required
 			>
 				<template #indications>
 					Le nom d'affichage est le nom que les autres utilisateurs
 					verront. Il peut contenir n'importe quels caractères et doit
-					avoir moins de 32 caractères.
+					avoir {{ DISPLAY_NAME_MAX_LENGTH }} caractères maximum.
 				</template>
-				<template #error>Le nom d'affichage est incorrect.</template>
+				<template #error>
+					Le nom d'affichage doit contenir entre 1 et
+					{{ DISPLAY_NAME_MAX_LENGTH }} caractères.
+				</template>
 			</Input>
 			<Input
 				v-model="payload.birthday"
 				label="Date de naissance"
 				type="date"
 				placeholder="1990-01-01"
+				:invalid="payload.birthday.length > 0 && !valid.birthday"
 				required
-			/>
+			>
+				<template #error>
+					Date de naissance invalide : vous devez avoir au moins
+					{{ MIN_AGE }} ans.
+				</template>
+			</Input>
 			<div class="flex justify-center items-center gap-4 w-full">
 				<Button
 					label="Lier mon compte Beam"
 					size="medium"
 					submit
-					:disabled="
-						!(
-							valid.email &&
-							valid.username &&
-							valid.displayName &&
-							valid.password &&
-							valid.password_confirmation
-						)
-					"
+					:disabled="!profileValid"
 				/>
 				<Button
 					label="Continuer sans lier"
@@ -429,15 +536,7 @@ useHead({
 							step = 3;
 						}
 					"
-					:disabled="
-						!(
-							valid.email &&
-							valid.username &&
-							valid.displayName &&
-							valid.password &&
-							valid.password_confirmation
-						)
-					"
+					:disabled="!profileValid"
 				/>
 			</div>
 		</form>
@@ -458,7 +557,7 @@ useHead({
 				>
 					Beam
 				</a>
-				créé avant le 31 aouût 2026 est requise pour créer un compte
+				créé avant le 31 août 2026 est requise pour créer un compte
 				Ademyst. Pour trouver votre code Sudo, accédez aux paramètres
 				rubrique «
 				<Button
@@ -521,21 +620,16 @@ useHead({
 			</p>
 			<div class="flex justify-center items-center gap-4 w-full">
 				<Button
+					label="Retour"
+					variant="secondary"
+					size="medium"
+					:handler="backToProfile"
+				/>
+				<Button
 					label="M'inscrire"
 					size="medium"
 					submit
-					:disabled="
-						!(
-							valid.email &&
-							valid.username &&
-							valid.displayName &&
-							valid.password &&
-							valid.password_confirmation &&
-							valid.termsOfServiceConsent &&
-							valid.privacyPolicyConsent &&
-							valid.token
-						)
-					"
+					:disabled="!(profileValid && consentValid && valid.token)"
 				/>
 			</div>
 		</form>
@@ -587,20 +681,16 @@ useHead({
 			</p>
 			<div class="flex justify-center items-center gap-4 w-full">
 				<Button
+					label="Retour"
+					variant="secondary"
+					size="medium"
+					:handler="backToProfile"
+				/>
+				<Button
 					label="M'inscrire"
 					size="medium"
 					submit
-					:disabled="
-						!(
-							valid.email &&
-							valid.username &&
-							valid.displayName &&
-							valid.password &&
-							valid.password_confirmation &&
-							valid.termsOfServiceConsent &&
-							valid.privacyPolicyConsent
-						)
-					"
+					:disabled="!(profileValid && consentValid)"
 				/>
 			</div>
 		</form>
