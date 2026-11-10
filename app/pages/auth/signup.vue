@@ -23,7 +23,6 @@ const regex = {
 	username: /^[a-z][a-z0-9_]{2,15}$/,
 	// Au moins 8 caractères, une minuscule, une majuscule, un chiffre et un caractère spécial.
 	password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$/,
-	sudo: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
 	referrer: /^[A-Fa-f0-9]{6,10}$/,
 };
 
@@ -37,7 +36,6 @@ const payload = ref<{
 	password: string;
 	confirm_password: string;
 	birthday: string;
-	token: string | null;
 	termsOfServiceConsent: boolean;
 	privacyPolicyConsent: boolean;
 	referrer: string | null;
@@ -48,7 +46,6 @@ const payload = ref<{
 	password: "",
 	confirm_password: "",
 	birthday: "",
-	token: null,
 	termsOfServiceConsent: false,
 	privacyPolicyConsent: false,
 	referrer,
@@ -118,9 +115,6 @@ const valid = computed(() => {
 		termsOfServiceConsent: payload.value.termsOfServiceConsent,
 		privacyPolicyConsent: payload.value.privacyPolicyConsent,
 		birthday: age !== null && age >= MIN_AGE,
-		token:
-			payload.value.token !== null &&
-			regex.sudo.test(payload.value.token),
 		referrer:
 			payload.value.referrer !== null &&
 			regex.referrer.test(payload.value.referrer),
@@ -178,11 +172,7 @@ const backToProfile = () => {
 const handleSignup = async () => {
 	signupError.value = null;
 
-	if (
-		!profileValid.value ||
-		!consentValid.value ||
-		(step.value === 2 && !valid.value.token)
-	) {
+	if (!profileValid.value || !consentValid.value) {
 		return;
 	}
 
@@ -199,7 +189,6 @@ const handleSignup = async () => {
 				username,
 				display_name: payload.value.displayName.trim(),
 				birthday: payload.value.birthday,
-				token: payload.value.token,
 				termsOfServiceConsent: payload.value.termsOfServiceConsent,
 				privacyPolicyConsent: payload.value.privacyPolicyConsent,
 			},
@@ -213,7 +202,7 @@ const handleSignup = async () => {
 		await refresh();
 
 		if (session.value) {
-			step.value = 4;
+			step.value = 3;
 		} else {
 			signupError.value =
 				"Compte créé, mais la connexion automatique a échoué. Connectez-vous pour continuer.";
@@ -260,7 +249,7 @@ const claimReferralLink = async () => {
 	const code = payload.value.referrer?.trim().toUpperCase();
 
 	if (!code) {
-		step.value = 5;
+		step.value = 4;
 		await askEmailConfirmation();
 		return;
 	}
@@ -276,7 +265,7 @@ const claimReferralLink = async () => {
 		});
 
 		await refresh();
-		step.value = 5;
+		step.value = 4;
 		await askEmailConfirmation();
 	} catch (error) {
 		referralError.value = getApiErrorMessage(
@@ -289,7 +278,7 @@ const claimReferralLink = async () => {
 
 const skipReferral = async () => {
 	referralError.value = null;
-	step.value = 5;
+	step.value = 4;
 	await askEmailConfirmation();
 };
 
@@ -523,118 +512,15 @@ useHead({
 			</Input>
 			<div class="flex justify-center items-center gap-4 w-full">
 				<Button
-					label="Lier mon compte Beam"
+					label="Suivant"
 					size="medium"
 					submit
-					:disabled="!profileValid"
-				/>
-				<Button
-					label="Continuer sans lier"
-					size="medium"
-					:handler="
-						() => {
-							step = 3;
-						}
-					"
 					:disabled="!profileValid"
 				/>
 			</div>
 		</form>
 		<form
 			v-if="step === 2"
-			class="flex flex-col gap-6"
-			@submit.prevent="handleSignup"
-		>
-			<h2 class="text-xl font-semibold font-title">
-				Lier mon compte Beam
-			</h2>
-			<p class="text-surface-text-muted">
-				Jusqu'au 25 octobre 2026, la possession d'un compte
-				<a
-					href="https://beam.ejnalo.me"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Beam
-				</a>
-				créé avant le 31 août 2026 est requise pour créer un compte
-				Ademyst. Pour trouver votre code Sudo, accédez aux paramètres
-				rubrique «
-				<Button
-					label="Transférer vers Beam 2027"
-					variant="link"
-					handler="@:https://beam.ejnalo.me/account/settings?section=transfer"
-					class="inline"
-				/>
-				» puis suivez les instructions.
-			</p>
-			<p v-if="signupError" class="text-center text-danger">
-				{{ signupError }}
-			</p>
-			<Input
-				v-model="payload.token"
-				label="Token de vérification (sudo)"
-				type="text"
-				placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-				:validate="regex.sudo"
-				required
-			>
-				<template #error> Le token sudo est invalide. </template>
-			</Input>
-			<Input
-				v-model="payload.termsOfServiceConsent"
-				label="Accepter les conditions d'utilisation"
-				type="checkbox"
-				required
-			>
-				<template #error>
-					Vous devez accepter les conditions d'utilisation.
-				</template>
-			</Input>
-			<Input
-				v-model="payload.privacyPolicyConsent"
-				label="Accepter la politique de confidentialité"
-				type="checkbox"
-				required
-			>
-				<template #error>
-					Vous devez accepter la politique de confidentialité.
-				</template>
-			</Input>
-			<p class="text-surface-text-muted text-sm">
-				En vous inscrivant, vous acceptez nos
-				<Button
-					label="conditions d'utilisation"
-					variant="link"
-					handler="/legal/terms-of-service"
-					class="inline"
-				/>
-				et notre
-				<Button
-					label="politique de confidentialité"
-					variant="link"
-					handler="/legal/privacy-policy"
-					class="inline"
-				/>
-				.
-			</p>
-			<div class="flex justify-center items-center gap-4 w-full">
-				<Button
-					label="Retour"
-					variant="secondary"
-					size="medium"
-					:handler="backToProfile"
-				/>
-				<Button
-					label="M'inscrire"
-					size="medium"
-					submit
-					:disabled="!(profileValid && consentValid && valid.token)"
-				/>
-			</div>
-		</form>
-		<form
-			v-if="step === 3"
 			class="flex flex-col gap-6"
 			@submit.prevent="handleSignup"
 		>
@@ -695,7 +581,7 @@ useHead({
 			</div>
 		</form>
 		<form
-			v-if="step === 4"
+			v-if="step === 3"
 			class="flex flex-col gap-6"
 			@submit.prevent="claimReferralLink"
 		>
@@ -735,7 +621,7 @@ useHead({
 				/>
 			</div>
 		</form>
-		<div v-if="step === 5" class="flex flex-col gap-6">
+		<div v-if="step === 4" class="flex flex-col gap-6">
 			<template v-if="confirmationSent">
 				<h2 class="text-xl font-bold font-title">
 					E-mail de confirmation envoyé

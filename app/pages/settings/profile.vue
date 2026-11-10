@@ -13,7 +13,7 @@ import Box from "~/components/base/Box.vue";
 import Popup from "~/components/base/Popup.vue";
 
 import Avatar from "~/components/profile/Avatar.vue";
-import ProfileBox from "~/components/profile/EditableProfile.vue";
+import ProfileBox from "~/components/profile/ProfileBox.vue";
 
 import type { Profile } from "~~/shared/models/profiles";
 
@@ -244,24 +244,26 @@ const isAvatarMenuOpen = ref(false);
 		</nav>
 	</Teleport>
 	<section class="flex flex-col gap-2">
-		<div class="flex gap-4 max-md:flex-col max-md:items-center">
+		<div class="flex flex-wrap gap-4">
 			<ProfileBox
-				v-model="_profile"
+				:data="_profile"
 				editable
-				class="w-1/2 max-md:hidden"
+				class="max-md:hidden grow basis-64 max-w-sm"
 			/>
 			<ProfileBox
-				v-model="_profile"
+				:data="_profile"
 				editable
 				layout="horizontal"
-				class="md:hidden"
+				class="md:hidden w-full"
 			/>
-			<div class="grow flex flex-col justify-center gap-4 w-full">
-				<div class="flex items-center gap-2">
+			<div
+				class="grow-2 basis-80 min-w-0 flex flex-col justify-center gap-4"
+			>
+				<div class="flex flex-wrap items-center gap-2">
 					<Input
 						v-model="name"
 						placeholder="Nom d'utilisateur"
-						class="grow"
+						class="grow basis-48"
 						disabled
 					/>
 					<Button
@@ -276,12 +278,20 @@ const isAvatarMenuOpen = ref(false);
 				</div>
 				<hr class="border-surface-border rounded-full mx-16" />
 				<Input
+					v-model="payload.displayName"
+					label="Nom d'affichage"
+					placeholder="Nom d'affichage"
+					@enter="updateProfile"
+				/>
+				<Input
 					v-model="payload.pronouns"
 					label="Pronoms"
 					placeholder="Pronoms"
 					@enter="updateProfile"
 				/>
-				<div class="grid gap-2 sm:grid-cols-2">
+				<div
+					class="grid gap-2 grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))]"
+				>
 					<Input
 						v-model="payload.location"
 						label="Localisation"
@@ -295,7 +305,7 @@ const isAvatarMenuOpen = ref(false);
 						@enter="updateProfile"
 					/>
 				</div>
-				<div class="flex items-center gap-2 max-sm:flex-col">
+				<div class="flex flex-wrap items-center gap-2">
 					<Button
 						label="Changer d'avatar"
 						variant="white"
