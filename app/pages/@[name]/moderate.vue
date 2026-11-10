@@ -264,66 +264,17 @@ const focusedBadge = ref<Badge | null>(null);
 			</div>
 		</section>
 
-		<section
-			v-if="profile?.badges && profile?.badges.length > 0"
-			class="flex items-center gap-1.5 px-4"
-		>
-			<template :key="badge.id" v-for="badge in profile?.badges">
-				<img
-					:src="`/api/v1/badges/${badge.id}/icon.png`"
-					:alt="badge.name"
-					class="cursor-pointer h-5 w-5"
-					@click="focusedBadge = badge"
-				/>
-			</template>
-		</section>
-
-		<section class="flex items-center gap-4 px-4">
-			<div class="flex flex-col w-1/3 -space-y-1">
-				<span class="text-2xl font-bold">{{
-					toLitteral(postsPage?.count ?? 0) + (postsPage?.hasNext ? "+" : "")
-				}}</span>
-				<span class="text-muted">Publications</span>
-			</div>
-
-			<div class="flex flex-col w-1/3 -space-y-1">
-				<span class="text-2xl font-bold">{{
-					toLitteral(stats.following)
-				}}</span>
-				<span class="text-muted">Suivis</span>
-			</div>
-
-			<div class="flex flex-col w-1/3 -space-y-1">
-				<span class="text-2xl font-bold">{{
-					toLitteral(stats.followers)
-				}}</span>
-				<span class="text-muted">Abonnés</span>
-			</div>
-		</section>
-
-		<section
-			v-if="
-				profile?.bio ||
-				profile?.location ||
-				profile?.corporation ||
-				(profile?.links && profile?.links.length > 0)
-			"
-			class="flex flex-col gap-2 mt-4"
-		>
-			<p v-if="profile?.bio" class="text-muted px-4">{{ profile.bio }}</p>
-
-			<ul
-				v-if="profile?.location || profile?.corporation"
-				class="space-y-1 px-4"
-			>
-				<li v-if="profile.location" class="flex items-center gap-1">
-					<MapPinIcon class="w-5 h-5 text-muted" />
-					{{ profile.location }}
+		<section class="flex flex-col gap-2">
+			<ul>
+				<li>
+					<RouterLink :to="`/@${profile?.name}`" class="text-primary font-medium hover:underline">
+						Voir le profil
+					</RouterLink>
 				</li>
-
-				<li v-if="profile.corporation" class="flex items-center gap-1">
-					<BuildingOffice2Icon class="w-5 h-5 text-muted" />
-					{{ profile.corporation }}
+				<li>
+					<RouterLink :to="`/@${profile?.name}/subscription`" class="text-primary font-medium hover:underline">
+						Gérer les abonnements
+					</RouterLink>
 				</li>
 			</ul>
 		</section>
