@@ -78,7 +78,7 @@ const hideSensitiveContent = () => {
         <template v-else>
             <div
                 v-if="data.flags.AI"
-                class="flex items-center gap-2 text-surface-text-muted px-2 -mb-2"
+                class="flex items-center gap-2 text-surface-text-muted -mb-2"
             >
                 <FlagLabel
                     label="Contenu généré par IA"
@@ -94,7 +94,7 @@ const hideSensitiveContent = () => {
 
         <div
             v-if="data.flags.NFE && isWarningDismissed"
-            class="flex items-center gap-1 cursor-pointer text-surface-text-muted px-2"
+            class="flex items-center gap-1 cursor-pointer text-surface-text-muted"
             @click="hideSensitiveContent"
         >
             <EyeSlashIcon class="h-5 w-5" />
