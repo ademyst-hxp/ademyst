@@ -6,8 +6,22 @@ import type { ProfileReport } from "~~/shared/models/reports";
 import type { Badge } from "~~/shared/models/shop";
 
 import SocialIcon from "@/components/profile/SocialIcon.vue";
-import { ArrowPathIcon, AtSymbolIcon, EllipsisVerticalIcon, FlagIcon, HeartIcon, ScaleIcon, ShareIcon, UserMinusIcon } from "@heroicons/vue/24/outline";
-import { BuildingOffice2Icon, MapPinIcon } from "@heroicons/vue/24/solid";
+import {
+	ArrowPathIcon,
+	AtSymbolIcon,
+	EllipsisVerticalIcon,
+	FlagIcon,
+	HeartIcon,
+	ScaleIcon,
+	ShareIcon,
+	UserMinusIcon,
+} from "@heroicons/vue/24/outline";
+import {
+	BuildingOffice2Icon,
+	MapPinIcon,
+	IdentificationIcon,
+	ShieldCheckIcon,
+} from "@heroicons/vue/24/outline";
 
 import PostView from "@/components/interactions/Post.vue";
 import ProfileReportBox from "@/components/moderation/ProfileReport.vue";
@@ -492,47 +506,16 @@ const focusedBadge = ref<Badge | null>(null);
 					{{ `@${profile?.name ?? "ghost"}` }}
 				</span>
 
-				<div
-					v-if="profile?.pronouns || relationship?.followed"
-					class="flex items-center gap-2"
+				<span
+					v-if="relationship?.followed"
+					class="bg-primary/10 text-primary rounded-full px-2 py-1 text-sm font-medium"
 				>
-					<span
-						v-if="profile?.pronouns"
-						class="text-muted text-sm font-medium"
-					>
-						{{ profile.pronouns }}
-					</span>
-					<span
-						v-if="profile?.pronouns && relationship?.followed"
-						class="text-muted text-sm font-medium"
-					>
-						•
-					</span>
-					<span
-						v-if="relationship?.followed"
-						class="bg-primary/10 text-primary rounded-full px-2 py-1 text-sm font-medium"
-					>
-						Vous suit
-					</span>
-				</div>
+					Vous suit
+				</span>
 			</div>
 		</section>
 
-		<section
-			v-if="profile?.badges && profile?.badges.length > 0"
-			class="flex items-center gap-1.5 px-4"
-		>
-			<template :key="badge.id" v-for="badge in profile?.badges">
-				<img
-					:src="`/api/v1/badges/${badge.id}/icon.png`"
-					:alt="badge.name"
-					class="cursor-pointer h-5 w-5"
-					@click="focusedBadge = badge"
-				/>
-			</template>
-		</section>
-
-		<section class="flex items-center gap-4 px-4">
+		<section class="flex items-center gap-4">
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
 					toLitteral(posts.length) + (postsHasNext ? "+" : "")
@@ -554,6 +537,7 @@ const focusedBadge = ref<Badge | null>(null);
 				<span class="text-muted">Abonnés</span>
 			</div>
 		</section>
+
 
 		<section v-if="profile" class="flex flex-wrap gap-2 items-center">
 			<Button
@@ -592,31 +576,61 @@ const focusedBadge = ref<Badge | null>(null);
 
 		<section
 			v-if="
-				profile?.bio ||
-				profile?.location ||
+				profile?.pronouns ||
 				profile?.corporation ||
-				(profile?.links && profile?.links.length > 0)
+				profile?.location ||
+				(profile?.badges && profile?.badges.length > 0)
 			"
-			class="flex flex-col gap-2 mt-4"
+			class="flex items-center gap-1.5 bg-surface border border-surface-border rounded-2xl px-4 py-3 -mx-4 -mb-2 overflow-x-auto"
 		>
-			<p v-if="profile?.bio" class="text-muted px-4">{{ profile.bio }}</p>
-
-			<ul
-				v-if="profile?.location || profile?.corporation"
-				class="space-y-1 px-4"
-			>
-				<li v-if="profile.location" class="flex items-center gap-1">
-					<MapPinIcon class="w-5 h-5 text-muted" />
-					{{ profile.location }}
+			<ul class="flex flex-col">
+				<li v-if="profile.pronouns" class="flex items-center gap-1">
+					<IdentificationIcon class="w-5 h-5 text-muted" />
+					{{ profile.pronouns }}
 				</li>
 
 				<li v-if="profile.corporation" class="flex items-center gap-1">
 					<BuildingOffice2Icon class="w-5 h-5 text-muted" />
 					{{ profile.corporation }}
 				</li>
-			</ul>
 
-			<ul class="flex flex-col items-start gap-1 px-4">
+				<li v-if="profile.location" class="flex items-center gap-1">
+					<MapPinIcon class="w-5 h-5 text-muted" />
+					{{ profile.location }}
+				</li>
+
+				<li
+					v-if="profile.badges && profile.badges.length > 0"
+					class="flex items-center gap-1"
+				>
+					<ShieldCheckIcon class="w-5 h-5 text-muted" />
+					<div class="flex items-center gap-0.5 bg-surface text-surface-text border border-surface-border rounded-full p-1">
+						<img
+							:key="badge.id"
+							v-for="badge in profile?.badges.slice(0, 3)"
+							:src="`/api/v1/badges/${badge.id}/icon.png`"
+							:alt="badge.name"
+							class="cursor-pointer h-4 w-4"
+							@click="focusedBadge = badge"
+						/>
+					</div>
+					<RouterLink
+						:to="`/@${profile.name}/badges`"
+						class="text-sm text-primary font-semibold cursor-pointer"
+					>
+						Voir les badges
+					</RouterLink>
+				</li>
+			</ul>
+		</section>
+
+		<section
+			v-if="profile?.bio || (profile?.links && profile?.links.length > 0)"
+			class="flex flex-col gap-2"
+		>
+			<p v-if="profile?.bio" class="text-muted">{{ profile.bio }}</p>
+
+			<ul class="flex flex-col items-start gap-1">
 				<a
 					class="flex items-center gap-2 cursor-pointer text-muted group"
 					v-for="link in profile?.links ?? []"

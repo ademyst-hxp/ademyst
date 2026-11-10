@@ -187,19 +187,19 @@ useHead({
 			<span class="text-muted">Niveau actuel</span>
 		</section>
 
-		<section class="flex items-center gap-2 px-4">
-			<Button
-				label="Profil"
-				variant="secondary"
-				size="small"
-				:handler="`/@${profile?.name}`"
-			/>
-			<Button
-				label="Modération"
-				variant="secondary"
-				size="small"
-				:handler="`/@${profile?.name}/moderate`"
-			/>
+		<section class="flex flex-col gap-2">
+			<ul>
+				<li>
+					<RouterLink :to="`/@${profile?.name}`" class="text-primary font-medium hover:underline">
+						Voir le profil
+					</RouterLink>
+				</li>
+				<li>
+					<RouterLink :to="`/@${profile?.name}/moderate`" class="text-primary font-medium hover:underline">
+						Modérer
+					</RouterLink>
+				</li>
+			</ul>
 		</section>
 	</Teleport>
 
