@@ -177,25 +177,12 @@ const tabs = computed<{ name: string; value: string }[]>(() => {
 });
 
 /**********/
-const newSanction = ref<Sanction>({
-	id: "",
-	type: "warning",
-	reason: "",
-	details: "",
-	createdAt: new Date(),
-	expiresAt: null,
-	issuer: null,
-	account: {
-		id: data.value?.profile?.name ?? "",
-		email: data.value?.profile?.name ?? "",
-		createdAt: new Date(),
-		updatedAt: new Date(),
-		confirmedAt: new Date(),
-	},
-	profileReport: null,
-	postReport: null,
-	whisperReport: null,
-});
+const newSanction = ref<Sanction>(
+	(() => {
+		const _sanction = emptySanction();
+		return _sanction;
+	})(),
+);
 
 const submitNewSanction = async () => {
 	if (!data.value?.profile) return;

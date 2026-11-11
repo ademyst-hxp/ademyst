@@ -78,73 +78,18 @@ useHead({
 
 /*********************/
 
-const newReport = ref<PostReport>({
-	id: "",
-	reason: "",
-	details: "",
-	status: "pending",
-	reporter: {
-		id: "",
-		email: "",
-		createdAt: new Date(),
-		confirmedAt: new Date(),
-		updatedAt: new Date(),
-	},
-	reportedPost: post.value ?? {
-		id: "",
-		profile: {
-			id: "",
-			name: "",
-			displayName: "",
-			bio: "",
-			location: "",
-			corporation: "",
-			birthday: null,
-			pronouns: null,
-			links: [],
-			badge: null,
-			badges: [],
-			level: 0,
-			stats: { following: 0, followers: 0 },
-			relationships: {
-				me: false,
-				following: false,
-				followed: false,
-				friend: false,
-				blocking: false,
-			},
-			createdAt: new Date(),
-		},
-		parentId: null,
-		visibility: "everyone",
-		content: "",
-		createdAt: new Date(),
-		updatedAt: null,
-		stats: {
-			reactions: {
-				like: 0,
-			},
-			answers: 0,
-			score: 0,
-		},
-		attachments: [],
-		flags: {
-			NFE: false,
-			AI: false,
-			joke: false,
-			misinformation: false,
-			spam: false,
-			suspicious: false,
-			suicide: false,
-			reported: false,
-		},
-		interaction: {
-			liked: false,
-			reported: false,
-			saved: false,
-		},
-	},
-	createdAt: new Date(),
+const newReport = ref<PostReport>(
+	(() => {
+		const _report = emptyPostReport();
+		if (post.value) _report.reportedPost = post.value;
+		return _report;
+	})(),
+);
+
+watch(post, (value) => {
+	if (value) {
+		newReport.value.reportedPost = value;
+	}
 });
 
 const submitReport = async () => {
