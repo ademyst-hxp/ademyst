@@ -362,6 +362,12 @@ const rendered = computed(() => {
 				<span class="text-lg">Masquer</span>
 			</div>
 			<div class="grow" />
+			<div class="flex items-center gap-1">
+				<ChartBarIcon class="h-6 w-6 cursor-pointer" />
+				<span class="text-lg">{{
+					toLitteral(post.stats.visits || 0)
+				}}</span>
+			</div>
 			<div
 				class="flex items-center gap-1"
 				@click="disabled ? null : copyLinkToClipboard"
