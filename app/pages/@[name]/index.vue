@@ -292,44 +292,18 @@ useHead({
 
 /*********************/
 
-const newReport = ref<ProfileReport>({
-	id: "",
-	reason: "",
-	details: "",
-	status: "pending",
-	reporter: {
-		id: "",
-		email: "",
-		createdAt: new Date(),
-		confirmedAt: new Date(),
-		updatedAt: new Date(),
-	},
-	reportedProfile: profile.value ?? {
-		id: "",
-		name: "",
-		displayName: "",
-		bio: "",
-		location: "",
-		corporation: "",
-		birthday: null,
-		pronouns: null,
-		links: [],
-		badge: null,
-		badges: [],
-		level: 0,
-		stats: { following: 0, followers: 0 },
-		relationships: {
-			me: false,
-			requesting: false,
-			requested: false,
-			following: false,
-			followed: false,
-			friend: false,
-			blocking: false,
-		},
-		createdAt: new Date(),
-	},
-	createdAt: new Date(),
+const newReport = ref<ProfileReport>(
+	(() => {
+		const _report = emptyProfileReport();
+		if (profile.value) _report.reportedProfile = profile.value;
+		return _report;
+	})(),
+);
+
+watch(profile, (value) => {
+	if (value) {
+		newReport.value.reportedProfile = value;
+	}
 });
 
 const submitReport = async () => {
