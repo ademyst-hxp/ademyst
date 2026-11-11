@@ -38,9 +38,11 @@ import ProfileRow from "../profile/ProfileRow.vue";
 const props = withDefaults(
 	defineProps<{
 		data: Post;
+		triggerPostVisit?: boolean;
 		disabled?: boolean;
 	}>(),
 	{
+		triggerPostVisit: false,
 		disabled: false,
 	},
 );
@@ -71,6 +73,47 @@ watch(
 		post.value = newPost;
 	},
 );
+
+const visited = ref(false);
+const postElement = ref<InstanceType<typeof Box> | null>(null);
+let observer: IntersectionObserver | null = null;
+
+const sendPostVisit = async () => {
+	await $api(`/posts/${post.value.id}/visit`, { method: "POST" });
+};
+
+onMounted(() => {
+	if (!props.triggerPostVisit) return;
+
+	const element = postElement.value?.$el as HTMLElement | undefined;
+	if (!element) return;
+
+	observer = new IntersectionObserver(
+		async ([entry]) => {
+			if (!entry?.isIntersecting || visited.value) return;
+
+			visited.value = true;
+
+			try {
+				await sendPostVisit();
+
+				setTimeout(() => {
+					visited.value = false;
+				}, 1000 * 60 * 5); // 5 minutes
+			} catch (err) {
+				console.error("Erreur lors de l'enregistrement de la visite:", err);
+				visited.value = false; // on autorise une nouvelle tentative
+			}
+		},
+		{ threshold: 0.5 }, // au moins 50 % du post visible
+	);
+
+	observer.observe(element);
+});
+
+onBeforeUnmount(() => {
+	observer?.disconnect();
+});
 
 const { likePost, unlikePost } = usePostInteractions();
 
@@ -207,7 +250,7 @@ const rendered = computed(() => {
 });
 </script>
 <template>
-	<Box :key="'post-' + post.id" class="shrink-0">
+	<Box :key="'post-' + post.id" :id="'post-' + post.id" class="shrink-0">
 		<div class="flex items-center gap-2">
 			<ProfileRow :data="post.profile" />
 			<div class="grow" />

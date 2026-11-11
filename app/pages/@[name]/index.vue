@@ -651,7 +651,7 @@ const focusedBadge = ref<Badge | null>(null);
 	</section>
 
 	<section v-if="tab === 'posts'" class="space-y-2">
-		<PostView v-for="post in posts" :key="post.id" :data="post" />
+		<PostView v-for="post in posts" :key="post.id" :data="post" triggerPostVisit />
 	</section>
 
 	<!-- Pagination sentinel (hidden, hence never observed, outside the lists) -->
