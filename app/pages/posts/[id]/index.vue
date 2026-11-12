@@ -162,38 +162,13 @@ useHead({
 
 const isPrev = ref<boolean>(false);
 
-const preparingPost = ref<Post>({
-	id: "0",
-	profile: session.value!.profile,
-	parentId: postId || null,
-	visibility: "everyone",
-	content: "",
-	createdAt: new Date(),
-	updatedAt: null,
-	attachments: [],
-	flags: {
-		NFE: false,
-		AI: false,
-		joke: false,
-		misinformation: false,
-		spam: false,
-		suspicious: false,
-		suicide: false,
-		reported: false,
-	},
-	interaction: {
-		liked: false,
-		reported: false,
-		saved: false,
-	},
-	stats: {
-		reactions: {
-			like: 0,
-		},
-		answers: 0,
-		score: 0,
-	},
-});
+const preparingPost = ref<Post>(
+	(() => {
+		const _post = emptyPost();
+		_post.profile = session.value!.profile;
+		return _post;
+	})(),
+);
 
 const limit = computed(
 	() => getPostSpecs(session.value!.profile.level).max_length,
