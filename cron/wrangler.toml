@@ -1,0 +1,19 @@
+name = "ademyst-cron"
+
+# Chemins relatifs à CE fichier
+main = "index.ts"
+
+compatibility_date = "2026-10-06"
+compatibility_flags = ["nodejs_compat"]
+
+# Heures en UTC. Doivent correspondre aux constantes CRON_HOURLY / CRON_DAILY de index.ts :
+#   toutes les heures (whispers + réactions, 24 h) et tous les jours à 03:15 (le reste)
+[triggers]
+crons = ["0 * * * *", "15 3 * * *"]
+
+# Conserve les logs des exécutions (résultat du dry-run, lignes supprimées...)
+[observability]
+enabled = true
+
+[vars]
+DRY_RUN = "true"
