@@ -412,6 +412,14 @@ export async function retrieveCleanWhisperReport(
 		});
 	}
 
+	// Le whisper signalé a pu être supprimé (purge automatique à 24 h)
+	if (!report.reportedWhisperId) {
+		throw createError({
+			statusCode: 404,
+			statusMessage: "Reported whisper not found",
+		});
+	}
+
 	const [reportedWhisper] = await db
 		.select()
 		.from(whispers)
@@ -456,7 +464,7 @@ export async function retrieveCleanWhisperReport(
 export async function retrieveSeveralCleanWhisperReports(
 	event: H3Event,
 	identity: Identity | null | undefined,
-	_reports: DbWhisperReport[],
+	allReports: DbWhisperReport[],
 ): Promise<WhisperReport[]> {
 	const db = useDb(event);
 
@@ -482,6 +490,13 @@ export async function retrieveSeveralCleanWhisperReports(
 			statusMessage: "Insufficient permissions",
 		});
 	}
+
+	// Les signalements dont le whisper a été supprimé (purge automatique à 24 h)
+	// sont conservés en base mais ne peuvent plus être affichés.
+	const _reports = allReports.filter(
+		(r): r is DbWhisperReport & { reportedWhisperId: string } =>
+			r.reportedWhisperId !== null,
+	);
 
 	const reportedWhispers = await db
 		.select()
