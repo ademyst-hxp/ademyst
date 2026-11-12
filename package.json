@@ -12,6 +12,8 @@
 		"preview:cf": "wrangler preview",
 		"deploy": "npm run build && wrangler deploy",
 		"deploy:staging": "npm run build && wrangler deploy --env staging",
+		"deploy:cron": "wrangler deploy -c cron/wrangler.toml",
+		"cron:prefire": "cp .env cron/.dev.vars && wrangler dev -c cron/wrangler.toml --test-scheduled",
 		"db:push": "drizzle-kit push --force",
 		"postinstall": "nuxt prepare"
 	},
