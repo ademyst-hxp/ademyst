@@ -25,6 +25,7 @@ logs
 .env
 .env.*
 !.env.example
+cron/.dev.vars
 
 # Other
 .local
