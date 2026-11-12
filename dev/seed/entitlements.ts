@@ -69,7 +69,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Les 100",
 		description:
 			"Ce badge est accordé aux 100 premiers membres de la communauté.",
-		family: "title",
+		family: "reward",
 		rarity: "legendary",
 		color: "#BB1A34",
 		createdAt: new Date(),
@@ -79,7 +79,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Early Bird",
 		description:
 			"Ce badge est accordé aux membres ayant rejoint la communauté dès les deux premiers mois.",
-		family: "title",
+		family: "reward",
 		rarity: "collector",
 		color: "#3CC900",
 		createdAt: new Date(),
@@ -89,7 +89,7 @@ const badgesToPut: Omit<DbBadge, "updatedAt">[] = [
 		name: "Première Heure",
 		description:
 			"Ce badge est accordé aux membres de Beam, première version d'Ademyst.",
-		family: "title",
+		family: "reward",
 		rarity: "legendary",
 		color: "#D013FF",
 		createdAt: new Date(),

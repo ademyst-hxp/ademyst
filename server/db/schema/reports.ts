@@ -28,6 +28,12 @@ export const profileReports = pgTable("profile_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+
+	// Référence de la purge automatique (cron/, 5 ans après la dernière mise à jour)
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.notNull()
+		.$onUpdate(() => new Date()),
 }).enableRLS();
 
 export type ProfileReport = typeof profileReports.$inferSelect;
@@ -48,6 +54,12 @@ export const postReports = pgTable("post_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+
+	// Référence de la purge automatique (cron/, 5 ans après la dernière mise à jour)
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.notNull()
+		.$onUpdate(() => new Date()),
 }, (table) => [
 	index("post_reports_reported_post_id_idx").on(table.reportedPostId),
 ]).enableRLS();
@@ -61,8 +73,9 @@ export const whisperReports = pgTable("whisper_reports", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
 
+	// Nullable : les whispers sont supprimés après 24 h (cron/) alors que le
+	// signalement est conservé 5 ans ; la FK "set null" doit pouvoir s'appliquer.
 	reportedWhisperId: varchar("reported_whisper_id", { length: 10 })
-		.notNull()
 		.references(() => whispers.id, { onDelete: "set null" }),
 
 	reason: text("reason").notNull(),
@@ -70,6 +83,12 @@ export const whisperReports = pgTable("whisper_reports", {
 	status: reportStatusEnum("status").notNull().default("pending"),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
+
+	// Référence de la purge automatique (cron/, 5 ans après la dernière mise à jour)
+	updatedAt: timestamp("updated_at")
+		.defaultNow()
+		.notNull()
+		.$onUpdate(() => new Date()),
 }).enableRLS();
 
 export type WhisperReport = typeof whisperReports.$inferSelect;

@@ -29,7 +29,13 @@ export const sessions = pgTable(
 		userAgent: text("user_agent"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+
+		// Dernière activité : mis à jour à chaque UPDATE (ex. rotation du refresh token).
+		// Sert de référence à la purge automatique (cron/, 1 an d'inactivité).
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 	},
 	(table) => [index("sessions_account_id_idx").on(table.accountId)],
 ).enableRLS();
