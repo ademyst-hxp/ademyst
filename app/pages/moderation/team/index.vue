@@ -5,6 +5,8 @@ import { ArrowPathIcon, PlusIcon } from "@heroicons/vue/24/outline";
 
 import Table from "~/components/base/Table.vue";
 import Box from "~/components/base/Box.vue";
+import EmptyData from "~/components/layout/EmptyData.vue";
+
 import ProfileRow from "~/components/profile/ProfileRow.vue";
 
 definePageMeta({
@@ -154,7 +156,13 @@ const confirmRemove = async () => {
 		<p>{{ error }}</p>
 	</Box>
 
-	<Table>
+	<EmptyData
+		v-if="!pending && items.length === 0"
+		title="Aucun membre dans cette catégorie"
+		message="Il n'y a aucun membre dans cette catégorie pour le moment."
+	/>
+
+	<Table v-else-if="items.length > 0">
 		<template #head>
 			<tr>
 				<th>Membre</th>
@@ -165,11 +173,6 @@ const confirmRemove = async () => {
 			</tr>
 		</template>
 		<template #body>
-			<tr v-if="!pending && items.length === 0">
-				<td colspan="5" class="text-muted text-center">
-					Aucun membre dans cette catégorie.
-				</td>
-			</tr>
 			<tr v-for="member in items" :key="member.id">
 				<td><ProfileRow :data="member.profile" /></td>
 				<td>{{ getLevelLabel(member.level.id) }}</td>
