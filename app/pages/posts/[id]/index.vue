@@ -250,7 +250,7 @@ const handlePublish = async () => {
 			/>
 		</div>
 	</section>
-	<section class="flex flex-col gap-4">
+	<section class="flex flex-col gap-4" v-if="answers.length > 0">
 		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" />
 	</section>
 

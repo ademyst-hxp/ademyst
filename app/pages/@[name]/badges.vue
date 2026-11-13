@@ -3,6 +3,7 @@ import type { Profile } from "~~/shared/models/profiles";
 import type { Badge } from "~~/shared/models/shop";
 
 import Box from "@/components/base/Box.vue";
+import EmptyData from "@/components/layout/EmptyData.vue";
 import BadgeInfo from "@/components/profile/BadgeInfo.vue";
 
 type ProfileResponse = {
@@ -225,14 +226,11 @@ const focusedBadge = ref<Badge | null>(null);
 				/>
 			</Box>
 		</div>
-		<template v-else>
-			<h2 class="text-2xl font-bold text-center font-title">
-				Aucun badge trouvé
-			</h2>
-			<p class="text-muted text-center">
-				Cet utilisateur n'a pas de badges.
-			</p>
-		</template>
+		<EmptyData
+			v-else-if="!pending"
+			title="Aucun badge trouvé"
+			message="Cet utilisateur ne possède pas de badges."
+		/>
 	</section>
 
 	<section class="space-y-2" v-else>
@@ -262,14 +260,11 @@ const focusedBadge = ref<Badge | null>(null);
 				/>
 			</Box>
 		</div>
-		<template v-else>
-			<h2 class="text-2xl font-bold text-center font-title">
-				Aucun badge trouvé
-			</h2>
-			<p class="text-muted text-center">
-				Cet utilisateur ne possède pas de badges de cette famille.
-			</p>
-		</template>
+		<EmptyData
+			v-else-if="!pending"
+			title="Aucun badge trouvé"
+			message="Cet utilisateur ne possède pas de badges dans cette famille."
+		/>
 	</section>
 
 	<BadgeInfo
