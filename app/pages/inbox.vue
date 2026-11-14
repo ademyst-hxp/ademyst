@@ -1,15 +1,21 @@
 <script setup lang="ts">
-import { ArrowPathIcon } from "@heroicons/vue/24/outline";
+import { ArrowPathIcon, Cog6ToothIcon } from "@heroicons/vue/24/outline";
 
 import type { Account } from "~~/shared/models/accounts";
 import type {
+	InboxPage,
 	Notification,
-	NotificationCategory,
 	NotificationFilter,
 } from "~~/shared/models/inbox";
 
 import WarningBox from "~/components/boxes/Warning.vue";
+import EmptyData from "~/components/layout/EmptyData.vue";
 import NotificationBox from "~/components/notifications/Notification.vue";
+import {
+	getNotificationLink,
+	groupNotificationsByDay,
+	NOTIFICATION_FILTERS,
+} from "~/utils/notifications";
 
 const { $api } = useNuxtApp();
 const { session, refresh } = useAuthSession();
@@ -28,48 +34,13 @@ definePageMeta({
 
 useHead({ title: "Notifications | Ademyst" });
 
-type InboxPage = {
-	notifications: Notification[];
-	next: number;
-	hasNext: boolean;
-};
-
-type InboxTab = NotificationFilter | "account-security";
-const tab = ref<InboxTab>("all");
+const tab = ref<NotificationFilter>("all");
 const PAGE_SIZE = 20;
 
-const fetchPage = async (offset: number): Promise<InboxPage> => {
-	const types =
-		tab.value === "account-security"
-			? (["account", "moderation", "security"] as const)
-			: ([tab.value] as const);
-
-	if (types.length === 1) {
-		return $api<InboxPage>("/inbox", {
-			query: { limit: PAGE_SIZE, offset, type: types[0] },
-		});
-	}
-
-	const pages = await Promise.all(
-		types.map((type) =>
-			$api<InboxPage>("/inbox", {
-				query: { limit: offset + PAGE_SIZE + 1, offset: 0, type },
-			}),
-		),
-	);
-	const merged = pages
-		.flatMap((page) => page.notifications)
-		.sort(
-			(a, b) =>
-				new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-		);
-	const page = merged.slice(offset, offset + PAGE_SIZE);
-	return {
-		notifications: page,
-		next: offset + page.length,
-		hasNext: merged.length > offset + PAGE_SIZE,
-	};
-};
+const fetchPage = (offset: number): Promise<InboxPage> =>
+	$api<InboxPage>("/inbox", {
+		query: { limit: PAGE_SIZE, offset, type: tab.value },
+	});
 
 const {
 	data: firstPage,
@@ -139,14 +110,7 @@ const error = computed(() =>
 	fetchError.value ? "Impossible de récupérer les notifications." : null,
 );
 
-const tabs: { name: string; value: InboxTab }[] = [
-	{ name: "Toutes", value: "all" },
-	{ name: "Interactions", value: "interactions" },
-	{ name: "Relations", value: "relations" },
-	{ name: "Récompenses", value: "rewards" },
-	{ name: "Compte et sécurité", value: "account-security" },
-	{ name: "Annonces", value: "announcements" },
-];
+const tabs = NOTIFICATION_FILTERS;
 
 type AccountResponse = { status: "ok"; data: Account };
 const { data: account } = await useAsyncData(
@@ -155,35 +119,39 @@ const { data: account } = await useAsyncData(
 );
 
 const openNotification = (notification: Notification) => {
-	switch (notification.type) {
-		case "content.post":
-			return navigateTo(`/posts/${notification.post.id}`);
-		case "content.whisper":
-			return navigateTo(`/discover?whisper=${notification.whisper.id}`);
-		case "interaction.reply":
-			return navigateTo(`/posts/${notification.reply.id}`);
-		case "interaction.reaction":
-		case "interaction.milestone":
-			return notification.subject.kind === "post"
-				? navigateTo(`/posts/${notification.subject.post.id}`)
-				: navigateTo(`/discover?whisper=${notification.subject.whisper.id}`);
-		case "relation.follower":
-		case "relation.request":
-			return navigateTo(`/@${notification.actor.name}`);
-		case "announcement.alert":
-		case "announcement.news":
-			if (notification.announcement.actionUrl) {
-				return navigateTo(notification.announcement.actionUrl);
-			}
-			break;
+	const link = getNotificationLink(notification);
+	if (link) return navigateTo(link);
+};
+
+const groups = computed(() => groupNotificationsByDay(notifications.value));
+
+// La page marque tout comme lu dès son ouverture : on retient ce qui était
+// nouveau pour garder le repère visuel jusqu'à la fermeture de la page.
+const unreadIds = ref(new Set<string>());
+const rememberUnread = (items: Notification[]) => {
+	for (const item of items) {
+		if (!item.read) unreadIds.value.add(item.id);
 	}
 };
+rememberUnread(notifications.value);
+watch(notifications, (items) => rememberUnread(items), { deep: true });
+
+const emptyMessage = computed(() =>
+	tab.value === "all"
+		? "Vous n'avez aucune notification pour le moment."
+		: "Aucune notification dans cette catégorie.",
+);
 
 onMounted(() => {
 	if (!fetchError.value) {
-		$api("/inbox/read", { method: "POST" }).catch((reason) => {
-			console.error("Impossible de marquer les notifications comme lues.", reason);
-		});
+		$api("/inbox/read", { method: "POST" })
+			.then(() => refreshNuxtData("notifications-count"))
+			.catch((reason) => {
+				console.error(
+					"Impossible de marquer les notifications comme lues.",
+					reason,
+				);
+			});
 	}
 });
 </script>
@@ -191,12 +159,19 @@ onMounted(() => {
 <template>
 	<Teleport to="#header">
 		<h1 class="text-2xl font-bold font-title text-center">Notifications</h1>
-		<Button
-			label="Actualiser"
-			:handler="refreshNotifications"
-			variant="link"
-			class="mx-auto"
-		/>
+		<div class="flex items-center justify-center gap-4">
+			<Button
+				label="Actualiser"
+				:handler="refreshNotifications"
+				variant="link"
+			/>
+			<Button
+				label="Réglages"
+				:icon="Cog6ToothIcon"
+				:handler="() => navigateTo('/settings/notifications')"
+				variant="link"
+			/>
+		</div>
 		<TabBar v-model="tab" :tabs />
 	</Teleport>
 
@@ -216,26 +191,36 @@ onMounted(() => {
 		</RouterLink>
 	</WarningBox>
 
-	<p
-		v-if="error"
-		class="py-8 text-center text-sm text-danger"
-	>
+	<p v-if="error" class="py-8 text-center text-sm text-danger">
 		{{ error }}
 	</p>
-	<section v-else class="flex flex-col gap-2">
-		<NotificationBox
-			v-for="notification in notifications"
-			:key="notification.id"
-			:data="notification"
-			@open="openNotification"
-		/>
-		<p
-			v-if="!notifications.length && !hasNext && !refreshing"
-			class="py-8 text-center text-sm text-surface-text-muted"
+	<template v-else>
+		<section
+			v-for="group in groups"
+			:key="group.label"
+			class="flex flex-col gap-2"
 		>
-			Aucune notification en vue pour le moment.
-		</p>
-	</section>
+			<h2
+				class="px-4 text-sm font-semibold uppercase tracking-wide text-muted"
+			>
+				{{ group.label }}
+			</h2>
+			<NotificationBox
+				v-for="notification in group.notifications"
+				:key="notification.id"
+				:data="notification"
+				:unread="unreadIds.has(notification.id)"
+				@open="openNotification"
+			/>
+		</section>
+
+		<EmptyData
+			v-if="!notifications.length && !hasNext && !refreshing"
+			title="Rien à signaler"
+			:message="emptyMessage"
+			class="py-8"
+		/>
+	</template>
 
 	<div ref="sentinel" class="flex justify-center py-6 text-muted">
 		<ArrowPathIcon

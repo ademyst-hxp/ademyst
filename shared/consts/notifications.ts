@@ -138,6 +138,13 @@ export const NOTIFICATION_CATEGORY_META: Record<
 	},
 };
 
+// Réglages de mail modifiables par l'utilisateur, dans l'ordre d'affichage
+// (une entrée par catégorie qui possède un réglage).
+export const NOTIFICATION_EMAIL_SETTINGS: readonly NotificationEmailSetting[] =
+	Object.values(NOTIFICATION_CATEGORY_META)
+		.map((meta) => meta.setting)
+		.filter((setting): setting is NotificationEmailSetting => setting !== null);
+
 /*
  * --------------------------------------------------------------------------
  * MÉTADONNÉES PAR TYPE
