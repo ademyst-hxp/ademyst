@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
 	const identity = await requireAuth(event);
 
-	const entitlementId = event.context.params?.entitlementId;
+	const badgeId = event.context.params?.badgeId;
 	const name = event.context.params?.name;
 
 	if (!name) {
@@ -23,10 +23,10 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	if (!entitlementId) {
+	if (!badgeId) {
 		throw createError({
 			statusCode: 400,
-			statusMessage: "Missing entitlement ID",
+			statusMessage: "Missing badge ID",
 		});
 	}
 
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
 	const [entitlement] = await db
 		.select()
 		.from(badgesEntitlements)
-		.where(eq(badgesEntitlements.id, entitlementId))
+		.where(eq(badgesEntitlements.badgeId, badgeId))
 		.limit(1);
 
 	if (!entitlement) {
