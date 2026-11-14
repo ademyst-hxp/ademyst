@@ -464,7 +464,12 @@ export type Notification = {
 	[T in NotificationType]: NotificationOf<T>;
 }[NotificationType];
 
-export type NotificationFilter = "all" | NotificationCategory;
+// Filtres de la boîte de réception. `account-security` regroupe les
+// catégories `account` et `security` ; les autres filtres sont des catégories.
+export type NotificationFilter =
+	| "all"
+	| NotificationCategory
+	| "account-security";
 
 export type InboxPage = {
 	notifications: Notification[];

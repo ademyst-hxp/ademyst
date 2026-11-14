@@ -5,7 +5,7 @@ import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { queryBoolean, queryEnum, queryPagination } from "~~/server/utils/helpers/filters";
 import type { H3Event } from "h3";
 
-const TYPES = ["all", "content", "interactions", "relations", "rewards", "moderation", "security", "account", "announcements"] as const;
+const TYPES = ["all", "content", "interactions", "relations", "rewards", "moderation", "security", "account", "account-security", "announcements"] as const;
 const CATEGORY_TYPES = {
 	content: ["content.post", "content.whisper"],
 	interactions: ["interaction.reaction", "interaction.milestone", "interaction.reply"],
@@ -14,6 +14,7 @@ const CATEGORY_TYPES = {
 	moderation: ["report.received", "report.rejected", "report.actioned", "report.downgraded", "sanction.issued", "sanction.updated", "sanction.lifted", "sanction.expired"],
 	security: ["security.email_changed", "security.email_confirmed", "security.password_changed", "security.deletion_requested"],
 	account: ["account.settings_changed"],
+	"account-security": ["security.email_changed", "security.email_confirmed", "security.password_changed", "security.deletion_requested", "account.settings_changed"],
 	announcements: ["announcement.alert", "announcement.news"],
 } as const;
 const endpoints = { index: "/api/v1/inbox/", read: "/api/v1/inbox/read", unread: "/api/v1/inbox/unread" };

@@ -35,16 +35,14 @@ import type { SanctionType } from "~~/shared/models/sanctions";
  * --------------------------------------------------------------------------
  */
 
+// Publications, interactions et relations n'ont pas d'onglet : elles
+// n'apparaissent que dans « Toutes ». Sécurité et compte sont fusionnés.
 export const NOTIFICATION_FILTERS: { name: string; value: NotificationFilter }[] =
 	[
 		{ name: "Toutes", value: "all" },
-		{ name: "Publications", value: "content" },
-		{ name: "Interactions", value: "interactions" },
-		{ name: "Relations", value: "relations" },
 		{ name: "Récompenses", value: "rewards" },
 		{ name: "Modération", value: "moderation" },
-		{ name: "Sécurité", value: "security" },
-		{ name: "Compte", value: "account" },
+		{ name: "Compte & Sécurité", value: "account-security" },
 		{ name: "Annonces", value: "announcements" },
 	];
 
