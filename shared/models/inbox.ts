@@ -195,6 +195,7 @@ export type LevelSnapshot = {
 	levelName: string;
 	reason: string | null;
 	expiresAt: string | null;
+	badgeId?: string | null;
 };
 
 export type NotificationDataMap = Complete<{
@@ -439,9 +440,9 @@ export type NotificationPayloadMap = Complete<{
 	"badge.granted": { badge: Badge | null };
 	"badge.expired": { badge: Badge | null };
 	"badge.revoked": { badge: Badge | null };
-	"level.granted": { level: Level | null };
-	"level.expired": { level: Level | null };
-	"level.revoked": { level: Level | null };
+	"level.granted": { level: Level | null; badge: Badge | null };
+	"level.expired": { level: Level | null; badge: Badge | null };
+	"level.revoked": { level: Level | null; badge: Badge | null };
 
 	"security.email_changed": unknown;
 	"security.email_confirmed": unknown;

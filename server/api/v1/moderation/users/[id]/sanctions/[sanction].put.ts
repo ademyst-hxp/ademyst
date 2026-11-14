@@ -1,5 +1,5 @@
 import { useDb } from "~~/server/db";
-import { accountSanctionNotifications } from "~~/server/db/schema/inbox";
+import { notifications } from "~~/server/db/schema/inbox";
 import { profiles } from "~~/server/db/schema/profiles";
 import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
 import { sanctions } from "~~/server/db/schema/sanctions";
@@ -257,14 +257,14 @@ export default defineEventHandler(async (event: H3Event) => {
 		}
 
 		await tx
-			.update(accountSanctionNotifications)
+			.update(notifications)
 			.set({
-				read: false,
-				updatedAt: new Date(),
+				readAt: null,
+				type: "sanction.updated",
 			})
 			.where(
 				eq(
-					accountSanctionNotifications.sanctionId,
+					notifications.sanctionId,
 					normalizedSanctionId,
 				),
 			);
