@@ -132,8 +132,8 @@ const retentions: Retention[] = [
 			Politique de confidentialité
 		</h2>
 
-		<p class="text-muted">Dernière mise à jour: 12 novembre 2026</p>
-		<p class="text-muted">Entrée en vigueur: 30 novembre 2026</p>
+		<p class="text-muted">Dernière mise à jour: 14 novembre 2026</p>
+		<p class="text-muted">Entrée en vigueur: 16 novembre 2026</p>
 	</header>
 
 	<article
