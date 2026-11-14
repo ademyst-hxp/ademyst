@@ -7,6 +7,7 @@ import {
 import { and, eq, gt, inArray } from "drizzle-orm";
 
 import { levels } from "~~/server/db/schema/shop";
+import { notifications } from "~~/server/db/schema/inbox";
 
 import { getLevelInfo } from "~~/shared/consts/labels";
 
@@ -135,6 +136,20 @@ export default defineEventHandler(async (event) => {
 				expiresAt: expiresAt ? new Date(expiresAt) : undefined,
 			});
 	}
+
+	await db.insert(notifications).values({
+		accountId: profile.accountId,
+		profileId: profile.id,
+		type: "level.granted",
+		levelEntitlementId: candidate.id,
+		data: {
+			levelId: level.id,
+			levelName: level.name,
+			reason: candidate.reason,
+			expiresAt: candidate.expiresAt?.toISOString() ?? null,
+			badgeId,
+		},
+	});
 
 	const entitlement = await retrieveCleanLevelEntitlement(
 		event,

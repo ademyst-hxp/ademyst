@@ -1,736 +1,172 @@
 import { useDb } from "#server/db";
-import { accountSanctionNotifications } from "#server/db/schema/inbox";
-import { followNotifications } from "#server/db/schema/inbox";
-import { postNotifications } from "#server/db/schema/inbox";
-import { postSanctionNotifications } from "#server/db/schema/inbox";
-import { reportNotifications } from "#server/db/schema/inbox";
-import { whisperNotifications } from "#server/db/schema/inbox";
+import {
+	announcements,
+	notifications,
+} from "#server/db/schema/inbox";
+import { badgesEntitlements, levelsEntitlements } from "#server/db/schema/entitlements";
 import { posts, whispers } from "#server/db/schema/interactions";
 import { profiles } from "#server/db/schema/profiles";
-import { follows, requests } from "#server/db/schema/relations";
 import { postReports, profileReports, whisperReports } from "#server/db/schema/reports";
-import { sanctions } from "#server/db/schema/sanctions";
-import { and, inArray } from "drizzle-orm";
-import { or } from "drizzle-orm";
+import { badges, levels } from "#server/db/schema/shop";
+import { eq } from "drizzle-orm";
 
-import { retrieveSeveralCleanPosts, retrieveSeveralCleanWhispers } from "#server/utils/converters/interactions";
-import { retrieveSeveralCleanProfiles } from "#server/utils/converters/profiles";
-import { convertFollow, convertRequest } from "#server/utils/converters/relations";
-import { retrieveSeveralCleanPostReports, retrieveSeveralCleanProfileReports, retrieveSeveralCleanWhisperReports } from "#server/utils/converters/reports";
-import { retrieveSeveralCleanSanctions } from "#server/utils/converters/sanctions";
-
-import type { AccountSanctionNotification } from "~~/shared/models/inbox";
-import type { FollowNotification } from "~~/shared/models/inbox";
-import type { PostNotification } from "~~/shared/models/inbox";
-import type { PostSanctionNotification } from "~~/shared/models/inbox";
-import type { ReportNotification } from "~~/shared/models/inbox";
-import type { WhisperNotification } from "~~/shared/models/inbox";
+import { getNotificationCategory } from "~~/shared/consts/notifications";
+import type { Notification } from "~~/shared/models/inbox";
+import { retrieveCleanPost, retrieveCleanWhisper } from "#server/utils/converters/interactions";
+import { retrieveCleanProfile } from "#server/utils/converters/profiles";
+import { retrieveCleanPostReport, retrieveCleanProfileReport, retrieveCleanWhisperReport } from "#server/utils/converters/reports";
+import { retrieveCleanBadge, retrieveCleanLevel } from "#server/utils/converters/shop";
 import type { H3Event } from "h3";
 
-/*
- * --------------------------------------------------------------------------
- * TYPES
- * --------------------------------------------------------------------------
- */
+type DbNotification = typeof notifications.$inferSelect;
 
-type InboxNotifications = {
-	accountSanctions: (typeof accountSanctionNotifications.$inferSelect)[];
-	postSanctions: (typeof postSanctionNotifications.$inferSelect)[];
-	reports: (typeof reportNotifications.$inferSelect)[];
-	posts: (typeof postNotifications.$inferSelect)[];
-	whispers: (typeof whisperNotifications.$inferSelect)[];
-	follows: (typeof followNotifications.$inferSelect)[];
-};
+const first = async <T>(query: PromiseLike<T[]>): Promise<T | null> =>
+	(await query)[0] ?? null;
 
-export type CleanInboxNotifications = {
-	accountSanctions: AccountSanctionNotification[];
-	postSanctions: PostSanctionNotification[];
-	reports: ReportNotification[];
-	posts: PostNotification[];
-	whispers: WhisperNotification[];
-	follows: FollowNotification[];
-};
-
-/*
- * --------------------------------------------------------------------------
- * HELPERS
- * --------------------------------------------------------------------------
- */
-
-function getRelationKey(issuerId: string, profileId: string): string {
-	return `${issuerId}:${profileId}`;
-}
-
-/*
- * --------------------------------------------------------------------------
- * GLOBAL INBOX CLEANER
- * --------------------------------------------------------------------------
- *
- * Toutes les ressources sont collectées puis chargées en batch.
- *
- * Pour les relations :
- *
- *   request:
- *     issuer -> profile
- *
- *   request_accepted / happened:
- *     issuer -> profile
- *
- * Dans les deux cas, issuer/profile permettent de retrouver la relation.
- *
- * Pour les reports, une notification référence normalement un seul des trois
- * types de reports :
- *
- *   profileReportId
- *   postReportId
- *   whisperReportId
- *
- * --------------------------------------------------------------------------
- */
-
-export async function retrieveCleanInboxNotifications(
+export async function retrieveCleanNotifications(
 	event: H3Event,
-	identity: Identity | null | undefined,
-	notifications: InboxNotifications,
-): Promise<CleanInboxNotifications> {
+	identity: Identity,
+	rows: DbNotification[],
+): Promise<Notification[]> {
 	const db = useDb(event);
 
-	/*
-	 * ------------------------------------------------------------------
-	 * 1. COLLECT IDS
-	 * ------------------------------------------------------------------
-	 */
-
-	const profileIds = new Set<string>();
-	const postIds = new Set<string>();
-	const whisperIds = new Set<string>();
-	const sanctionIds = new Set<string>();
-
-	const profileReportIds = new Set<string>();
-	const postReportIds = new Set<string>();
-	const whisperReportIds = new Set<string>();
-
-	/*
-	 * Posts
-	 */
-
-	for (const notification of notifications.posts) {
-		if (notification.issuerId) {
-			profileIds.add(notification.issuerId);
-		}
-
-		if (notification.postId) {
-			postIds.add(notification.postId);
-		}
-	}
-
-	/*
-	 * Whispers
-	 */
-
-	for (const notification of notifications.whispers) {
-		if (notification.issuerId) {
-			profileIds.add(notification.issuerId);
-		}
-
-		if (notification.whisperId) {
-			whisperIds.add(notification.whisperId);
-		}
-	}
-
-	/*
-	 * Relations
-	 */
-
-	for (const notification of notifications.follows) {
-		profileIds.add(notification.profileId);
-
-		if (notification.issuerId) {
-			profileIds.add(notification.issuerId);
-		}
-	}
-
-	/*
-	 * Account sanctions
-	 */
-
-	for (const notification of notifications.accountSanctions) {
-		profileIds.add(notification.profileId);
-
-		if (notification.sanctionId) {
-			sanctionIds.add(notification.sanctionId);
-		}
-	}
-
-	/*
-	 * Post sanctions
-	 */
-
-	for (const notification of notifications.postSanctions) {
-		if (notification.postId) {
-			postIds.add(notification.postId);
-		}
-
-		if (notification.sanctionId) {
-			sanctionIds.add(notification.sanctionId);
-		}
-	}
-
-	/*
-	 * Reports
-	 */
-
-	for (const notification of notifications.reports) {
-		if (notification.profileReportId) {
-			profileReportIds.add(notification.profileReportId);
-		}
-
-		if (notification.postReportId) {
-			postReportIds.add(notification.postReportId);
-		}
-
-		if (notification.whisperReportId) {
-			whisperReportIds.add(notification.whisperReportId);
-		}
-	}
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 2. LOAD RAW RESOURCES
-	 * ------------------------------------------------------------------
-	 */
-
-	const [
-		rawProfiles,
-		rawPosts,
-		rawWhispers,
-		rawSanctions,
-		rawProfileReports,
-		rawPostReports,
-		rawWhisperReports,
-	] = await Promise.all([
-		profileIds.size > 0
-			? db
-					.select()
-					.from(profiles)
-					.where(inArray(profiles.id, [...profileIds]))
-			: Promise.resolve([]),
-
-		postIds.size > 0
-			? db
-					.select()
-					.from(posts)
-					.where(inArray(posts.id, [...postIds]))
-			: Promise.resolve([]),
-
-		whisperIds.size > 0
-			? db
-					.select()
-					.from(whispers)
-					.where(inArray(whispers.id, [...whisperIds]))
-			: Promise.resolve([]),
-
-		sanctionIds.size > 0
-			? db
-					.select()
-					.from(sanctions)
-					.where(inArray(sanctions.id, [...sanctionIds]))
-			: Promise.resolve([]),
-
-		profileReportIds.size > 0
-			? db
-					.select()
-					.from(profileReports)
-					.where(
-						inArray(profileReports.id, [...profileReportIds]),
-					)
-			: Promise.resolve([]),
-
-		postReportIds.size > 0
-			? db
-					.select()
-					.from(postReports)
-					.where(inArray(postReports.id, [...postReportIds]))
-			: Promise.resolve([]),
-
-		whisperReportIds.size > 0
-			? db
-					.select()
-					.from(whisperReports)
-					.where(
-						inArray(whisperReports.id, [...whisperReportIds]),
-					)
-			: Promise.resolve([]),
-	]);
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 3. LOAD RELATIONSHIPS
-	 * ------------------------------------------------------------------
-	 *
-	 * Les notifications ne stockent pas followId/requestId.
-	 * On retrouve donc la relation à partir du couple :
-	 *
-	 *   issuerId -> profileId
-	 *
-	 * Pour éviter les requêtes une par une, on récupère toutes les
-	 * relations impliquant les profiles concernés.
-	 * ------------------------------------------------------------------
-	 */
-
-	const relationNotifications = notifications.follows.filter(
-		(notification) => notification.issuerId !== null,
-	);
-
-	const relationIssuerIds = [
-		...new Set(
-			relationNotifications
-				.map((notification) => notification.issuerId)
-				.filter((id): id is string => id !== null),
-		),
-	];
-
-	const relationProfileIds = [
-		...new Set(
-			relationNotifications.map(
-				(notification) => notification.profileId,
-			),
-		),
-	];
-
-	const [rawFollows, rawRequests] = await Promise.all([
-		relationIssuerIds.length > 0 && relationProfileIds.length > 0
-			? db
-					.select()
-					.from(follows)
-					.where(
-						and(
-							inArray(follows.followerId, relationIssuerIds),
-							inArray(
-								follows.followingId,
-								relationProfileIds,
-							),
-						),
-					)
-			: Promise.resolve([]),
-
-		relationIssuerIds.length > 0 && relationProfileIds.length > 0
-			? db
-					.select()
-					.from(requests)
-					.where(
-						and(
-							inArray(requests.senderId, relationIssuerIds),
-							inArray(
-								requests.receiverId,
-								relationProfileIds,
-							),
-						),
-					)
-			: Promise.resolve([]),
-	]);
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 4. CLEAN RESOURCES IN BATCH
-	 * ------------------------------------------------------------------
-	 */
-
-	const [
-		cleanProfiles,
-		cleanPosts,
-		cleanWhispers,
-		cleanSanctions,
-		cleanProfileReports,
-		cleanPostReports,
-		cleanWhisperReports,
-	] = await Promise.all([
-		rawProfiles.length > 0
-			? retrieveSeveralCleanProfiles(event, identity, rawProfiles)
-			: Promise.resolve([]),
-
-		rawPosts.length > 0
-			? retrieveSeveralCleanPosts(event, identity, rawPosts)
-			: Promise.resolve([]),
-
-		rawWhispers.length > 0
-			? retrieveSeveralCleanWhispers(event, identity, rawWhispers)
-			: Promise.resolve([]),
-
-		rawSanctions.length > 0
-			? retrieveSeveralCleanSanctions(event, identity, rawSanctions)
-			: Promise.resolve([]),
-
-		rawProfileReports.length > 0
-			? retrieveSeveralCleanProfileReports(
-					event,
-					identity,
-					rawProfileReports,
-				)
-			: Promise.resolve([]),
-
-		rawPostReports.length > 0
-			? retrieveSeveralCleanPostReports(
-					event,
-					identity,
-					rawPostReports,
-				)
-			: Promise.resolve([]),
-
-		rawWhisperReports.length > 0
-			? retrieveSeveralCleanWhisperReports(
-					event,
-					identity,
-					rawWhisperReports,
-				)
-			: Promise.resolve([]),
-	]);
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 5. MAPS
-	 * ------------------------------------------------------------------
-	 */
-
-	const profilesMap = new Map(
-		cleanProfiles.map((profile) => [profile.id, profile]),
-	);
-
-	const postsMap = new Map(cleanPosts.map((post) => [post.id, post]));
-
-	const whispersMap = new Map(
-		cleanWhispers.map((whisper) => [whisper.id, whisper]),
-	);
-
-	const sanctionsMap = new Map(
-		cleanSanctions.map((sanction) => [sanction.id, sanction]),
-	);
-
-	const followsMap = new Map(
-		rawFollows.map((follow) => [
-			getRelationKey(follow.followerId, follow.followingId),
-			follow,
-		]),
-	);
-
-	const requestsMap = new Map(
-		rawRequests.map((request) => [
-			getRelationKey(request.senderId, request.receiverId),
-			request,
-		]),
-	);
-
-	const profileReportsMap = new Map(
-		cleanProfileReports.map((report) => [report.id, report]),
-	);
-
-	const postReportsMap = new Map(
-		cleanPostReports.map((report) => [report.id, report]),
-	);
-
-	const whisperReportsMap = new Map(
-		cleanWhisperReports.map((report) => [report.id, report]),
-	);
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 6. POST NOTIFICATIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanPostsNotifications: PostNotification[] =
-		notifications.posts.map((notification) => {
-			const post = notification.postId
-				? postsMap.get(notification.postId)
-				: undefined;
-
-			const issuer = notification.issuerId
-				? profilesMap.get(notification.issuerId)
-				: undefined;
-
-			if (!post || !issuer) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Failed to retrieve post notification issuer or post",
-				});
-			}
-
-			const { profileId, issuerId, postId, ...data } = notification;
-
-			return {
-				...data,
-				post,
-				issuer,
-			};
-		});
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 7. WHISPER NOTIFICATIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanWhisperNotifications: WhisperNotification[] =
-		notifications.whispers.map((notification) => {
-			const whisper = notification.whisperId
-				? whispersMap.get(notification.whisperId)
-				: undefined;
-
-			const issuer = notification.issuerId
-				? profilesMap.get(notification.issuerId)
-				: undefined;
-
-			if (!whisper || !issuer) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Failed to retrieve whisper notification issuer or whisper",
-				});
-			}
-
-			const { profileId, issuerId, whisperId, ...data } =
-				notification;
-
-			return {
-				...data,
-				whisper,
-				issuer,
-			};
-		});
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 8. FOLLOW / REQUEST NOTIFICATIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanFollowNotifications: FollowNotification[] =
-		notifications.follows.map((notification) => {
-			const profile = profilesMap.get(notification.profileId);
-
-			const issuer = notification.issuerId
-				? profilesMap.get(notification.issuerId)
-				: undefined;
-
-			if (!profile || !issuer) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Failed to retrieve follow notification profiles",
-				});
-			}
-
-			const relationKey = getRelationKey(
-				notification.issuerId,
-				notification.profileId,
-			);
-
-			let relationship:
-				FollowNotification["relationship"] | undefined;
-
-			if (notification.type === "request") {
-				const request = requestsMap.get(relationKey);
-
-				if (!request) {
-					throw createError({
-						statusCode: 500,
-						statusMessage:
-							"Failed to retrieve request relationship",
-					});
+	return Promise.all(rows.map(async (row) => {
+		const base = {
+			id: row.id,
+			type: row.type,
+			category: getNotificationCategory(row.type),
+			read: row.readAt !== null,
+			readAt: row.readAt,
+			createdAt: row.createdAt,
+			data: row.data,
+		};
+
+		switch (row.type) {
+			case "content.post":
+			case "interaction.milestone":
+			case "interaction.reply": {
+				const post = row.postId
+					? await first(db.select().from(posts).where(eq(posts.id, row.postId)))
+					: null;
+				if (!post) return { ...base, subject: { kind: "post", post: null } } as Notification;
+				const cleanPost = await retrieveCleanPost(event, identity, post);
+				const actor = row.actorId
+					? await first(db.select().from(profiles).where(eq(profiles.id, row.actorId)))
+					: null;
+				const cleanActor = actor
+					? await retrieveCleanProfile(event, identity, actor)
+					: null;
+				if (row.type === "interaction.reply") {
+					const parent = post.parentId
+						? await first(db.select().from(posts).where(eq(posts.id, post.parentId)))
+						: null;
+					return {
+						...base,
+						actor: cleanActor,
+						reply: cleanPost,
+						parent: parent ? await retrieveCleanPost(event, identity, parent) : null,
+					} as Notification;
 				}
-
-				const sender = profilesMap.get(request.senderId);
-
-				const receiver = profilesMap.get(request.receiverId);
-
-				if (!sender || !receiver) {
-					throw createError({
-						statusCode: 500,
-						statusMessage:
-							"Failed to retrieve request profiles",
-					});
+				if (row.type === "content.post") {
+					return { ...base, actor: cleanActor, post: cleanPost } as Notification;
 				}
-
-				relationship = convertRequest(request, sender, receiver);
-			} else {
-				const follow = followsMap.get(relationKey);
-
-				if (!follow) {
-					throw createError({
-						statusCode: 500,
-						statusMessage:
-							"Failed to retrieve follow relationship",
-					});
+				return {
+					...base,
+					...(cleanActor ? { actor: cleanActor } : {}),
+					subject: { kind: "post", post: cleanPost },
+				} as Notification;
+			}
+			case "content.whisper": {
+				const whisper = row.whisperId
+					? await first(db.select().from(whispers).where(eq(whispers.id, row.whisperId)))
+					: null;
+				if (!whisper) return { ...base, subject: { kind: "whisper", whisper: null } } as Notification;
+				const actor = row.actorId
+					? await first(db.select().from(profiles).where(eq(profiles.id, row.actorId)))
+					: null;
+				const cleanWhisper = await retrieveCleanWhisper(event, identity, whisper);
+				const cleanActor = actor ? await retrieveCleanProfile(event, identity, actor) : null;
+				return row.type === "content.whisper"
+					? { ...base, actor: cleanActor, whisper: cleanWhisper } as Notification
+					: { ...base, ...(cleanActor ? { actor: cleanActor } : {}), subject: { kind: "whisper", whisper: cleanWhisper } } as Notification;
+			}
+			case "interaction.reaction": {
+				if (row.postId) {
+					const post = await first(db.select().from(posts).where(eq(posts.id, row.postId)));
+					const actor = row.actorId ? await first(db.select().from(profiles).where(eq(profiles.id, row.actorId))) : null;
+					return {
+						...base,
+						...(actor ? { actor: await retrieveCleanProfile(event, identity, actor) } : {}),
+						subject: { kind: "post", post: post ? await retrieveCleanPost(event, identity, post) : null },
+					} as Notification;
 				}
-
-				const follower = profilesMap.get(follow.followerId);
-
-				const following = profilesMap.get(follow.followingId);
-
-				if (!follower || !following) {
-					throw createError({
-						statusCode: 500,
-						statusMessage: "Failed to retrieve follow profiles",
-					});
-				}
-
-				relationship = convertFollow(follow, follower, following);
+				const whisper = row.whisperId ? await first(db.select().from(whispers).where(eq(whispers.id, row.whisperId))) : null;
+				const actor = row.actorId ? await first(db.select().from(profiles).where(eq(profiles.id, row.actorId))) : null;
+				return {
+					...base,
+					...(actor ? { actor: await retrieveCleanProfile(event, identity, actor) } : {}),
+					subject: { kind: "whisper", whisper: whisper ? await retrieveCleanWhisper(event, identity, whisper) : null },
+				} as Notification;
 			}
-
-			const { profileId, issuerId, ...data } = notification;
-
-			return {
-				...data,
-				profile,
-				issuer,
-				relationship,
-			};
-		});
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 9. ACCOUNT SANCTIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanAccountSanctions: AccountSanctionNotification[] =
-		notifications.accountSanctions.map((notification) => {
-			const profile = profilesMap.get(notification.profileId);
-
-			const sanction = sanctionsMap.get(notification.sanctionId);
-
-			if (!profile || !sanction) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Failed to retrieve account sanction notification data",
-				});
+			case "relation.follower":
+			case "relation.request": {
+				const actor = row.actorId
+					? await first(db.select().from(profiles).where(eq(profiles.id, row.actorId)))
+					: null;
+				return { ...base, actor: actor ? await retrieveCleanProfile(event, identity, actor) : null } as Notification;
 			}
-
-			const {
-				profileId,
-				issuerId,
-				sanctionId,
-				reason,
-				details,
-				...data
-			} = notification;
-
-			return {
-				...data,
-				profile,
-				sanction,
-			};
-		});
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 10. POST SANCTIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanPostSanctions: PostSanctionNotification[] =
-		notifications.postSanctions.map((notification) => {
-			const post = postsMap.get(notification.postId);
-
-			const sanction = sanctionsMap.get(notification.sanctionId);
-
-			if (!post || !sanction) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Failed to retrieve post sanction notification data",
-				});
+			case "report.received":
+			case "report.rejected":
+			case "report.actioned":
+			case "report.downgraded": {
+				const report = row.profileReportId
+					? await first(db.select().from(profileReports).where(eq(profileReports.id, row.profileReportId))).then((r) => r ? retrieveCleanProfileReport(event, identity, r) : null)
+					: row.postReportId
+						? await first(db.select().from(postReports).where(eq(postReports.id, row.postReportId))).then((r) => r ? retrieveCleanPostReport(event, identity, r) : null)
+						: await first(db.select().from(whisperReports).where(eq(whisperReports.id, row.whisperReportId!))).then((r) => r ? retrieveCleanWhisperReport(event, identity, r) : null);
+				return { ...base, report: report ? { id: report.id, target: report } : null } as Notification;
 			}
-
-			const {
-				profileId,
-				issuerId,
-				postId,
-				sanctionId,
-				reason,
-				details,
-				...data
-			} = notification;
-
-			return {
-				...data,
-				post,
-				sanction,
-			};
-		});
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 11. REPORT NOTIFICATIONS
-	 * ------------------------------------------------------------------
-	 */
-
-	const cleanReports: ReportNotification[] = notifications.reports.map(
-		(notification) => {
-			const profileReport = notification.profileReportId
-				? (profileReportsMap.get(notification.profileReportId) ??
-					null)
-				: null;
-
-			const postReport = notification.postReportId
-				? (postReportsMap.get(notification.postReportId) ?? null)
-				: null;
-
-			const whisperReport = notification.whisperReportId
-				? (whisperReportsMap.get(notification.whisperReportId) ??
-					null)
-				: null;
-
-			/*
-			 * Une notification de report doit référencer exactement
-			 * un type de report.
-			 */
-
-			const reportCount =
-				Number(profileReport !== null) +
-				Number(postReport !== null) +
-				Number(whisperReport !== null);
-
-			if (reportCount !== 1) {
-				throw createError({
-					statusCode: 500,
-					statusMessage:
-						"Invalid report notification: expected exactly one report",
-				});
+			case "sanction.issued":
+			case "sanction.updated":
+			case "sanction.lifted":
+			case "sanction.expired":
+				return { ...base, sanctionId: row.sanctionId } as Notification;
+			case "badge.granted":
+			case "badge.expired":
+			case "badge.revoked": {
+				const entitlement = row.badgeEntitlementId
+					? await first(db.select().from(badgesEntitlements).where(eq(badgesEntitlements.id, row.badgeEntitlementId)))
+					: null;
+				const badge = entitlement ? await first(db.select().from(badges).where(eq(badges.id, entitlement.badgeId))) : null;
+				return { ...base, badge: badge ? await retrieveCleanBadge(event, badge) : null } as Notification;
 			}
-
-			const {
-				profileId,
-				issuerId,
-				profileReportId,
-				postReportId,
-				whisperReportId,
-				...data
-			} = notification;
-
-			return {
-				...data,
-				profileReport,
-				postReport,
-				whisperReport,
-			};
-		},
-	);
-
-	/*
-	 * ------------------------------------------------------------------
-	 * 12. RETURN
-	 * ------------------------------------------------------------------
-	 */
-
-	return {
-		accountSanctions: cleanAccountSanctions,
-		postSanctions: cleanPostSanctions,
-		reports: cleanReports,
-		posts: cleanPostsNotifications,
-		whispers: cleanWhisperNotifications,
-		follows: cleanFollowNotifications,
-	};
+			case "level.granted":
+			case "level.expired":
+			case "level.revoked": {
+				const entitlement = row.levelEntitlementId
+					? await first(db.select().from(levelsEntitlements).where(eq(levelsEntitlements.id, row.levelEntitlementId)))
+					: null;
+				const level = entitlement ? await first(db.select().from(levels).where(eq(levels.id, entitlement.levelId))) : null;
+				const badgeId =
+					"badgeId" in row.data ? row.data.badgeId : null;
+				const badge = badgeId
+					? await first(db.select().from(badges).where(eq(badges.id, badgeId)))
+					: null;
+				return {
+					...base,
+					level: level ? await retrieveCleanLevel(event, level) : null,
+					badge: badge ? await retrieveCleanBadge(event, badge) : null,
+				} as Notification;
+			}
+			case "announcement.alert":
+			case "announcement.news": {
+				const announcement = row.announcementId
+					? await first(db.select().from(announcements).where(eq(announcements.id, row.announcementId)))
+					: null;
+				return { ...base, announcement } as Notification;
+			}
+			default:
+				return base as Notification;
+		}
+	}));
 }

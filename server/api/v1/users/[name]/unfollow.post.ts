@@ -1,5 +1,5 @@
 import { useDb } from "#server/db";
-import { followNotifications } from "~~/server/db/schema/inbox";
+import { notifications } from "~~/server/db/schema/inbox";
 import { profiles } from "~~/server/db/schema/profiles";
 import { follows, friendships, requests } from "~~/server/db/schema/relations";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
@@ -64,15 +64,15 @@ export default defineEventHandler(async (event: H3Event) => {
 	if (request) {
 		await db.delete(requests).where(eq(requests.id, request.id));
 		await db
-			.delete(followNotifications)
+			.delete(notifications)
 			.where(
 				and(
-					eq(followNotifications.profileId, profile.id),
+					eq(notifications.profileId, profile.id),
 					eq(
-						followNotifications.issuerId,
+						notifications.actorId,
 						identity.profileId as string,
 					),
-					eq(followNotifications.type, "request"),
+					eq(notifications.type, "relation.request"),
 				),
 			);
 		anyAction = true;

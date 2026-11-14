@@ -1,6 +1,6 @@
 import { useDb } from "~~/server/db";
 import { levelsEntitlements } from "~~/server/db/schema/entitlements";
-import { accountSanctionNotifications, postSanctionNotifications } from "~~/server/db/schema/inbox";
+import { notifications } from "~~/server/db/schema/inbox";
 import { posts } from "~~/server/db/schema/interactions";
 import { profiles } from "~~/server/db/schema/profiles";
 import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
@@ -268,49 +268,18 @@ export default defineEventHandler(async (event: H3Event) => {
 		}
 
 		// Create the sanction notification.
-		const sanctionTypes = {
-			ban: "account_suspension",
-			mute: "mute",
-			shadow_ban: "shadow_ban",
-			warning: "warn",
-		} as const;
-
-		await tx.insert(accountSanctionNotifications).values({
+		await tx.insert(notifications).values({
+			accountId: target.accountId,
 			profileId: normalizedId,
-			issuerId: identity.profileId,
 			sanctionId: createdSanction.id,
-			type: sanctionTypes[createdSanction.type],
-			reason: createdSanction.reason,
-			details: createdSanction.details ?? "",
+			type: "sanction.issued",
+			data: {
+				sanctionType: createdSanction.type,
+				reason: createdSanction.reason,
+				details: createdSanction.details ?? null,
+				expiresAt: createdSanction.expiresAt?.toISOString() ?? null,
+			},
 		});
-
-		if (report_type === "post" && report_id) {
-			const [postReport] = await tx
-				.select({ reportedPostId: postReports.reportedPostId })
-				.from(postReports)
-				.where(eq(postReports.id, report_id))
-				.limit(1);
-
-			if (postReport) {
-				const [post] = await tx
-					.select({ id: posts.id, profileId: posts.profileId })
-					.from(posts)
-					.where(eq(posts.id, postReport.reportedPostId))
-					.limit(1);
-
-				if (post && post.profileId !== identity.profileId) {
-					await tx.insert(postSanctionNotifications).values({
-						profileId: post.profileId,
-						issuerId: identity.profileId,
-						postId: post.id,
-						sanctionId: createdSanction.id,
-						type: type === "warning" ? "flag" : "removal",
-						reason: createdSanction.reason,
-						details: createdSanction.details ?? "",
-					});
-				}
-			}
-		}
 
 		return createdSanction;
 	});

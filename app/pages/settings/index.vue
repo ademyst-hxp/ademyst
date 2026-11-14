@@ -111,11 +111,11 @@ useHead({
 					icon: ShieldCheckIcon,
 					handler: '/settings/privacy',
 				},
-				/*{
+				{
 					label: 'Notifications et mails',
 					icon: BellSnoozeIcon,
-					handler: '/settings/mailing',
-				},*/
+					handler: '/settings/notifications',
+				},
 			]"
 		/>
 	</section>

@@ -59,8 +59,9 @@ function simple(
 /*
  * L'ordre du tableau est l'ordre d'exécution à l'intérieur d'un même schedule.
  *
- * Les tables notification_* sont listées une par une : un wildcard attraperait
- * aussi `notification_settings` (réglages des utilisateurs, à ne jamais purger).
+ * Les tables liées aux notifications sont listées une par une : un wildcard
+ * attraperait aussi `notification_settings` (réglages des utilisateurs, à ne
+ * jamais purger).
  */
 export const JOBS: Job[] = [
 	// --- Toutes les heures : données éphémères (24 h) ---
@@ -78,12 +79,14 @@ export const JOBS: Job[] = [
 	simple("email_change_tokens", "created_at", "1 year", "daily"),
 	simple("email_confirmation_tokens", "created_at", "1 year", "daily"),
 
-	simple("notification_post", "created_at", "1 year", "daily"),
-	simple("notification_whisper", "created_at", "1 year", "daily"),
-	simple("notification_follow", "created_at", "1 year", "daily"),
-	simple("notification_sanction", "created_at", "1 year", "daily"),
-	simple("notification_post_sanction", "created_at", "1 year", "daily"),
-	simple("notification_report", "created_at", "1 year", "daily"),
+	// Tous les types de notifications sont dans une seule table. Elle est
+	// listée explicitement : `notification_settings` (réglages des
+	// utilisateurs) ne doit jamais être purgée.
+	simple("notifications", "created_at", "1 year", "daily"),
+
+	// Les notifications d'une annonce sont purgées au bout d'un an ; l'annonce
+	// (texte) aussi, après elles. Le CASCADE ne retire que des lignes déjà périmées.
+	simple("announcements", "created_at", "1 year", "daily"),
 
 	simple("password_reset_tokens", "updated_at", "1 year", "daily"),
 

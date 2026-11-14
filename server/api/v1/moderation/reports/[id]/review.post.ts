@@ -1,5 +1,5 @@
 import { useDb } from "~~/server/db";
-import { reportNotifications } from "~~/server/db/schema/inbox";
+import { notifications } from "~~/server/db/schema/inbox";
 import { profiles } from "~~/server/db/schema/profiles";
 import { postReports, profileReports, whisperReports } from "~~/server/db/schema/reports";
 import { eq } from "drizzle-orm";
@@ -103,7 +103,7 @@ export default defineEventHandler(async (event) => {
 		.execute();
 
 	const [reporterProfile] = await db
-		.select({ id: profiles.id })
+	.select({ id: profiles.id, accountId: profiles.accountId })
 		.from(profiles)
 		.where(eq(profiles.accountId, _report.reporter.id))
 		.limit(1);
@@ -117,14 +117,14 @@ export default defineEventHandler(async (event) => {
 
 	const [existingNotification] = await db
 		.select()
-		.from(reportNotifications)
+		.from(notifications)
 		.where(
 			eq(
 				_type === "profile"
-					? reportNotifications.profileReportId
+					? notifications.profileReportId
 					: _type === "post"
-						? reportNotifications.postReportId
-						: reportNotifications.whisperReportId,
+						? notifications.postReportId
+						: notifications.whisperReportId,
 				_report.id,
 			),
 		)
@@ -132,17 +132,22 @@ export default defineEventHandler(async (event) => {
 
 	if (existingNotification) {
 		await db
-			.update(reportNotifications)
-			.set({ type: "update", read: false })
-			.where(eq(reportNotifications.id, existingNotification.id));
+			.update(notifications)
+			.set({ type: status === "rejected" ? "report.rejected" : "report.actioned", readAt: null })
+			.where(eq(notifications.id, existingNotification.id));
 	} else {
-		await db.insert(reportNotifications).values({
+		await db.insert(notifications).values({
+			accountId: reporterProfile.accountId,
 			profileId: reporterProfile.id,
 			profileReportId: _type === "profile" ? _report.id : null,
 			postReportId: _type === "post" ? _report.id : null,
 			whisperReportId: _type === "whisper" ? _report.id : null,
-			type: "update",
-			read: false,
+			type: status === "rejected" ? "report.rejected" : "report.actioned",
+			data: {
+				reportKind: _type,
+				reason: _report.reason,
+				note: _report.details ?? null,
+			},
 		});
 	}
 

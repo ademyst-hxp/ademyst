@@ -26,20 +26,39 @@ export type PrivacySettings = {
 	updatedAt: Date;
 };
 
+// Un réglage = une catégorie de notifications (cf. NOTIFICATION_CATEGORIES).
+// Les notifications de sécurité et de modération n'ont volontairement PAS de
+// réglage : elles sont toujours envoyées par mail.
 export type NotificationSettings = {
-	// Email notification settings
-	securityAlertsEmail: boolean;
-	moderationAlertsEmail: boolean;
-	broadcastsEmail: boolean;
-	socialEmail: boolean;
+	// Email : nouvelles publications / pensées des comptes auxquels on est abonné
+	contentEmail: boolean;
+
+	// Email : réactions, paliers et réponses sur mes publications
 	interactionsEmail: boolean;
-	campaignEmail: boolean;
+
+	// Email : nouveaux abonnés et demandes d'abonnement
+	relationsEmail: boolean;
+
+	// Email : badges et niveaux
+	rewardsEmail: boolean;
+
+	// Email : modification du compte ou de ses paramètres
+	accountEmail: boolean;
+
+	// Email : alertes et nouvelles de l'équipe
+	announcementsEmail: boolean;
 
 	// SMS's are on the way, I swear
 
 	createdAt: Date;
 	updatedAt: Date;
 };
+
+// Clés booléennes de NotificationSettings (sans les dates)
+export type NotificationEmailSetting = Exclude<
+	keyof NotificationSettings,
+	"createdAt" | "updatedAt"
+>;
 
 export const defaultAppearanceSettings: AppearanceSettings = {
 	theme: "system",
@@ -60,13 +79,15 @@ export const defaultPrivacySettings: PrivacySettings = {
 	updatedAt: new Date(),
 };
 
+// Tout est désactivé par défaut : un mail n'est envoyé que si l'utilisateur
+// le demande (hors sécurité et modération).
 export const defaultNotificationSettings: NotificationSettings = {
-	securityAlertsEmail: true,
-	moderationAlertsEmail: true,
-	broadcastsEmail: false,
-	socialEmail: false,
+	contentEmail: false,
 	interactionsEmail: false,
-	campaignEmail: false,
+	relationsEmail: false,
+	rewardsEmail: false,
+	accountEmail: false,
+	announcementsEmail: false,
 	createdAt: new Date(),
 	updatedAt: new Date(),
 };

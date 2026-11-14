@@ -5,6 +5,7 @@ import {
 	levelsEntitlements,
 } from "~~/server/db/schema/entitlements";
 import { badges } from "~~/server/db/schema/shop";
+import { notifications } from "~~/server/db/schema/inbox";
 import { and, eq, isNotNull, lt } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
@@ -103,6 +104,21 @@ export default defineEventHandler(async (event) => {
 		throw createError({
 			statusCode: 500,
 			statusMessage: "Failed to assign badge entitlement",
+		});
+	}
+
+	if (badge.family !== "level") {
+		await db.insert(notifications).values({
+			accountId: profile.accountId,
+			profileId: profile.id,
+			type: "badge.granted",
+			badgeEntitlementId: candidate.id,
+			data: {
+				badgeId: badge.id,
+				badgeName: badge.name,
+				reason: candidate.reason,
+				expiresAt: candidate.expiresAt?.toISOString() ?? null,
+			},
 		});
 	}
 

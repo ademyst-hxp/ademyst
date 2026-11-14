@@ -69,6 +69,10 @@ export const privacySettings = pgTable("privacy_settings", {
 
 export type PrivacySettings = typeof privacySettings.$inferSelect;
 
+// Un réglage par catégorie de notification (cf. NOTIFICATION_CATEGORIES dans
+// shared/models/inbox.ts). Les notifications de sécurité et de modération
+// n'ont pas de réglage : elles sont toujours envoyées par mail.
+// Tout est désactivé par défaut : un mail n'est envoyé qu'à la demande.
 export const notificationSettings = pgTable("notification_settings", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
@@ -76,16 +80,12 @@ export const notificationSettings = pgTable("notification_settings", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
 
-	securityAlertsEmail: boolean("security_alerts_email")
-		.notNull()
-		.default(true),
-	moderationAlertsEmail: boolean("moderation_alerts_email")
-		.notNull()
-		.default(true),
-	broadcastsEmail: boolean("broadcasts_email").notNull().default(true),
-	socialEmail: boolean("social_email").notNull().default(true),
-	interactionsEmail: boolean("interactions_email").notNull().default(true),
-	campaignEmail: boolean("campaign_email").notNull().default(true),
+	contentEmail: boolean("content_email").notNull().default(false),
+	interactionsEmail: boolean("interactions_email").notNull().default(false),
+	relationsEmail: boolean("relations_email").notNull().default(false),
+	rewardsEmail: boolean("rewards_email").notNull().default(false),
+	accountEmail: boolean("account_email").notNull().default(false),
+	announcementsEmail: boolean("announcements_email").notNull().default(false),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
