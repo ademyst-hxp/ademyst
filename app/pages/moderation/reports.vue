@@ -4,6 +4,8 @@ import type { ReportsTab } from "~/composables/useModeration";
 import PostReportBox from "~/components/moderation/PostReport.vue";
 import ProfileReportBox from "~/components/moderation/ProfileReport.vue";
 
+import EmptyData from "~/components/layout/EmptyData.vue";
+
 import { ArrowPathIcon } from "@heroicons/vue/24/outline";
 
 const { $api } = useNuxtApp();
@@ -94,7 +96,13 @@ useHead({
 		class="flex flex-col gap-2 overflow-visible"
 		v-if="tab === 'users'"
 	>
+		<EmptyData
+			v-if="usersReports.length === 0 && !loading"
+			title="Aucun signalement de profil"
+			message="Il n'y a aucun signalement de profil à traiter pour le moment."
+		/>
 		<ProfileReportBox
+			v-else-if="usersReports.length > 0"
 			v-for="report in usersReports"
 			:key="report.id"
 			:data="report"
@@ -106,7 +114,13 @@ useHead({
 		class="flex flex-col gap-2 overflow-visible"
 		v-if="tab === 'posts'"
 	>
+		<EmptyData
+			v-if="postsReports.length === 0 && !loading"
+			title="Aucun signalement de publication"
+			message="Il n'y a aucun signalement de publication à traiter pour le moment."
+		/>
 		<PostReportBox
+			v-else-if="postsReports.length > 0"
 			v-for="report in postsReports"
 			:key="report.id"
 			:data="report"

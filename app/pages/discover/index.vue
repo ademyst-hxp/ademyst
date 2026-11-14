@@ -16,6 +16,8 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import Popup from "~/components/base/Popup.vue";
+import EmptyData from "~/components/layout/EmptyData.vue";
+
 import PostBox from "~/components/interactions/Post.vue";
 import WhisperBox from "~/components/interactions/Whisper.vue";
 import ProfileBox from "~/components/profile/ProfileBox.vue";
@@ -41,6 +43,23 @@ const {
 const { blockUser } = useRelations();
 
 const tab = ref<FeedTab>("following");
+const emptyMessages: Record<FeedTab, { title: string; message: string }> = {
+	following: {
+		title: "Aucune publication trouvée",
+		message:
+			"Essayez de vous abonner à plus de profils pour voir plus de publications.",
+	},
+	suggest: {
+		title: "Aucune publication trouvée",
+		message:
+			"Aucune suggestion de publication n'est disponible pour le moment.",
+	},
+	hits: {
+		title: "Aucune publication trouvée",
+		message:
+			"La communauté est un peu timide ces temps-ci. Revenez plus tard pour voir les publications les plus populaires.",
+	},
+};
 
 const refreshFeed = () => refresh(tab.value);
 
@@ -206,6 +225,13 @@ watch(
 				<PlusCircleIcon class="w-8 h-8" />
 			</div>
 
+			<p
+				v-if="whispers.length === 0 && !loading"
+				class="flex items-center justify-center text-muted h-full px-2"
+			>
+				Rien à signaler par ici !
+			</p>
+
 			<WhisperBox
 				v-for="whisper in whispers"
 				:key="'whisper-' + whisper.id"
@@ -224,6 +250,37 @@ watch(
 		class="flex flex-col gap-2 overflow-visible"
 		v-if="tab === 'following'"
 	>
+		<div
+			v-if="following.length === 0 && !loading"
+			class="flex flex-col gap-4 py-16"
+		>
+			<EmptyData
+				:title="emptyMessages['following'].title"
+				:message="emptyMessages['following'].message"
+			/>
+			<div
+				v-if="users.length"
+				class="flex flex-col gap-2 py-4"
+			>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
+				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
+					<ProfileBox
+						v-for="user in users"
+						:key="'hits-suggestion-' + user.id"
+						:data="user"
+						class="cursor-pointer shrink-0"
+						@click.self="
+							() => {
+								focusedWhisper = null;
+								navigateTo('/@' + user.name);
+							}
+						"
+					/>
+				</div>
+			</div>
+		</div>
 		<template
 			v-for="(post, index) in following"
 			:key="'following-' + post.id"
@@ -232,7 +289,7 @@ watch(
 
 			<div
 				v-if="(index + 1) % 25 === 0"
-				class="flex flex-col items-center gap-2 text-center py-8"
+				class="flex flex-col items-center gap-2 text-center py-16"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
 				<h2 class="text-2xl font-bold font-title px-8">
@@ -244,7 +301,7 @@ watch(
 				</p>
 			</div>
 			<div
-				v-else-if="(index + 1) % 13 === 0"
+				v-else-if="(index + 1) % 13 === 0 && users.length"
 				class="flex flex-col gap-2 py-4"
 			>
 				<h2 class="text-2xl font-bold font-title px-8">
@@ -272,7 +329,39 @@ watch(
 		class="flex flex-col gap-2 overflow-visible"
 		v-if="tab === 'suggest'"
 	>
+		<div
+			v-if="suggestions.length === 0 && !loading"
+			class="flex flex-col gap-4 py-16"
+		>
+			<EmptyData
+				:title="emptyMessages[tab].title"
+				:message="emptyMessages[tab].message"
+			/>
+			<div
+				v-if="users.length"
+				class="flex flex-col gap-2 py-4"
+			>
+				<h2 class="text-2xl font-bold font-title px-8">
+					Profils à suivre
+				</h2>
+				<div class="flex gap-4 h-96 overflow-x-auto scrollbar-none">
+					<ProfileBox
+						v-for="user in users"
+						:key="'hits-suggestion-' + user.id"
+						:data="user"
+						class="cursor-pointer shrink-0"
+						@click.self="
+							() => {
+								focusedWhisper = null;
+								navigateTo('/@' + user.name);
+							}
+						"
+					/>
+				</div>
+			</div>
+		</div>
 		<template
+			v-else
 			v-for="(post, index) in suggestions"
 			:key="'suggest-' + post.id"
 		>
@@ -280,7 +369,7 @@ watch(
 
 			<div
 				v-if="(index + 1) % 25 === 0"
-				class="flex flex-col items-center gap-2 text-center py-8"
+				class="flex flex-col items-center gap-2 text-center py-16"
 			>
 				<ClockIcon class="w-24 h-24 text-muted/50 mx-auto" />
 				<h2 class="text-2xl font-bold font-title px-8">
@@ -292,7 +381,7 @@ watch(
 				</p>
 			</div>
 			<div
-				v-else-if="(index + 1) % 9 === 0"
+				v-else-if="(index + 1) % 9 === 0 && users.length"
 				class="flex flex-col gap-2 py-4"
 			>
 				<h2 class="text-2xl font-bold font-title px-8">
@@ -317,7 +406,18 @@ watch(
 	</section>
 
 	<section class="flex flex-col gap-2 overflow-visible" v-if="tab === 'hits'">
-		<PostBox v-for="post in hits" :key="'hits-' + post.id" :data="post" triggerPostVisit />
+		<EmptyData
+			v-if="hits.length === 0 && !loading"
+			:title="emptyMessages[tab].title"
+			:message="emptyMessages[tab].message"
+		/>
+		<PostBox
+			v-else
+			v-for="post in hits"
+			:key="'hits-' + post.id"
+			:data="post"
+			triggerPostVisit
+		/>
 	</section>
 
 	<!-- Pagination sentinel -->
@@ -326,8 +426,8 @@ watch(
 			v-if="loadingMore || loading"
 			class="w-6 h-6 animate-spin"
 		/>
-		<p v-else-if="!hasMore(tab)" class="text-sm">
-			Vous avez tout vu pour le moment.
+		<p v-else-if="!hasMore(tab)" class="text-muted">
+			Vous avez atteint la fin du flux.
 		</p>
 	</div>
 

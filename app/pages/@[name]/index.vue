@@ -5,6 +5,7 @@ import type { Relationship } from "~~/shared/models/profiles";
 import type { ProfileReport } from "~~/shared/models/reports";
 import type { Badge } from "~~/shared/models/shop";
 
+import EmptyData from "@/components/layout/EmptyData.vue";
 import SocialIcon from "@/components/profile/SocialIcon.vue";
 import {
 	ArrowPathIcon,
@@ -626,6 +627,12 @@ const focusedBadge = ref<Badge | null>(null);
 
 	<section v-if="tab === 'posts'" class="space-y-2">
 		<PostView v-for="post in posts" :key="post.id" :data="post" triggerPostVisit />
+
+		<EmptyData
+			v-if="!posts.length && !pending"
+			title="Aucune publication trouvée"
+			message="Cet utilisateur n'a pas encore publié de contenu."
+		/>
 	</section>
 
 	<!-- Pagination sentinel (hidden, hence never observed, outside the lists) -->
@@ -639,6 +646,7 @@ const focusedBadge = ref<Badge | null>(null);
 
 	<section v-if="tab === 'following'" class="space-y-2">
 		<div
+			v-if="following.length && !pending"
 			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
 		>
 			<ProfileBox
@@ -649,10 +657,16 @@ const focusedBadge = ref<Badge | null>(null);
 				@click="$router.push(`/@${followed.name}`)"
 			/>
 		</div>
+		<EmptyData
+			v-else-if="!pending"
+			title="Aucun utilisateur trouvé"
+			message="Cet utilisateur ne suit personne."
+		/>
 	</section>
 
 	<section v-if="tab === 'followers'" class="space-y-2">
 		<div
+			v-if="followers.length && !pending"
 			class="grid grid-cols-1 gap-2 sm:max-lg:grid-cols-2 xl:grid-cols-3"
 		>
 			<ProfileBox
@@ -663,6 +677,11 @@ const focusedBadge = ref<Badge | null>(null);
 				@click="$router.push(`/@${follower.name}`)"
 			/>
 		</div>
+		<EmptyData
+			v-else-if="!pending"
+			title="Aucun utilisateur trouvé"
+			message="Cet utilisateur n'a pas d'abonnés."
+		/>
 	</section>
 
 	<section v-if="tab === 'report'" class="space-y-2">

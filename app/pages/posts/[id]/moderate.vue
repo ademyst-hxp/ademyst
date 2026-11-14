@@ -4,6 +4,8 @@ import type { PostReport } from "~~/shared/models/reports";
 
 import Box from "~/components/base/Box.vue";
 import FilterSelect from "~/components/base/FilterSelect.vue";
+import EmptyData from "~/components/layout/EmptyData.vue";
+
 import PostBox from "~/components/interactions/Post.vue";
 import PostReportView from "~/components/moderation/PostReport.vue";
 
@@ -237,12 +239,11 @@ const submitFlags = async () => {
 			label="Statut"
 			:options="REPORT_STATUS_OPTIONS"
 		/>
-		<p
+		<EmptyData
 			v-if="visibleReports.length === 0 && !filteredReportsPending"
-			class="px-8 text-muted"
-		>
-			Aucun signalement{{ reportStatus ? " avec ce statut" : "" }}.
-		</p>
+			title="Aucun signalement"
+			message="Il n'y a aucun signalement à traiter pour le moment."
+		/>
 		<PostReportView
 			v-for="report in visibleReports"
 			:key="report.id"

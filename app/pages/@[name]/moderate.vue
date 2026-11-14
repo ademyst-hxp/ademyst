@@ -329,15 +329,17 @@ const focusedBadge = ref<Badge | null>(null);
 			label="Statut"
 			:options="REPORT_STATUS_OPTIONS"
 		/>
+		<EmptyData
+			v-if="!visibleReports.length && !filteredReportsPending"
+			title="Aucun signalement trouvé"
+			:message="reportStatus
+				? 'Aucun signalement avec ce statut pour cet utilisateur.'
+				: 'Cet utilisateur n\'a pas été signalé.'"
+		/>
 		<div
-			v-if="visibleReports.length === 0 && !filteredReportsPending"
-			class="px-8 text-muted"
+			v-else
+			class="flex flex-col gap-2"
 		>
-			Aucun signalement
-			{{ reportStatus ? "avec ce statut" : "" }} pour
-			{{ profile?.displayName ?? profile?.name }}
-		</div>
-		<div class="flex flex-col gap-2">
 			<ProfileReportView
 				v-for="report in visibleReports"
 				:key="report.id"
@@ -366,17 +368,18 @@ const focusedBadge = ref<Badge | null>(null);
 			label="Statut"
 			:options="SANCTION_STATE_OPTIONS"
 		/>
-		<div
+		<EmptyData
 			v-if="
 				visibleSanctions.filter((s) => s.type != 'warning').length ===
 					0 && !filteredSanctionsPending
 			"
-			class="px-8 text-muted"
+			title="Aucune sanction trouvée"
+			message="Cet utilisateur n'a pas de sanctions."
+		/>
+		<div
+			v-else
+			class="flex flex-col gap-2"
 		>
-			Aucune sanction pour
-			{{ profile?.displayName ?? profile?.name }}
-		</div>
-		<div class="flex flex-col gap-2">
 			<SanctionView
 				v-for="sanction in visibleSanctions.filter(
 					(s) => s.type != 'warning',
@@ -397,16 +400,14 @@ const focusedBadge = ref<Badge | null>(null);
 			label="Statut"
 			:options="SANCTION_STATE_OPTIONS"
 		/>
-		<div
+		<EmptyData
 			v-if="
 				visibleSanctions.filter((s) => s.type == 'warning').length ===
 					0 && !filteredSanctionsPending
 			"
-			class="px-8 text-muted"
-		>
-			Aucun avertissement pour
-			{{ profile?.displayName ?? profile?.name }}
-		</div>
+			title="Aucun avertissement trouvé"
+			message="Cet utilisateur n'a pas d'avertissements."
+		/>
 		<SanctionView
 			v-for="sanction in visibleSanctions.filter(
 				(s) => s.type == 'warning',
