@@ -285,7 +285,7 @@ watch(
 			v-for="(post, index) in following"
 			:key="'following-' + post.id"
 		>
-			<PostBox :data="post" />
+			<PostBox :data="post" triggerPostVisit />
 
 			<div
 				v-if="(index + 1) % 25 === 0"
@@ -365,7 +365,7 @@ watch(
 			v-for="(post, index) in suggestions"
 			:key="'suggest-' + post.id"
 		>
-			<PostBox :data="post" />
+			<PostBox :data="post" triggerPostVisit />
 
 			<div
 				v-if="(index + 1) % 25 === 0"
@@ -416,6 +416,7 @@ watch(
 			v-for="post in hits"
 			:key="'hits-' + post.id"
 			:data="post"
+			triggerPostVisit
 		/>
 	</section>
 

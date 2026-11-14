@@ -626,7 +626,8 @@ const focusedBadge = ref<Badge | null>(null);
 	</section>
 
 	<section v-if="tab === 'posts'" class="space-y-2">
-		<PostView v-for="post in posts" :key="post.id" :data="post" />
+		<PostView v-for="post in posts" :key="post.id" :data="post" triggerPostVisit />
+
 		<EmptyData
 			v-if="!posts.length && !pending"
 			title="Aucune publication trouvée"

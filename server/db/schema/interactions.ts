@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, foreignKey, index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { check, foreignKey, index, pgEnum, pgTable, text, integer, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
 
@@ -67,6 +67,34 @@ export const postReactions = pgTable("post_reactions", {
 ]).enableRLS();
 
 export type PostReaction = typeof postReactions.$inferSelect;
+
+export const postVisits = pgTable(
+	"post_visits",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		postId: varchar("post_id", { length: 10 })
+			.notNull()
+			.references(() => posts.id, { onDelete: "cascade" }),
+
+		profileId: varchar("profile_id", { length: 10 })
+			.notNull()
+			.references(() => profiles.id, { onDelete: "cascade" }),
+
+		timesVisited: integer("times_visited").default(1).notNull(),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		lastVisitedAt: timestamp("last_visited_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("post_visits_post_id_profile_id_idx").on(
+			table.postId,
+			table.profileId,
+		),
+	],
+).enableRLS();
+
+export type PostVisit = typeof postVisits.$inferSelect;
 
 export const postsFlagEnum = pgEnum("post_flag", [
 	"NFE", // Contenu non-adapté à un public mineur (nudité non-artistique, violence...)

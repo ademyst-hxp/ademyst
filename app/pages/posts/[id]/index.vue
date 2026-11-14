@@ -195,7 +195,7 @@ const handlePublish = async () => {
 </script>
 <template>
 	<Teleport to="#header">
-		<PostBox v-if="post" :data="post" />
+		<PostBox v-if="post" :data="post" triggerPostVisit />
 		<template v-else-if="!postPending">
 			<h1 class="text-2xl font-bold font-title">
 				Publication introuvable
@@ -251,7 +251,7 @@ const handlePublish = async () => {
 		</div>
 	</section>
 	<section class="flex flex-col gap-4" v-if="answers.length > 0">
-		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" />
+		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" triggerPostVisit />
 	</section>
 
 	<!-- Pagination sentinel -->
