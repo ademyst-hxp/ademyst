@@ -100,6 +100,17 @@ export const ratingScoreDetails = (
 	};
 };
 
+export const getHashtagsFromContent = (content: string): string[] => {
+	const hashtagRegex = /#(\w+)/g;
+	const hashtags: string[] = [];
+	let match;
+
+	while ((match = hashtagRegex.exec(content)) !== null) {
+		hashtags.push(match[1]!);
+	}
+
+	return hashtags;
+};
 
 // Specs
 export const getPostSpecs = (

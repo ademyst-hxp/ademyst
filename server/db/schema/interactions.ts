@@ -101,9 +101,9 @@ export const hashtags = pgTable(
 	{
 		tag: varchar("tag", { length: 128 }).notNull().primaryKey(),
 
-		NFE: boolean().default(false),
-		irrelevant: boolean().default(false),
-		suicide: boolean().default(false),
+		NFE: boolean().notNull().default(false),
+		irrelevant: boolean().notNull().default(false),
+		suicide: boolean().notNull().default(false),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -114,8 +114,9 @@ export const hashtags = pgTable(
 ).enableRLS();
 
 export type Hashtag = typeof hashtags.$inferSelect;
+export type HashtagFlags = Pick<Hashtag, "NFE" | "irrelevant" | "suicide">;
 
-export const post_hashtags = pgTable("post_hashtags", {
+export const postsHashtags = pgTable("post_hashtags", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
 	postId: varchar("post_id", { length: 10 })
@@ -132,6 +133,8 @@ export const post_hashtags = pgTable("post_hashtags", {
 	index("post_hashtags_post_id_idx").on(table.postId),
 	index("post_hashtags_hashtag_id_idx").on(table.hashtag),
 ]).enableRLS();
+
+export type PostHashtag = typeof postsHashtags.$inferSelect;
 
 /************************************************/
 
