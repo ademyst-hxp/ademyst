@@ -6,7 +6,11 @@ import { convertAttachment } from "~~/server/utils/converters/drive";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeUUID } from "~~/server/utils/normalizers/ids";
 import { normalizeOptionalText } from "~~/server/utils/normalizers/interactions";
-import { ATTACHMENT_ALT_TEXT_MAX_LENGTH } from "~~/shared/consts/specs";
+import {
+	ATTACHMENT_ALT_TEXT_MAX_LENGTH,
+	ATTACHMENT_TITLE_MAX_LENGTH,
+} from "~~/shared/consts/specs";
+import { resolveLinkTitle } from "~~/shared/consts/links";
 
 import { createError, readBody } from "h3";
 import type { H3Event } from "h3";
@@ -34,11 +38,18 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	const altText = normalizeOptionalText(body.altText);
+	const requestedTitle = normalizeOptionalText(body.title);
 
 	if (altText && altText.length > ATTACHMENT_ALT_TEXT_MAX_LENGTH) {
 		throw createError({
 			statusCode: 400,
 			statusMessage: `Alt text exceeds maximum length of ${ATTACHMENT_ALT_TEXT_MAX_LENGTH} characters`,
+		});
+	}
+	if (requestedTitle && requestedTitle.length > ATTACHMENT_TITLE_MAX_LENGTH) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `Title exceeds maximum length of ${ATTACHMENT_TITLE_MAX_LENGTH} characters`,
 		});
 	}
 
@@ -64,7 +75,14 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	const [edited] = await db
 		.update(attachments)
-		.set({ altText })
+		.set({
+			// Lien sans titre : nom déclaré dans le registre, sinon nom de domaine
+			title:
+				candidate.type === "link"
+					? resolveLinkTitle(requestedTitle, candidate.link)
+					: requestedTitle,
+			altText,
+		})
 		.where(eq(attachments.id, attachmentId))
 		.returning();
 

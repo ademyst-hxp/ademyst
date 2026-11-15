@@ -73,6 +73,7 @@ export const ATTACHMENT_RULES: Record<
 
 export const ATTACHMENT_MAX_FILE_SIZE = 1 * 1024 * 1024;
 export const ATTACHMENT_ALT_TEXT_MAX_LENGTH = 500;
+export const ATTACHMENT_TITLE_MAX_LENGTH = 200;
 export const ATTACHMENT_LINK_MAX_LENGTH = 2048;
 
 export const WHISPER_CHAR_LIMITS: Record<number, number> = {

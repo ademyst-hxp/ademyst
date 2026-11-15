@@ -14,7 +14,7 @@ import {
 	ATTACHMENT_RULES,
 } from "~~/shared/consts/specs";
 import {
-	getLinkDomain,
+	getLinkInfo,
 	getRemainingSlots,
 	groupAttachments,
 } from "~~/shared/utils/attachments";
@@ -190,7 +190,7 @@ const {
 	error: attachmentsError,
 	uploadAttachment,
 	createExternalAttachment,
-	updateAltText,
+	updateAttachment,
 	deleteAttachment,
 	attachToPost,
 } = useAttachments();
@@ -223,7 +223,9 @@ const hasAttachments = computed(
 const showLinkForm = ref(false);
 const showOptions = ref(false);
 const editingAltId = ref<string | null>(null);
+const editingTitleId = ref<string | null>(null);
 const linkPayload = ref("");
+const linkTitlePayload = ref("");
 const mediaInput = ref<HTMLInputElement | null>(null);
 
 const acceptedMimeTypes = ATTACHMENT_RULES.image.mimeTypes.join(",");
@@ -234,8 +236,10 @@ const createPlaceholder = (type: Attachment["type"]): Attachment => ({
 	postId: null,
 	type,
 	ratio: "1:1",
+	title: null,
 	altText: null,
 	link: "",
+	linkType: null,
 	visibility: "me",
 	createdAt: new Date(),
 });
@@ -268,7 +272,7 @@ const addMedia = async (file: File | null) => {
 	const placeholder = createPlaceholder("image");
 	uploads.value.push(placeholder);
 
-	const attachment = await uploadAttachment(file);
+	const attachment = await uploadAttachment(file, file.name);
 
 	uploads.value = uploads.value.filter((item) => item.id !== placeholder.id);
 
@@ -285,11 +289,16 @@ const addLink = async () => {
 
 	error.value = null;
 
-	const attachment = await createExternalAttachment("link", link);
+	const attachment = await createExternalAttachment(
+		"link",
+		link,
+		linkTitlePayload.value.trim() || undefined,
+	);
 
 	if (attachment) {
 		preparingPost.value.attachments.push(attachment);
 		linkPayload.value = "";
+		linkTitlePayload.value = "";
 		showLinkForm.value = false;
 	} else {
 		error.value = attachmentsError.value;
@@ -313,10 +322,29 @@ const setAltText = (attachment: Attachment, value: unknown) => {
 	attachment.altText = typeof value === "string" ? value : null;
 };
 
+const setTitle = (attachment: Attachment, value: unknown) => {
+	attachment.title = typeof value === "string" ? value : null;
+};
+
+const saveTitle = async (attachment: Attachment) => {
+	editingTitleId.value = null;
+
+	const saved = await updateAttachment(
+		attachment.id,
+		attachment.title ?? "",
+		attachment.altText ?? "",
+	);
+	if (!saved) error.value = attachmentsError.value;
+};
+
 const saveAltText = async (attachment: Attachment) => {
 	editingAltId.value = null;
 
-	const saved = await updateAltText(attachment.id, attachment.altText ?? "");
+	const saved = await updateAttachment(
+		attachment.id,
+		attachment.title ?? "",
+		attachment.altText ?? "",
+	);
 	if (!saved) error.value = attachmentsError.value;
 };
 
@@ -462,6 +490,23 @@ const handlePublish = async () => {
 							/>
 
 							<Input
+								v-if="editingTitleId === media.id"
+								:model-value="media.title ?? ''"
+								size="small"
+								placeholder="Titre du fichier..."
+								@update:model-value="setTitle(media, $event)"
+								@enter="saveTitle(media)"
+								@blur="saveTitle(media)"
+							/>
+							<button
+								v-else
+								type="button"
+								class="text-xs text-left truncate text-muted hover:underline"
+								@click="editingTitleId = media.id"
+							>
+								{{ media.title || "+ Ajouter un titre" }}
+							</button>
+							<Input
 								v-if="editingAltId === media.id"
 								:model-value="media.altText ?? ''"
 								size="small"
@@ -498,15 +543,31 @@ const handlePublish = async () => {
 						class="flex items-center gap-3 rounded-xl border border-surface-border px-3 py-2"
 					>
 						<SocialIcon
-							:icon="getLinkDomain(link.link).domain?.name"
+							:icon="link.linkType ?? getLinkInfo(link.link).hostname"
 							class="w-5 h-5 shrink-0"
 						/>
-						<span class="grow font-medium truncate">
-							{{
-								getLinkDomain(link.link).domain?.title ||
-								getLinkDomain(link.link).hostname
-							}}
-						</span>
+						<div class="min-w-0 grow">
+							<Input
+								v-if="editingTitleId === link.id"
+								:model-value="link.title ?? ''"
+								size="small"
+								placeholder="Titre du lien..."
+								@update:model-value="setTitle(link, $event)"
+								@enter="saveTitle(link)"
+								@blur="saveTitle(link)"
+							/>
+							<button
+								v-else
+								type="button"
+								class="block max-w-full truncate text-left font-medium hover:underline"
+								@click="editingTitleId = link.id"
+							>
+								{{ link.title || getLinkInfo(link.link).title }}
+							</button>
+							<p class="truncate text-xs text-surface-text-muted">
+								{{ link.link }}
+							</p>
+						</div>
 						<button
 							type="button"
 							aria-label="Retirer le lien"
@@ -537,6 +598,13 @@ const handlePublish = async () => {
 					v-model="linkPayload"
 					label="URL du lien"
 					placeholder="https://"
+					class="sm:grow"
+					@enter="addLink"
+				/>
+				<Input
+					v-model="linkTitlePayload"
+					label="Titre (optionnel)"
+					placeholder="Titre du lien"
 					class="sm:grow"
 					@enter="addLink"
 				/>

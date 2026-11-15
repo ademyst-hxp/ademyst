@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 import type { H3Event } from "h3";
 
-import { domains } from "~~/shared/consts/links";
+import { resolveProfileLink } from "~~/shared/consts/links";
 
 const validatePayload = (
 	payload: any,
@@ -25,11 +25,11 @@ const validatePayload = (
 	const { name, type, url, resourceId, resourceName } = payload;
 
 	if (
-		(name && typeof name !== "string") ||
+		(name !== undefined && typeof name !== "string") ||
 		typeof type !== "string" ||
-		typeof url !== "string" ||
-		typeof resourceId !== "string" ||
-		typeof resourceName !== "string"
+		(url !== undefined && typeof url !== "string") ||
+		(resourceId !== undefined && typeof resourceId !== "string") ||
+		(resourceName !== undefined && typeof resourceName !== "string")
 	) {
 		throw createError({
 			statusCode: 400,
@@ -39,8 +39,9 @@ const validatePayload = (
 
 	const trimmedType = type?.trim();
 	const trimmedUrl = url?.trim();
-	const trimmedResourceId = resourceId?.trim();
-	const trimmedResourceName = resourceName?.trim();
+	let trimmedResourceId = resourceId?.trim();
+	let trimmedResourceName = resourceName?.trim();
+	let normalizedType = trimmedType;
 
 	if (!trimmedType) {
 		throw createError({
@@ -67,11 +68,21 @@ const validatePayload = (
 	let _name: string | undefined = name?.trim();
 
 	if (trimmedUrl && /^https?:\/\/.+/.test(trimmedUrl)) {
-		_name = new URL(trimmedUrl).hostname.replace(/^www\./, "");
+		// Détection automatique : le type, le nom et le slug suivent toujours l'URL.
+		// Hors registre, le domaine remplace le slug.
+		const info = resolveProfileLink(trimmedUrl);
 
-		if (Object.keys(domains).includes(name)) {
-			_name = domains[name as keyof typeof domains]!.title;
+		if (!info) {
+			throw createError({
+				statusCode: 400,
+				statusMessage: "Invalid URL format",
+			});
 		}
+
+		_name = info.name;
+		normalizedType = info.type;
+		trimmedResourceId = info.resourceId;
+		trimmedResourceName = info.resourceName;
 	}
 
 	if (!_name) {
@@ -83,7 +94,7 @@ const validatePayload = (
 
 	return {
 		name: _name,
-		type: trimmedType,
+		type: normalizedType,
 		url: trimmedUrl,
 		resourceId: trimmedResourceId,
 		resourceName: trimmedResourceName,

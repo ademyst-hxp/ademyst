@@ -16,8 +16,10 @@ export type Attachment = {
 	postId: string | null;
 	type: AttachmentType;
 	ratio: MediaRatio;
+	title: string | null;
 	altText: string | null;
 	link: string; // URL affichable : fichier hébergé (route /file), GIF ou lien externe
+	linkType: string | null; // id du registre des liens (ex: "youtube_video"), null hors lien reconnu
 	visibility: AttachmentVisibility;
 	createdAt: Date;
 };
