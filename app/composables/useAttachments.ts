@@ -26,11 +26,12 @@ export const useAttachments = () => {
 	};
 
 	// Envoie un fichier hébergé : l'Attachment est orphelin jusqu'à son rattachement.
-	const uploadAttachment = (file: File, altText?: string) =>
+	const uploadAttachment = (file: File, title?: string, altText?: string) =>
 		run(async () => {
 			const body = new FormData();
 
 			body.append("file", file);
+			if (title) body.append("title", title);
 			if (altText) body.append("altText", altText);
 
 			const response = await $api<{ data: Attachment }>(
@@ -45,22 +46,23 @@ export const useAttachments = () => {
 	const createExternalAttachment = (
 		type: Extract<AttachmentType, "gif" | "link">,
 		link: string,
+		title?: string,
 		altText?: string,
 	) =>
 		run(async () => {
 			const response = await $api<{ data: Attachment }>(
 				"/attachments/new",
-				{ method: "POST", body: { type, link, altText } },
+				{ method: "POST", body: { type, link, title, altText } },
 			);
 
 			return response.data;
 		});
 
-	const updateAltText = (id: string, altText: string) =>
+	const updateAttachment = (id: string, title: string, altText: string) =>
 		run(async () => {
 			const response = await $api<{ data: Attachment }>(
 				`/attachments/${id}/edit`,
-				{ method: "PUT", body: { altText } },
+				{ method: "PUT", body: { title, altText } },
 			);
 
 			return response.data;
@@ -88,7 +90,7 @@ export const useAttachments = () => {
 		loading,
 		uploadAttachment,
 		createExternalAttachment,
-		updateAltText,
+		updateAttachment,
 		deleteAttachment,
 		attachToPost,
 	};

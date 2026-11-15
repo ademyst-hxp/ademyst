@@ -16,11 +16,13 @@ import { normalizeOptionalText } from "~~/server/utils/normalizers/interactions"
 import {
 	ATTACHMENT_ALT_TEXT_MAX_LENGTH,
 	ATTACHMENT_RULES,
+	ATTACHMENT_TITLE_MAX_LENGTH,
 } from "~~/shared/consts/specs";
 import {
 	getAttachmentTypeFromMime,
 	getClosestRatio,
 } from "~~/shared/utils/attachments";
+import { matchLink, resolveLinkTitle } from "~~/shared/consts/links";
 
 import type { AttachmentType, MediaRatio } from "~~/shared/models/drive";
 
@@ -40,6 +42,17 @@ const normalizeAltText = (value: unknown): string | null => {
 	return altText;
 };
 
+const normalizeTitle = (value: unknown): string | null => {
+	const title = normalizeOptionalText(value);
+	if (title && title.length > ATTACHMENT_TITLE_MAX_LENGTH) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: `Title exceeds maximum length of ${ATTACHMENT_TITLE_MAX_LENGTH} characters`,
+		});
+	}
+	return title;
+};
+
 // Les Attachments créés ici sont orphelins (postId null, visibilité "me")
 // jusqu'à leur rattachement via POST /posts/:id/attachments.
 export default defineEventHandler(async (event: H3Event) => {
@@ -54,7 +67,9 @@ export default defineEventHandler(async (event: H3Event) => {
 	let type: AttachmentType;
 	let ratio: MediaRatio = "1:1";
 	let altText: string | null = null;
+	let title: string | null = null;
 	let link: string;
+	let linkType: string | null = null;
 	let upload: { buffer: ArrayBuffer; contentType: string } | null = null;
 
 	const id = globalThis.crypto.randomUUID();
@@ -73,6 +88,10 @@ export default defineEventHandler(async (event: H3Event) => {
 
 		altText = normalizeAltText(
 			parts?.find((part) => part.name === "altText")?.data.toString(),
+		);
+		title = normalizeTitle(
+			parts?.find((part) => part.name === "title")?.data.toString() ??
+				file.filename,
 		);
 
 		const contentType = file.type ?? "application/octet-stream";
@@ -143,6 +162,9 @@ export default defineEventHandler(async (event: H3Event) => {
 		type = requestedType;
 		link = normalizeExternalUrl(body?.link);
 		altText = normalizeAltText(body?.altText);
+		// Titre saisi, sinon nom déclaré dans le registre, sinon nom de domaine
+		title = resolveLinkTitle(normalizeTitle(body?.title), link);
+		if (type === "link") linkType = matchLink(link)?.type.id ?? null;
 		ratio = normalizeMediaRatio(body?.ratio) ?? "16:9";
 	}
 
@@ -164,8 +186,10 @@ export default defineEventHandler(async (event: H3Event) => {
 			postId: null,
 			type,
 			ratio,
+			title,
 			altText,
 			link,
+			linkType,
 			visibility: "me",
 		})
 		.returning();

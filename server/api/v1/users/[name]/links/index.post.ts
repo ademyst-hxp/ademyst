@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 import type { H3Event } from "h3";
 
-import { domains } from "~~/shared/consts/links";
+import { resolveProfileLink } from "~~/shared/consts/links";
 
 type LinkPayload = {
 	name: string;
@@ -49,38 +49,17 @@ const validatePayload = (payload: unknown): LinkPayload => {
 		});
 	}
 
-	const hostname = parsedUrl.hostname.toLowerCase().replace(/^www\./, "");
+	// Détection automatique : hors registre, le domaine remplace le slug.
+	const info = resolveProfileLink(url);
 
-	const domain = domains[hostname];
-
-	let type = "website";
-	let name = hostname;
-	let resourceId: string | undefined;
-	let resourceName: string | undefined;
-
-	if (domain) {
-		type = domain.name;
-		name = domain.title;
-
-		const match = domain.pattern.exec(parsedUrl.pathname);
-		const resource = match?.[1];
-
-		if (resource) {
-			if (domain.slugType === "id") {
-				resourceId = resource;
-			} else {
-				resourceName = resource;
-			}
-		}
+	if (!info) {
+		throw createError({
+			statusCode: 400,
+			statusMessage: "Invalid URL format",
+		});
 	}
 
-	return {
-		name,
-		type,
-		url,
-		resourceId,
-		resourceName,
-	};
+	return { ...info, url };
 };
 
 export default defineEventHandler(async (event: H3Event) => {

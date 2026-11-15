@@ -1,4 +1,4 @@
-import { domains } from "~~/shared/consts/links";
+import { getLinkInfo } from "~~/shared/consts/links";
 import { ATTACHMENT_RULES } from "~~/shared/consts/specs";
 
 import type {
@@ -118,15 +118,4 @@ export const getRemainingSlots = (
 		{} as Record<AttachmentType, number>,
 	);
 
-// Domaine connu (cf. shared/consts/links.ts) d'un lien, s'il existe.
-export const getLinkDomain = (link: string) => {
-	try {
-		const hostname = new URL(link).hostname
-			.toLowerCase()
-			.replace(/^www\./, "");
-
-		return { hostname, domain: domains[hostname] ?? null };
-	} catch {
-		return { hostname: link, domain: null };
-	}
-};
+export { getLinkInfo };
