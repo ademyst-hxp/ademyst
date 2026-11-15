@@ -37,6 +37,16 @@ export const profiles = pgTable(
 		check("profiles_id_hex", sql`${table.id}::text ~* '^[0-9A-F]{6,10}$'`),
 
 		index("profiles_account_id_idx").on(table.accountId),
+
+		// Recherche partielle sur le pseudo et le nom affiché (pg_trgm)
+		index("profiles_name_trgm_idx").using(
+			"gin",
+			table.name.op("gin_trgm_ops"),
+		),
+		index("profiles_display_name_trgm_idx").using(
+			"gin",
+			table.displayName.op("gin_trgm_ops"),
+		),
 	],
 ).enableRLS();
 

@@ -41,6 +41,12 @@ export const posts = pgTable(
 		index("posts_created_at_idx").on(table.createdAt),
 		index("posts_profile_id_idx").on(table.profileId),
 		index("posts_parent_id_idx").on(table.parentId),
+
+		// Recherche partielle (ILIKE '%…%') : nécessite l'extension pg_trgm
+		index("posts_content_trgm_idx").using(
+			"gin",
+			table.content.op("gin_trgm_ops"),
+		),
 	],
 ).enableRLS();
 
@@ -109,7 +115,12 @@ export const hashtags = pgTable(
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
 	(table) => [
-		index("hashtags_tag_idx").on(table.tag),
+		// L'index B-tree sur `tag` était redondant avec la clé primaire.
+		// Recherche partielle sur les tags (pg_trgm).
+		index("hashtags_tag_trgm_idx").using(
+			"gin",
+			table.tag.op("gin_trgm_ops"),
+		),
 	]
 ).enableRLS();
 
@@ -128,10 +139,12 @@ export const postsHashtags = pgTable("post_hashtags", {
 		.references(() => hashtags.tag, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updateAt: timestamp("updated_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
 	index("post_hashtags_post_id_idx").on(table.postId),
-	index("post_hashtags_hashtag_id_idx").on(table.hashtag),
+	// Remplace post_hashtags_hashtag_id_idx (la colonne s'appelle `hashtag`) ;
+	// couvre aussi la recherche tag -> publications sans toucher la table.
+	index("post_hashtags_hashtag_post_id_idx").on(table.hashtag, table.postId),
 ]).enableRLS();
 
 export type PostHashtag = typeof postsHashtags.$inferSelect;
