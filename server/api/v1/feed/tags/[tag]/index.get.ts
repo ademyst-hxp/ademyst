@@ -1,7 +1,6 @@
 import { useDb } from "#server/db";
 import { posts, postsHashtags, hashtags } from "#server/db/schema/interactions";
-import { eq } from "drizzle-orm/sql/expressions/conditions";
-import { desc } from "drizzle-orm/sql/expressions/select";
+import { eq, count, desc } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
 	const db = useDb(event);
@@ -49,6 +48,7 @@ export default defineEventHandler(async (event) => {
 		return {
 			status: "ok",
 			hashtag: retrieveCleanHashtag(event, identity, hashtag),
+			total: 0,
 			posts: [],
 			next: offset + limit,
 			hasNext: false,
@@ -75,10 +75,16 @@ export default defineEventHandler(async (event) => {
 		(post): post is NonNullable<typeof post> => post !== null,
 	);
 
+	const [hashtagCount] = await db
+		.select({ count: count() })
+		.from(postsHashtags)
+		.where(eq(postsHashtags.hashtag, hashtag.tag));
+
 	return {
 		status: "ok",
 		hashtag: retrieveCleanHashtag(event, identity, hashtag),
 		posts: filteredPosts,
+		total: Number(hashtagCount?.count || 0),
 		next: offset + limit,
 		hasNext: filteredPosts.length === limit,
 	};
