@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, foreignKey, index, pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { check, foreignKey, index, pgEnum, pgTable, text, timestamp, uuid, varchar, boolean } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
 
@@ -93,6 +93,45 @@ export const postsFlags = pgTable("post_flags", {
 ]).enableRLS();
 
 export type PostFlag = typeof postsFlags.$inferSelect;
+
+/************************************************/
+
+export const hashtags = pgTable(
+	"hashtags",
+	{
+		tag: varchar("tag", { length: 128 }).notNull().primaryKey(),
+
+		NFE: boolean().default(false),
+		irrelevant: boolean().default(false),
+		suicide: boolean().default(false),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("hashtags_tag_idx").on(table.tag),
+	]
+).enableRLS();
+
+export type Hashtag = typeof hashtags.$inferSelect;
+
+export const post_hashtags = pgTable("post_hashtags", {
+	id: uuid("id").defaultRandom().primaryKey(),
+
+	postId: varchar("post_id", { length: 10 })
+		.notNull()
+		.references(() => posts.id, { onDelete: "cascade" }),
+
+	hashtag: varchar("hashtag", { length: 128 })
+		.notNull()
+		.references(() => hashtags.tag, { onDelete: "cascade" }),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updateAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+	index("post_hashtags_post_id_idx").on(table.postId),
+	index("post_hashtags_hashtag_id_idx").on(table.hashtag),
+]).enableRLS();
 
 /************************************************/
 
