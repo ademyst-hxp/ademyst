@@ -2,7 +2,7 @@ import { useDb } from "#server/db";
 import { postNotifications } from "#server/db/schema/inbox";
 import { posts, postsFlags } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { generateHexId } from "#server/utils/ids";
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -12,7 +12,7 @@ import {
 	normalizeOptionalText,
 	normalizeVisibility,
 } from "~~/server/utils/normalizers/interactions";
-import { getPostSpecs } from "~~/shared/utils/interactions";
+import { getPostSpecs, getHashtagsFromContent } from "~~/shared/utils/interactions";
 
 import type { PostFlag } from "~~/shared/models/interactions";
 
@@ -128,6 +128,17 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusCode: 500,
 			statusMessage: "Failed to create post",
 		});
+	}
+
+	// Handle hashtags
+	const hashtagList = getHashtagsFromContent(createdPost.content);
+
+	if (hashtagList.length > 0) {
+		await upsertTagsForPost(event, createdPost, {
+			NFE: flag_entries.NFE,
+			irrelevant: false,
+			suicide: flag_entries.suicide,
+		}, hashtagList);
 	}
 
 	// Handle flags
