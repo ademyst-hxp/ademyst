@@ -579,50 +579,36 @@ const handlePublish = async () => {
 					@change="onMediaPicked"
 				/>
 
-				<button
-					type="button"
-					class="relative rounded-full p-2 text-muted transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
+				<Button
+					:icon="PhotoIcon"
+					variant="white"
 					:disabled="remaining.image <= 0"
 					:title="
 						remaining.image > 0
 							? `Ajouter une image (max ${formatBytes(ATTACHMENT_MAX_FILE_SIZE)})`
 							: 'Limite d\'images atteinte'
 					"
-					@click="pickMedia"
-				>
-					<PhotoIcon class="h-6 w-6" />
-				</button>
+					:handler="pickMedia"
+				/>
 
-				<button
-					type="button"
-					class="rounded-full p-2 text-muted transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40"
-					:class="{ 'bg-surface-hover': showLinkForm }"
+				<Button
+					:icon="LinkIcon"
+					variant="white"
 					:disabled="remaining.link <= 0"
 					:title="
 						remaining.link > 0
 							? 'Ajouter un lien'
 							: 'Limite de liens atteinte'
 					"
-					@click="showLinkForm = !showLinkForm"
-				>
-					<LinkIcon class="h-6 w-6" />
-				</button>
+					:handler="() => (showLinkForm = !showLinkForm)"
+				/>
 
-				<button
-					type="button"
-					class="relative rounded-full p-2 text-muted transition-colors hover:bg-surface-hover"
-					:class="{ 'bg-surface-hover': showOptions }"
+				<Button
+					:icon="AdjustmentsHorizontalIcon"
+					variant="white"
 					title="Options de contenu"
-					@click="showOptions = !showOptions"
-				>
-					<AdjustmentsHorizontalIcon class="h-6 w-6" />
-					<span
-						v-if="activeFlagsCount"
-						class="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white"
-					>
-						{{ activeFlagsCount }}
-					</span>
-				</button>
+					:handler="() => (showOptions = !showOptions)"
+				/>
 
 				<p
 					class="ml-auto mr-3 text-sm tabular-nums"
