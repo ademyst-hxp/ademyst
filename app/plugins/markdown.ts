@@ -6,6 +6,7 @@ type StateCore = Parameters<CoreRule>[0];
 type Token = StateCore["tokens"][number];
 
 const MENTION = /(^|[^\w@/.])@(\w+(?:[.-]\w+)*)/g;
+const TAG = /(^|[^\w#])#(\w+(?:[.-]\w+)*)/g;
 
 function splitMentions(token: Token, state: StateCore): Token[] {
 	const text = token.content;
@@ -75,6 +76,73 @@ function mentionPlugin(md: MarkdownIt) {
 	});
 }
 
+function splitTags(token: Token, state: StateCore): Token[] {
+	const text = token.content;
+	const result: Token[] = [];
+	let last = 0;
+
+	const pushText = (content: string, level: number) => {
+		const node = new state.Token("text", "", 0);
+		node.content = content;
+		node.level = level;
+		result.push(node);
+	};
+
+	for (const match of text.matchAll(TAG)) {
+		const prefix = match[1] ?? "";
+		const tag = match[2]!;
+		const start = match.index! + prefix.length;
+
+		if (start > last) pushText(text.slice(last, start), token.level);
+
+		const open = new state.Token("link_open", "a", 1);
+		open.attrSet("href", `/discover/tags/${encodeURIComponent(tag)}`);
+		open.attrSet("class", "tag");
+		open.level = token.level;
+		result.push(open);
+
+		pushText(`#${tag}`, token.level + 1);
+
+		const close = new state.Token("link_close", "a", -1);
+		close.level = token.level;
+		result.push(close);
+
+		last = start + 1 + tag.length;
+	}
+
+	if (last < text.length) pushText(text.slice(last), token.level);
+
+	return result;
+}
+
+function tagPlugin(md: MarkdownIt) {
+	md.core.ruler.after("mention", "tag", (state) => {
+		for (const block of state.tokens) {
+			if (block.type !== "inline" || !block.children) continue;
+
+			const children: Token[] = [];
+			let linkDepth = 0;
+
+			for (const token of block.children) {
+				if (token.type === "link_open") linkDepth++;
+				else if (token.type === "link_close") linkDepth--;
+
+				if (
+					token.type === "text" &&
+					linkDepth === 0 &&
+					token.content.includes("#")
+				) {
+					children.push(...splitTags(token, state));
+				} else {
+					children.push(token);
+				}
+			}
+
+			block.children = children;
+		}
+	});
+}
+
 function underlinePlugin(md: MarkdownIt) {
 	md.inline.ruler.before("html_inline", "underline", (state, silent) => {
 		const { src, pos } = state;
@@ -127,6 +195,7 @@ export default defineNuxtPlugin(() => {
 	});
 
 	md.use(mentionPlugin);
+	md.use(tagPlugin);
 	md.use(underlinePlugin);
 
 	md.renderer.rules.image = () => "";

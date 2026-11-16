@@ -9,6 +9,7 @@ import {
 	ArrowPathIcon,
 	ChatBubbleBottomCenterTextIcon,
 	ClockIcon,
+	MagnifyingGlassIcon,
 	NoSymbolIcon,
 	PaperAirplaneIcon,
 	PlusCircleIcon,
@@ -16,6 +17,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import Popup from "~/components/base/Popup.vue";
+import Button from "~/components/Button.vue";
 import PostBox from "~/components/interactions/Post.vue";
 import WhisperBox from "~/components/interactions/Whisper.vue";
 import ProfileBox from "~/components/profile/ProfileBox.vue";
@@ -184,7 +186,17 @@ watch(
 </script>
 <template>
 	<Teleport to="#header">
-		<h1 class="text-3xl font-bold text-center font-title">Discover</h1>
+		<div class="relative flex items-center justify-center">
+			<h1 class="text-3xl font-bold text-center font-title">Discover</h1>
+			<Button
+				class="absolute right-0 md:hidden"
+				aria-label="Rechercher"
+				:icon="MagnifyingGlassIcon"
+				variant="secondary"
+				size="small"
+				handler="/search"
+			/>
+		</div>
 		<TabBar
 			v-model="tab"
 			:tabs="[

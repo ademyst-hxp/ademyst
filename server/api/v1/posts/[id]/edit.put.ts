@@ -170,6 +170,17 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 	}
 
+	// Handle hashtags
+	const hashtagList = getHashtagsFromContent(editedPost.content);
+
+	if (hashtagList.length > 0) {
+		await upsertTagsForPost(event, editedPost, {
+			NFE: flag_entries.NFE,
+			irrelevant: false,
+			suicide: flag_entries.suicide,
+		}, hashtagList);
+	}
+
 	// Les Attachments suivent la visibilité de leur publication
 	if (visibility) {
 		await db

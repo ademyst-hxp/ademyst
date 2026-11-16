@@ -7,6 +7,12 @@ const limiters = {
 		duration: 60,
 	}),
 
+	// Recherche (requêtes ILIKE + filtres : plus coûteuse qu'une lecture simple)
+	search: new RateLimiterMemory({
+		points: 30,
+		duration: 60,
+	}),
+
 	// Publier un post
 	post: new RateLimiterMemory({
 		points: 10,
@@ -51,7 +57,9 @@ export default defineEventHandler(async (event) => {
 
 	let limiter = limiters.default;
 
-	if (method === "GET") {
+	if (method === "GET" && path.startsWith("/api/v1/search")) {
+		limiter = limiters.search;
+	} else if (method === "GET") {
 		limiter = limiters.read;
 	} else if (path.startsWith("/api/v1/auth/login")) {
 		limiter = limiters.login;
