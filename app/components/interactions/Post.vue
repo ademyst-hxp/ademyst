@@ -99,6 +99,7 @@ onMounted(() => {
 
 				setTimeout(() => {
 					visited.value = false;
+					post.value.stats.visits = (post.value.stats.visits || 0) + 1;
 				}, 1000 * 60 * 5); // 5 minutes
 			} catch (err) {
 				console.error("Erreur lors de l'enregistrement de la visite:", err);
@@ -250,7 +251,7 @@ const rendered = computed(() => {
 });
 </script>
 <template>
-	<Box :key="'post-' + post.id" :id="'post-' + post.id" class="shrink-0">
+	<Box ref="postElement" :key="'post-' + post.id" :id="'post-' + post.id" class="shrink-0">
 		<div class="flex items-center gap-2">
 			<ProfileRow :data="post.profile" />
 			<div class="grow" />
