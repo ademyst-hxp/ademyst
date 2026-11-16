@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 	let exclude_posts =
 		(query.exclude_posts as string | undefined) === "true";
 
-	const tag = event.context.params?.tag;
+	const tag = event.context.params?.tag?.toLowerCase();
 
 	if (!tag) {
 		throw createError({
