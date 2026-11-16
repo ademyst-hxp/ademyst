@@ -1,49 +1,14 @@
 import { useDb } from "#server/db";
-import { accountSanctionNotifications, followNotifications, postNotifications, postSanctionNotifications, reportNotifications, whisperNotifications } from "#server/db/schema/inbox";
-import { eq } from "drizzle-orm";
-
+import { notifications } from "#server/db/schema/inbox";
+import { and, eq, isNull, or } from "drizzle-orm";
 import type { H3Event } from "h3";
 
 export default defineEventHandler(async (event: H3Event) => {
-	const db = useDb(event);
-
 	const identity = await requireAuth(event);
-
-	await Promise.all([
-		db
-			.update(accountSanctionNotifications)
-			.set({ read: true })
-			.where(
-				eq(
-					accountSanctionNotifications.profileId,
-					identity.profileId,
-				),
-			),
-		db
-			.update(postSanctionNotifications)
-			.set({ read: true })
-			.where(
-				eq(postSanctionNotifications.profileId, identity.profileId),
-			),
-		db
-			.update(reportNotifications)
-			.set({ read: true })
-			.where(eq(reportNotifications.profileId, identity.profileId)),
-		db
-			.update(postNotifications)
-			.set({ read: true })
-			.where(eq(postNotifications.profileId, identity.profileId)),
-		db
-			.update(whisperNotifications)
-			.set({ read: true })
-			.where(eq(whisperNotifications.profileId, identity.profileId)),
-		db
-			.update(followNotifications)
-			.set({ read: true })
-			.where(eq(followNotifications.profileId, identity.profileId)),
-	]);
-
-	return {
-		status: "ok",
-	};
+	await useDb(event).update(notifications).set({ readAt: new Date() }).where(and(
+		eq(notifications.accountId, identity.accountId),
+		or(isNull(notifications.profileId), eq(notifications.profileId, identity.profileId)),
+		isNull(notifications.readAt),
+	));
+	return { status: "ok" };
 });

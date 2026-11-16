@@ -2,6 +2,7 @@ import { useDb } from "#server/db";
 import { attachments } from "~~/server/db/schema/drive";
 import {
 	postReactions,
+	postVisits,
 	posts,
 	postsFlags,
 	postsHashtags,
@@ -90,7 +91,7 @@ export async function retrieveCleanPost(
 		post.visibility,
 	);
 
-	const [files, reactionCounts, myLikes, flags, tagsAssociations, answers, reports] =
+	const [files, reactionCounts, visits, myLikes, myVisits, flags, tagsAssociations, answers, reports] =
 		await Promise.all([
 			access
 				? db
@@ -109,6 +110,15 @@ export async function retrieveCleanPost(
 				.where(eq(postReactions.postId, post.id))
 				.groupBy(postReactions.reaction),
 
+			db
+				.select({
+					count: count(),
+				})
+				.from(postVisits)
+				.where(eq(postVisits.postId, post.id))
+				.groupBy(postVisits.timesVisited)
+				.then(([row]) => row?.count ?? 0),
+
 			identity
 				? db
 						.select({ id: postReactions.id })
@@ -118,6 +128,19 @@ export async function retrieveCleanPost(
 								eq(postReactions.postId, post.id),
 								eq(postReactions.profileId, identity.profileId),
 								eq(postReactions.reaction, "like"),
+							),
+						)
+						.limit(1)
+				: Promise.resolve([]),
+
+			identity
+				? db
+						.select({ id: postVisits.id })
+						.from(postVisits)
+						.where(
+							and(
+								eq(postVisits.postId, post.id),
+								eq(postVisits.profileId, identity.profileId),
 							),
 						)
 						.limit(1)
@@ -213,6 +236,7 @@ export async function retrieveCleanPost(
 		stats: {
 			reactions: computedReactions,
 			answers,
+			visits,
 			score: calculateRatingScore(
 				post.createdAt,
 				shouldTruncate ? "" : post.content,
@@ -237,9 +261,8 @@ export async function retrieveCleanPost(
 
 		interaction: {
 			liked: myLikes.length > 0,
-
+			visited: myVisits.length > 0,
 			reported: myReports.length > 0,
-
 			saved: false,
 		},
 	};
@@ -279,7 +302,9 @@ export async function retrieveSeveralCleanPosts(
 		authorsList,
 		allAttachments,
 		reactionCounts,
+		visits,
 		myLikes,
+		myVisits,
 		allFlags,
 		allTagAssociations,
 		answerCounts,
@@ -306,6 +331,15 @@ export async function retrieveSeveralCleanPosts(
 			.where(inArray(postReactions.postId, postIds))
 			.groupBy(postReactions.postId, postReactions.reaction),
 
+		db
+			.select({
+				postId: postVisits.postId,
+				count: count(),
+			})
+			.from(postVisits)
+			.where(inArray(postVisits.postId, postIds))
+			.groupBy(postVisits.postId),
+
 		identity
 			? db
 					.select({ postId: postReactions.postId })
@@ -315,6 +349,18 @@ export async function retrieveSeveralCleanPosts(
 							inArray(postReactions.postId, postIds),
 							eq(postReactions.profileId, identity.profileId),
 							eq(postReactions.reaction, "like"),
+						),
+					)
+			: Promise.resolve([]),
+
+		identity
+			? db
+					.select({ postId: postVisits.postId })
+					.from(postVisits)
+					.where(
+						and(
+							inArray(postVisits.postId, postIds),
+							eq(postVisits.profileId, identity.profileId),
 						),
 					)
 			: Promise.resolve([]),
@@ -363,7 +409,11 @@ export async function retrieveSeveralCleanPosts(
 
 	const reactionsMap = groupBy(reactionCounts, (row) => row.postId);
 
+	const visitsMap = new Map(visits.map((row) => [row.postId, row.count]));
+
 	const likedPostIds = new Set(myLikes.map((like) => like.postId));
+
+	const visitedPostIds = new Set(myVisits.map((visit) => visit.postId));
 
 	const flagsMap = groupBy(allFlags, (flag) => flag.postId);
 
@@ -420,6 +470,15 @@ export async function retrieveSeveralCleanPosts(
 			{} as Record<PostReactionType, number>,
 		);
 
+		const computedFlags = flags.reduce(
+			(acc, flag) => {
+				acc[flag.type] = true;
+
+				return acc;
+			},
+			{} as Record<PostFlag["type"], boolean>,
+		);
+
 		const reports = reportsMap.get(post.id) ?? [];
 
 		const pendingReports = reports.filter(
@@ -431,6 +490,8 @@ export async function retrieveSeveralCleanPosts(
 		);
 
 		const answers = answersMap.get(post.id) ?? 0;
+
+		const visitsCount = visitsMap.get(post.id) ?? 0;
 
 		return {
 			id: post.id,
@@ -450,21 +511,14 @@ export async function retrieveSeveralCleanPosts(
 			),
 
 			flags: {
-				...flags.reduce(
-					(acc, flag) => {
-						acc[flag.type] = true;
-
-						return acc;
-					},
-					{} as Record<PostFlag["type"], boolean>,
-				),
-
+				...computedFlags,
 				reported: pendingReports.length > 3,
 			},
 
 			stats: {
 				reactions: computedReactions,
 				answers,
+				visits: visitsCount,
 				score: calculateRatingScore(
 					post.createdAt,
 					access ? post.content : "",
@@ -473,24 +527,14 @@ export async function retrieveSeveralCleanPosts(
 						reactions: computedReactions,
 						answers,
 					},
-					{
-						...flags.reduce(
-							(acc, flag) => {
-								acc[flag.type] = true;
-
-								return acc;
-							},
-							{} as Record<PostFlag["type"], boolean>,
-						),
-					},
+					computedFlags,
 				),
 			},
 
 			interaction: {
 				liked: likedPostIds.has(post.id),
-
+				visited: visitedPostIds.has(post.id),
 				reported: myReports.length > 0,
-
 				saved: false,
 			},
 		};

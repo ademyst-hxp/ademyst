@@ -5,7 +5,7 @@ import {
 } from "@heroicons/vue/24/outline";
 
 import { ATTACHMENT_TYPES } from "~~/shared/consts/attachments";
-import { getLinkDomain } from "~~/shared/utils/attachments";
+import { getLinkInfo } from "~~/shared/utils/attachments";
 
 import type { Attachment } from "~~/shared/models/drive";
 
@@ -31,12 +31,15 @@ const emit = defineEmits<{
 const meta = computed(() => ATTACHMENT_TYPES[props.data.type]);
 
 const linkInfo = computed(() =>
-	props.data.type === "link" ? getLinkDomain(props.data.link) : null,
+	props.data.type === "link" ? getLinkInfo(props.data.link) : null,
 );
 
 const title = computed(() => {
+	if (props.data.title) return props.data.title;
+
+	// Sans titre : nom déclaré dans le registre, sinon nom de domaine
 	if (props.data.type === "link") {
-		return linkInfo.value?.domain?.title || linkInfo.value?.hostname;
+		return linkInfo.value?.title;
 	}
 
 	return props.data.altText || meta.value.label;
@@ -46,7 +49,7 @@ const title = computed(() => {
 	<Box layout="horizontal" scale="sm" class="items-center">
 		<SocialIcon
 			v-if="data.type === 'link'"
-			:icon="linkInfo?.domain?.name"
+			:icon="linkInfo?.type?.id ?? linkInfo?.hostname"
 			class="h-6 w-6 shrink-0"
 		/>
 		<component :is="meta.icon" v-else class="h-6 w-6 shrink-0" />
@@ -64,7 +67,7 @@ const title = computed(() => {
 				class="flex min-w-0 flex-col hover:underline"
 			>
 				<span class="truncate text-sm font-semibold">{{ title }}</span>
-				<span class="truncate text-xs opacity-80">{{ data.link }}</span>
+				<span class="break-all text-xs text-surface-text-muted">{{ data.link }}</span>
 			</a>
 		</div>
 

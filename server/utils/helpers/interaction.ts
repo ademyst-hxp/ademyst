@@ -1,6 +1,7 @@
 import { useDb } from "#server/db";
 import { Post } from "~~/server/db/schema/interactions";
 import {
+	postVisits,
 	postReactions,
 	hashtags,
 	postsHashtags,
@@ -137,6 +138,57 @@ export const getSeveralInteractionStatus = async (
 	}
 
 	return interactions;
+};
+
+export const triggerPostVisit = async (
+	event: H3Event,
+	identity: Identity | null,
+	post: Post | null,
+) => {
+	const db = useDb(event);
+
+	if (!identity || !post) {
+		return;
+	}
+
+	let [hasVisited] = await db
+		.select()
+		.from(postVisits)
+		.where(
+			and(
+				eq(postVisits.postId, post.id),
+				eq(postVisits.profileId, identity.profileId),
+			),
+		)
+		.limit(1);
+
+	if (!hasVisited) {
+		[hasVisited] = await db
+			.insert(postVisits)
+			.values({
+				postId: post.id,
+				profileId: identity.profileId,
+			})
+			.returning();
+	}
+
+	const [newVisit] = await db
+		.update(postVisits)
+		.set({
+			timesVisited: (hasVisited?.timesVisited ?? 0) + 1,
+			lastVisitedAt: new Date(),
+		})
+		.where(
+			and(
+				eq(postVisits.postId, post.id),
+				eq(postVisits.profileId, identity.profileId),
+			),
+		)
+		.returning();
+
+	if (!newVisit) {
+		throw new Error("Failed to update post visit");
+	}
 };
 
 export const upsertTagsForPost = async (

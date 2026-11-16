@@ -42,12 +42,14 @@ export type Post = {
 	};
 	interaction: {
 		liked: boolean;
+		visited: boolean;
 		reported: boolean;
 		saved: false;
 	};
 	stats: {
 		reactions: Record<PostReactionType, number>;
 		answers: number;
+		visits: number;
 		score: number;
 	};
 };

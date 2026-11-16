@@ -1,4 +1,4 @@
-import { index, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { index, pgTable, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
 
 import { profiles } from "./profiles";
 
@@ -52,7 +52,13 @@ export const contentSubscriptions = pgTable("content_subscriptions", {
 		.references(() => profiles.id, { onDelete: "cascade" }),
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
-}).enableRLS();
+}, (table) => [
+	// Un abonnement par couple (pas de doublon, donc pas de notification en double)
+	uniqueIndex("content_subscriptions_subscriber_id_subscribed_to_id_idx").on(table.subscriberId, table.subscribedToId),
+
+	// Retrouver les abonnés d'un compte à chaque nouvelle publication
+	index("content_subscriptions_subscribed_to_id_idx").on(table.subscribedToId),
+]).enableRLS();
 
 export type ContentSubscription = typeof contentSubscriptions.$inferSelect;
 

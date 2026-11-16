@@ -43,12 +43,12 @@ export function convertNotificationSettings(
 	setting: DbNotificationSettings,
 ): NotificationSettings {
 	return {
-		securityAlertsEmail: setting.securityAlertsEmail,
-		moderationAlertsEmail: setting.moderationAlertsEmail,
-		broadcastsEmail: setting.broadcastsEmail,
-		socialEmail: setting.socialEmail,
+		contentEmail: setting.contentEmail,
 		interactionsEmail: setting.interactionsEmail,
-		campaignEmail: setting.campaignEmail,
+		relationsEmail: setting.relationsEmail,
+		rewardsEmail: setting.rewardsEmail,
+		accountEmail: setting.accountEmail,
+		announcementsEmail: setting.announcementsEmail,
 		createdAt: setting.createdAt,
 		updatedAt: setting.updatedAt,
 	};

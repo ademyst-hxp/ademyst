@@ -14,9 +14,15 @@ import Card from "../base/Card.vue";
 import ProfileRow from "../profile/ProfileRow.vue";
 import FlagLabel from "../interactions/labels/FlagLabel.vue";
 
-const props = defineProps<{
-    data: Post;
-}>();
+const props = withDefaults(
+    defineProps<{
+        data: Post;
+        scale?: "sm" | "md";
+    }>(),
+    {
+        scale: "md",
+    },
+);
 
 const { $md } = useNuxtApp();
 
@@ -42,7 +48,7 @@ const hideSensitiveContent = () => {
 };
 </script>
 <template>
-    <Card :key="'post-' + data.id" class="shrink-0">
+    <Card :key="'post-' + data.id" :scale="scale" class="shrink-0">
         <div class="flex items-center">
             <ProfileRow :data="data.profile" />
         </div>

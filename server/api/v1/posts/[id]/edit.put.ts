@@ -171,7 +171,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	// Handle hashtags
-	const hashtagList = getHashtagsFromContent(editedPost.content);
+	const hashtagList = getHashtagsFromContent(editedPost.content).map((tag) => tag.toLowerCase());
 
 	if (hashtagList.length > 0) {
 		await upsertTagsForPost(event, editedPost, {

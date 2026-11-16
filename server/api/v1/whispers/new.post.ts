@@ -1,5 +1,6 @@
 import { useDb } from "#server/db";
-import { whisperNotifications } from "#server/db/schema/inbox";
+import { notifications } from "#server/db/schema/inbox";
+import { profiles } from "#server/db/schema/profiles";
 import { whispers } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
 import { eq } from "drizzle-orm";
@@ -56,17 +57,20 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	if (visibility !== "me" && visibility !== "friends") {
 		const followers = await db
-			.select({ profileId: follows.followerId })
+			.select({ profileId: follows.followerId, accountId: profiles.accountId })
 			.from(follows)
+			.innerJoin(profiles, eq(profiles.id, follows.followerId))
 			.where(eq(follows.followingId, identity.profileId));
 
 		if (followers.length > 0) {
-			await db.insert(whisperNotifications).values(
+			await db.insert(notifications).values(
 				followers.map(({ profileId }) => ({
+					accountId: followers.find((follower) => follower.profileId === profileId)!.accountId,
 					profileId,
-					issuerId: identity.profileId,
+					actorId: identity.profileId,
 					whisperId: createdWhisper.id,
-					type: "suggestion" as const,
+					type: "content.whisper" as const,
+					data: {},
 				})),
 			);
 		}

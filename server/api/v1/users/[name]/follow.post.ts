@@ -1,5 +1,5 @@
 import { useDb } from "#server/db";
-import { followNotifications } from "~~/server/db/schema/inbox";
+import { notifications } from "~~/server/db/schema/inbox";
 import { profiles } from "~~/server/db/schema/profiles";
 import { follows, requests } from "~~/server/db/schema/relations";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
@@ -99,10 +99,12 @@ export default defineEventHandler(async (event: H3Event) => {
 			followingId: profile.id,
 		});
 
-		await db.insert(followNotifications).values({
+		await db.insert(notifications).values({
+			accountId: profile.accountId,
 			profileId: profile.id,
-			issuerId: identity.profileId as string,
-			type: "happened",
+			actorId: identity.profileId as string,
+			type: "relation.follower",
+			data: {},
 		});
 
 		return {
@@ -116,10 +118,12 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 
 		if (result) {
-			await db.insert(followNotifications).values({
+			await db.insert(notifications).values({
+				accountId: profile.accountId,
 				profileId: profile.id,
-				issuerId: identity.profileId as string,
-				type: "request",
+				actorId: identity.profileId as string,
+				type: "relation.request",
+				data: {},
 			});
 
 			return {

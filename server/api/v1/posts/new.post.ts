@@ -1,5 +1,6 @@
 import { useDb } from "#server/db";
-import { postNotifications } from "#server/db/schema/inbox";
+import { notifications } from "#server/db/schema/inbox";
+import { profiles } from "#server/db/schema/profiles";
 import { posts, postsFlags } from "#server/db/schema/interactions";
 import { follows } from "#server/db/schema/relations";
 import { eq } from "drizzle-orm";
@@ -131,7 +132,7 @@ export default defineEventHandler(async (event: H3Event) => {
 	}
 
 	// Handle hashtags
-	const hashtagList = getHashtagsFromContent(createdPost.content);
+	const hashtagList = getHashtagsFromContent(createdPost.content).map((tag) => tag.toLowerCase());
 
 	if (hashtagList.length > 0) {
 		await upsertTagsForPost(event, createdPost, {
@@ -182,17 +183,20 @@ export default defineEventHandler(async (event: H3Event) => {
 	// Notify parent post author if the new post is a reply and the author is not the same as the replier
 	if (parentId && createdPost.profileId !== identity.profileId) {
 		const [parentPost] = await db
-			.select({ profileId: posts.profileId })
+			.select({ profileId: posts.profileId, accountId: profiles.accountId })
 			.from(posts)
+			.innerJoin(profiles, eq(profiles.id, posts.profileId))
 			.where(eq(posts.id, parentId))
 			.limit(1);
 
 		if (parentPost && parentPost.profileId !== identity.profileId) {
-			await db.insert(postNotifications).values({
+			await db.insert(notifications).values({
+				accountId: parentPost.accountId,
 				profileId: parentPost.profileId,
-				issuerId: identity.profileId,
+				actorId: identity.profileId,
 				postId: createdPost.id,
-				type: "reply",
+				type: "interaction.reply",
+				data: {},
 			});
 		}
 	}
@@ -200,17 +204,20 @@ export default defineEventHandler(async (event: H3Event) => {
 	// Notify followers of the author if the post is public (not "me" or "friends")
 	if (visibility !== "me" && visibility !== "friends") {
 		const followers = await db
-			.select({ profileId: follows.followerId })
+			.select({ profileId: follows.followerId, accountId: profiles.accountId })
 			.from(follows)
+			.innerJoin(profiles, eq(profiles.id, follows.followerId))
 			.where(eq(follows.followingId, identity.profileId));
 
 		if (followers.length > 0) {
-			await db.insert(postNotifications).values(
-				followers.map(({ profileId }) => ({
+			await db.insert(notifications).values(
+				followers.map(({ profileId, accountId }) => ({
+					accountId,
 					profileId,
-					issuerId: identity.profileId,
+					actorId: identity.profileId,
 					postId: createdPost.id,
-					type: "suggestion" as const,
+					type: "content.post" as const,
+					data: {},
 				})),
 			);
 		}

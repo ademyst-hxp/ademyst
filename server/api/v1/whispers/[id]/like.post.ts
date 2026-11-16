@@ -1,5 +1,6 @@
 import { useDb } from "#server/db";
-import { whisperNotifications } from "#server/db/schema/inbox";
+import { notifications } from "#server/db/schema/inbox";
+import { profiles } from "#server/db/schema/profiles";
 import { whisperReactions, whispers } from "#server/db/schema/interactions";
 import { and, eq } from "drizzle-orm";
 
@@ -24,8 +25,9 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	await db.transaction(async (tx) => {
 		const [whisper] = await tx
-			.select({ profileId: whispers.profileId })
+			.select({ profileId: whispers.profileId, accountId: profiles.accountId })
 			.from(whispers)
+			.innerJoin(profiles, eq(profiles.id, whispers.profileId))
 			.where(eq(whispers.id, whisperId))
 			.limit(1);
 
@@ -52,21 +54,23 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 
 		await tx
-			.delete(whisperNotifications)
+			.delete(notifications)
 			.where(
 				and(
-					eq(whisperNotifications.whisperId, whisperId),
-					eq(whisperNotifications.issuerId, identity.profileId),
-					eq(whisperNotifications.type, "reaction"),
+					eq(notifications.whisperId, whisperId),
+					eq(notifications.actorId, identity.profileId),
+					eq(notifications.type, "interaction.reaction"),
 				),
 			);
 
 		if (whisper.profileId !== identity.profileId) {
-			await tx.insert(whisperNotifications).values({
+			await tx.insert(notifications).values({
+				accountId: whisper.accountId,
 				profileId: whisper.profileId,
-				issuerId: identity.profileId,
+				actorId: identity.profileId,
 				whisperId,
-				type: "reaction",
+				type: "interaction.reaction",
+				data: { reaction: "like" },
 			});
 		}
 	});

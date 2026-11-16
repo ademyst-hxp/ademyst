@@ -1,5 +1,5 @@
 import { useDb } from "#server/db";
-import { whisperNotifications } from "#server/db/schema/inbox";
+import { notifications } from "#server/db/schema/inbox";
 import { whisperReactions } from "#server/db/schema/interactions";
 import { and, eq } from "drizzle-orm";
 
@@ -31,12 +31,12 @@ export default defineEventHandler(async (event) => {
 		);
 
 	await db
-		.delete(whisperNotifications)
+		.delete(notifications)
 		.where(
 			and(
-				eq(whisperNotifications.whisperId, whisperId),
-				eq(whisperNotifications.issuerId, identity.profileId),
-				eq(whisperNotifications.type, "reaction"),
+				eq(notifications.whisperId, whisperId),
+				eq(notifications.actorId, identity.profileId),
+				eq(notifications.type, "interaction.reaction"),
 			),
 		);
 

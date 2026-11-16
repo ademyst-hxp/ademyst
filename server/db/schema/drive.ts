@@ -47,10 +47,15 @@ export const attachments = pgTable("attachments", {
 
 	ratio: attachmentRatioEnum("ratio").notNull().default("1:1"),
 
+	title: text("title"),
 	altText: text("alt_text"),
 
 	// Clé du fichier dans le bucket "files" (hébergé) ou URL (GIF, lien externe)
 	link: text("link").notNull(),
+
+	// Id du registre (shared/consts/links.ts), uniquement pour les liens reconnus
+	// (type "link"). Null pour tous les autres Attachments et les liens hors registre.
+	linkType: text("link_type"),
 
 	visibility: attachmentVisibilityEnum("visibility")
 		.notNull()

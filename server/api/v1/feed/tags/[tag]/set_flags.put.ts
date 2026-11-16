@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
 
 	const identity = await requireAuth(event, { min_level: 7 });
 
-	const tag = event.context.params?.tag;
+	const tag = event.context.params?.tag?.toLowerCase();
 
 	const body = await readBody(event);
 

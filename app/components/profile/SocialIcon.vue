@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { GlobeAltIcon } from "@heroicons/vue/24/outline";
 
-import { domains } from "~~/shared/consts/links";
+import {
+	getLinkTypeById,
+	getLinkTypesByDomain,
+	getLinkTypesByPlatform,
+} from "~~/shared/consts/links";
 
 const props = withDefaults(
 	defineProps<{
@@ -15,12 +19,15 @@ const props = withDefaults(
 
 const icon = computed(() => {
 	if (props.icon) {
-		const domain = Object.values(domains).find(
-			(domain) => domain.name === props.icon,
-		);
+		// Id de type (ex: "youtube_video"), puis domaine, puis plateforme (ex: "youtube")
+		const type =
+			getLinkTypeById(props.icon) ??
+			getLinkTypesByDomain(props.icon)[0] ??
+			getLinkTypesByPlatform(props.icon)[0] ??
+			null;
 
-		if (domain && domain.icon) {
-			return domain.icon;
+		if (type?.icon) {
+			return type.icon;
 		}
 	}
 

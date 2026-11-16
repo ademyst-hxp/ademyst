@@ -2,6 +2,7 @@ import { useDb } from "~~/server/db";
 import { profiles } from "~~/server/db/schema/profiles";
 import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 import { levels } from "~~/server/db/schema/shop";
+import { notifications } from "~~/server/db/schema/inbox";
 import { and, eq, isNotNull, lt } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
@@ -112,6 +113,20 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "Failed to assign level entitlement",
 		});
 	}
+
+	await db.insert(notifications).values({
+		accountId: profile.accountId,
+		profileId: profile.id,
+		type: "level.granted",
+		levelEntitlementId: candidate.id,
+		data: {
+			levelId: lvl.id,
+			levelName: lvl.name,
+			reason: candidate.reason,
+			expiresAt: candidate.expiresAt?.toISOString() ?? null,
+			badgeId: null,
+		},
+	});
 
 	// Revoke the entitlements of the same level that expire before this one
 	// (a permanent entitlement never expires, so only a permanent one is kept

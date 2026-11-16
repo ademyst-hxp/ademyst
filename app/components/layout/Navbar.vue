@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Account } from "~~/shared/models/accounts";
+import type { InboxCounts } from "~~/shared/models/inbox";
 
 import { ArrowRightEndOnRectangleIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
 import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, MagnifyingGlassIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
@@ -17,13 +18,9 @@ const { $api } = useNuxtApp();
 const { data: notifications, refresh: refreshNotifications } = useAsyncData(
 	"notifications-count",
 	async () => {
-		const response = await $fetch<{
-			critical: number;
-			total: number;
-			endpoints: {
-				[key: string]: string;
-			};
-		}>("/api/v1/inbox/count");
+		const response = await $fetch<
+			InboxCounts & { endpoints: { [key: string]: string } }
+		>("/api/v1/inbox/count");
 		return response;
 	},
 );
@@ -67,17 +64,16 @@ const path = computed(() => useRoute().path);
 				:class="path === '/inbox' ? 'bg-primary/15 text-primary' : ''"
 			>
 				<BellIcon class="w-7 h-7" />
-				<div
-					v-if="notifications?.critical"
-					class="bg-danger rounded-full w-2 h-2 animate-pulse"
-				/>
+				<span
+					v-if="notifications?.unread"
+					class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white"
+					:aria-label="`${notifications.unread} notifications non lues`"
+				>
+					{{ notifications.unread > 99 ? "99+" : notifications.unread }}
+				</span>
 				<div
 					v-else-if="hasWarnings"
 					class="bg-warning rounded-full w-2 h-2 animate-pulse"
-				/>
-				<div
-					v-else-if="notifications?.total"
-					class="bg-warning rounded-full w-2 h-2"
 				/>
 			</RouterLink>
 
@@ -179,25 +175,20 @@ const path = computed(() => useRoute().path);
 				to="/inbox"
 				class="flex items-center gap-1 rounded-full px-4 py-2 transition-colors duration-200 hover:text-primary"
 				:class="
-					notifications?.critical
-						? 'bg-danger/15 text-danger'
-						: notifications?.total
-							? 'bg-warning/15 text-warning'
-							: ''
+					notifications?.unread ? 'bg-primary/15 text-primary' : ''
 				"
 			>
 				<BellIcon class="w-7 h-7" />
-				<div
-					v-if="notifications?.critical"
-					class="bg-danger rounded-full w-2 h-2 animate-pulse"
-				/>
+				<span
+					v-if="notifications?.unread"
+					class="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-white"
+					:aria-label="`${notifications.unread} notifications non lues`"
+				>
+					{{ notifications.unread > 99 ? "99+" : notifications.unread }}
+				</span>
 				<div
 					v-else-if="hasWarnings"
 					class="bg-warning rounded-full w-2 h-2 animate-pulse"
-				/>
-				<div
-					v-else-if="notifications?.total"
-					class="bg-warning rounded-full w-2 h-2"
 				/>
 			</RouterLink>
 

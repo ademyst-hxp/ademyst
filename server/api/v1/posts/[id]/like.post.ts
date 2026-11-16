@@ -1,6 +1,7 @@
 import { useDb } from "#server/db";
-import { postNotifications } from "#server/db/schema/inbox";
+import { notifications } from "#server/db/schema/inbox";
 import { postReactions, posts } from "#server/db/schema/interactions";
+import { profiles } from "#server/db/schema/profiles";
 import { and, eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
@@ -25,8 +26,9 @@ export default defineEventHandler(async (event: H3Event) => {
 
 	await db.transaction(async (tx) => {
 		const [post] = await tx
-			.select({ profileId: posts.profileId })
+			.select({ profileId: posts.profileId, accountId: profiles.accountId })
 			.from(posts)
+			.innerJoin(profiles, eq(profiles.id, posts.profileId))
 			.where(eq(posts.id, postId))
 			.limit(1);
 
@@ -53,21 +55,23 @@ export default defineEventHandler(async (event: H3Event) => {
 		});
 
 		await tx
-			.delete(postNotifications)
+			.delete(notifications)
 			.where(
 				and(
-					eq(postNotifications.postId, postId),
-					eq(postNotifications.issuerId, identity.profileId),
-					eq(postNotifications.type, "reaction"),
+					eq(notifications.postId, postId),
+					eq(notifications.actorId, identity.profileId),
+					eq(notifications.type, "interaction.reaction"),
 				),
 			);
 
 		if (post.profileId !== identity.profileId) {
-			await tx.insert(postNotifications).values({
+			await tx.insert(notifications).values({
+				accountId: post.accountId,
 				profileId: post.profileId,
-				issuerId: identity.profileId,
+				actorId: identity.profileId,
 				postId,
-				type: "reaction",
+				type: "interaction.reaction",
+				data: { reaction: "like" },
 			});
 		}
 	});
