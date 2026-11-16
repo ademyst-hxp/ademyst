@@ -5,10 +5,16 @@ import {
 	postVisits,
 	posts,
 	postsFlags,
+	postsHashtags,
+	hashtags,
 } from "~~/server/db/schema/interactions";
 import { type Post as DbPost } from "~~/server/db/schema/interactions";
-import { type PostFlag as DbPostFlag } from "~~/server/db/schema/interactions";
-import { type PostReaction as DbPostReaction } from "~~/server/db/schema/interactions";
+import {
+	type PostFlag as DbPostFlag,
+	type Hashtag as DbHashtag,
+	type PostHashtag as DbPostHashtag,
+	type PostReaction as DbPostReaction,
+} from "~~/server/db/schema/interactions";
 import { type Whisper as DbWhisper } from "~~/server/db/schema/interactions";
 import { type WhisperReaction as DbWhisperReaction } from "~~/server/db/schema/interactions";
 import { profiles } from "~~/server/db/schema/profiles";
@@ -30,7 +36,11 @@ import {
 import { calculateRatingScore } from "~~/shared/utils/interactions";
 
 import type { Post } from "~~/shared/models/interactions";
-import type { PostFlag, PostReactionType } from "~~/shared/models/interactions";
+import type {
+	PostFlag,
+	PostReactionType,
+	Hashtag,
+} from "~~/shared/models/interactions";
 import type { PostReaction } from "~~/shared/models/interactions";
 import type { Whisper } from "~~/shared/models/interactions";
 import type { WhisperReaction } from "~~/shared/models/interactions";
@@ -81,7 +91,7 @@ export async function retrieveCleanPost(
 		post.visibility,
 	);
 
-	const [files, reactionCounts, visits, myLikes, myVisits, flags, answers, reports] =
+	const [files, reactionCounts, visits, myLikes, myVisits, flags, tagsAssociations, answers, reports] =
 		await Promise.all([
 			access
 				? db
@@ -138,6 +148,8 @@ export async function retrieveCleanPost(
 
 			db.select().from(postsFlags).where(eq(postsFlags.postId, post.id)),
 
+			db.select().from(postsHashtags).where(eq(postsHashtags.postId, post.id)).fullJoin(hashtags, eq(postsHashtags.hashtag, hashtags.tag)),
+
 			db
 				.select({
 					count: count(),
@@ -181,6 +193,18 @@ export async function retrieveCleanPost(
 		(report) => report.reporterId === identity?.accountId,
 	);
 
+	const validTagAssociations = tagsAssociations.filter(
+		(
+			row,
+		): row is (typeof tagsAssociations)[number] & {
+			post_hashtags: NonNullable<(typeof row)["post_hashtags"]>;
+		} => row.post_hashtags !== null,
+	);
+
+	const tags = validTagAssociations.map(
+		(row) => row.hashtags,
+	).filter((tag): tag is NonNullable<typeof tag> => !!tag);
+
 	return {
 		id: post.id,
 		profile,
@@ -190,6 +214,12 @@ export async function retrieveCleanPost(
 		createdAt: post.createdAt,
 		updatedAt: post.updatedAt,
 		attachments: shouldTruncate ? [] : convertSeveralAttachments(files),
+
+		tags: await retrieveSeveralCleanHashtags(
+			event,
+			identity,
+			tags,
+		),
 
 		flags: {
 			...flags.reduce(
@@ -276,6 +306,7 @@ export async function retrieveSeveralCleanPosts(
 		myLikes,
 		myVisits,
 		allFlags,
+		allTagAssociations,
 		answerCounts,
 		allReports,
 	] = await Promise.all([
@@ -336,6 +367,12 @@ export async function retrieveSeveralCleanPosts(
 
 		db.select().from(postsFlags).where(inArray(postsFlags.postId, postIds)),
 
+		await db
+			.select()
+			.from(postsHashtags)
+			.where(inArray(postsHashtags.postId, postIds))
+			.fullJoin(hashtags, eq(postsHashtags.hashtag, hashtags.tag)),
+
 		db
 			.select({
 				parentId: posts.parentId,
@@ -386,8 +423,23 @@ export async function retrieveSeveralCleanPosts(
 		answerCounts.map((row) => [row.parentId!, row.count]),
 	);
 
-	const result: (Post | null)[] = dbPosts.map((post) => {
-		const author = authors.get(post.profileId);
+	const validTagAssociations = allTagAssociations.filter(
+		(
+			row,
+		): row is (typeof allTagAssociations)[number] & {
+			post_hashtags: NonNullable<(typeof row)["post_hashtags"]>;
+			hashtags: NonNullable<(typeof row)["hashtags"]>;
+		} => row.post_hashtags !== null && row.hashtags !== null,
+	);
+
+	const hashtagsMap = groupBy(
+		validTagAssociations,
+		(row) => row.post_hashtags.postId,
+	);
+
+	const result: (Post | null)[] = await Promise.all(
+		dbPosts.map(async (post) => {
+			const author = authors.get(post.profileId);
 
 		if (!author) {
 			throw new Error("Author not found");
@@ -452,6 +504,12 @@ export async function retrieveSeveralCleanPosts(
 
 			attachments: convertSeveralAttachments(files),
 
+			tags: await retrieveSeveralCleanHashtags(
+				event,
+				identity,
+				(hashtagsMap.get(post.id) ?? []).map((row) => row.hashtags),
+			),
+
 			flags: {
 				...computedFlags,
 				reported: pendingReports.length > 3,
@@ -480,7 +538,7 @@ export async function retrieveSeveralCleanPosts(
 				saved: false,
 			},
 		};
-	});
+	}));
 
 	return result.filter((item): item is NonNullable<typeof item> => !!item);
 }
@@ -492,6 +550,46 @@ export function convertPostReaction(reaction: DbPostReaction): PostReaction {
 export function convertPostFlag(flag: DbPostFlag): PostFlag {
 	return flag;
 }
+
+/************************************************/
+
+export async function retrieveCleanHashtag(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	hashtag: DbHashtag,
+): Promise<Hashtag> {
+	return {
+		tag: hashtag.tag,
+		flags: {
+			NFE: hashtag.NFE,
+			irrelevant: hashtag.irrelevant,
+			suicide: hashtag.suicide,
+		},
+		createdAt: hashtag.createdAt,
+		updatedAt: hashtag.updatedAt,
+	};
+}
+
+export function retrieveSeveralCleanHashtags(
+	event: H3Event,
+	identity: Identity | null | undefined,
+	hashtags: DbHashtag[],
+): Promise<Hashtag[]> {
+	return Promise.all(
+		hashtags.map((hashtag) => ({
+			tag: hashtag.tag,
+			flags: {
+				NFE: hashtag.NFE,
+				irrelevant: hashtag.irrelevant,
+				suicide: hashtag.suicide,
+			},
+			createdAt: hashtag.createdAt,
+			updatedAt: hashtag.updatedAt,
+		})),
+	);
+}
+
+/************************************************/
 
 export async function retrieveCleanWhisper(
 	event: H3Event,

@@ -63,7 +63,9 @@ export const attachments = pgTable("attachments", {
 
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
-	index("attachments_post_id_idx").on(table.postId),
+	// Remplace attachments_post_id_idx (même colonne de tête) : permet de
+	// compter les liens / images d'une publication directement dans l'index.
+	index("attachments_post_id_type_idx").on(table.postId, table.type),
 ]).enableRLS();
 
 export type Attachment = typeof attachments.$inferSelect;

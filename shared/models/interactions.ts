@@ -36,6 +36,7 @@ export type Post = {
 	createdAt: Date;
 	updatedAt: Date | null;
 	attachments: Attachment[];
+	tags: Hashtag[];
 	flags: {
 		[flag in PostFlagType]: boolean;
 	};
@@ -67,6 +68,21 @@ export type PostFlag = {
 	type: PostFlagType;
 	createdAt: Date;
 };
+
+/************************************************/
+
+export type Hashtag = {
+	tag: string;
+	flags: {
+		NFE: boolean;
+		irrelevant: boolean;
+		suicide: boolean;
+	};
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+/************************************************/
 
 export type Whisper = {
 	id: string;

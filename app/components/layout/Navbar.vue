@@ -3,7 +3,7 @@ import type { Account } from "~~/shared/models/accounts";
 import type { InboxCounts } from "~~/shared/models/inbox";
 
 import { ArrowRightEndOnRectangleIcon, Cog6ToothIcon, UserIcon } from "@heroicons/vue/24/outline";
-import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
+import { BellIcon, Cog6ToothIcon as Cog6ToothSolidIcon, FireIcon, MagnifyingGlassIcon, PaperAirplaneIcon, UserPlusIcon } from "@heroicons/vue/24/outline";
 import Icon from "~/assets/icon.svg";
 
 import Menu from "../Menu.vue";
@@ -143,6 +143,15 @@ const path = computed(() => useRoute().path);
 			>
 				<FireIcon class="w-7 h-7" />
 				Discover
+			</RouterLink>
+
+			<RouterLink
+				to="/search"
+				class="flex items-center gap-1 transition-colors duration-200 hover:text-primary"
+				:class="path === '/search' ? 'text-primary' : ''"
+			>
+				<MagnifyingGlassIcon class="w-7 h-7" />
+				Recherche
 			</RouterLink>
 
 			<RouterLink

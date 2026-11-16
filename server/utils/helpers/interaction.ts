@@ -1,6 +1,11 @@
 import { useDb } from "#server/db";
 import { Post } from "~~/server/db/schema/interactions";
-import { postReactions, postVisits } from "~~/server/db/schema/interactions";
+import {
+	postVisits,
+	postReactions,
+	hashtags,
+	postsHashtags,
+} from "~~/server/db/schema/interactions";
 import { postReports } from "~~/server/db/schema/reports";
 import { and, eq, inArray } from "drizzle-orm";
 
@@ -184,4 +189,44 @@ export const triggerPostVisit = async (
 	if (!newVisit) {
 		throw new Error("Failed to update post visit");
 	}
+};
+
+export const upsertTagsForPost = async (
+	event: H3Event,
+	post: Post,
+	flags: {
+		NFE: boolean;
+		irrelevant: boolean;
+		suicide: boolean;
+	},
+	tags: string[],
+): Promise<void> => {
+	const db = useDb(event);
+
+	const existingTags = await db
+		.select()
+		.from(hashtags)
+		.where(inArray(hashtags.tag, tags));
+
+	const existingTagNames = existingTags.map((t) => t.tag);
+
+	const newTags = tags.filter((tag) => !existingTagNames.includes(tag));
+
+	if (newTags.length > 0) {
+		await db.insert(hashtags).values(
+			newTags.map((tag) => ({
+				tag,
+				NFE: flags.NFE,
+				irrelevant: flags.irrelevant,
+				suicide: flags.suicide,
+			})),
+		);
+	}
+
+	await db.insert(postsHashtags).values(
+		tags.map((tag) => ({
+			postId: post.id,
+			hashtag: tag,
+		})),
+	);
 };
