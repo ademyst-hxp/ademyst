@@ -6,7 +6,6 @@ import {
 
 import type { PostFlagType } from "~~/shared/models/interactions";
 
-
 // Score de classement
 export const calculateRatingScore = (
 	date: Date | string,
@@ -19,7 +18,13 @@ export const calculateRatingScore = (
 	flags: {
 		[flag in PostFlagType]: boolean;
 	},
-): number => ratingScoreDetails(date, content, level, stats, flags).score;
+	ignore: {
+		dateMultiplier?: boolean;
+		lengthMultiplier?: boolean;
+		ethosMultiplier?: boolean;
+		flagMultiplier?: boolean;
+	} = {},
+): number => ratingScoreDetails(date, content, level, stats, flags, ignore).score;
 
 export const ratingScoreDetails = (
 	date: Date | string,
@@ -32,6 +37,12 @@ export const ratingScoreDetails = (
 	flags: {
 		[flag in PostFlagType]: boolean;
 	},
+	ignore: {
+		dateMultiplier?: boolean;
+		lengthMultiplier?: boolean;
+		ethosMultiplier?: boolean;
+		flagMultiplier?: boolean;
+	} = {},
 ): {
 	score: number;
 	dateMultiplier: number;
@@ -83,10 +94,10 @@ export const ratingScoreDetails = (
 
 	const score =
 		Math.sqrt(approvalScore) *
-		ethosMultiplier *
-		dateMultiplier *
-		lengthMultiplier *
-		flagMultiplier *
+		(ignore.ethosMultiplier ? 1 : ethosMultiplier) *
+		(ignore.dateMultiplier ? 1 : dateMultiplier) *
+		(ignore.lengthMultiplier ? 1 : lengthMultiplier) *
+		(ignore.flagMultiplier ? 1 : flagMultiplier) *
 		10;
 
 	return {
@@ -129,8 +140,7 @@ export const getPostSpecs = (
 			POST_MEDIA_LIMITS[level || 0]?.images ||
 			POST_MEDIA_LIMITS[0]?.images!,
 		max_gifs:
-			POST_MEDIA_LIMITS[level || 0]?.gifs ||
-			POST_MEDIA_LIMITS[0]?.gifs!,
+			POST_MEDIA_LIMITS[level || 0]?.gifs || POST_MEDIA_LIMITS[0]?.gifs!,
 		max_videos:
 			POST_MEDIA_LIMITS[level || 0]?.videos ||
 			POST_MEDIA_LIMITS[0]?.videos!,
