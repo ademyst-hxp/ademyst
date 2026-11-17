@@ -59,6 +59,7 @@ export const emptyPost: () => Post = () => ({
 	createdAt: new Date(),
 	updatedAt: null,
 	attachments: [],
+	tags: [],
 	flags: {
 		NFE: false,
 		AI: false,
