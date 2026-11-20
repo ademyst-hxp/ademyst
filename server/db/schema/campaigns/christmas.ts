@@ -7,6 +7,7 @@ import {
 	timestamp,
 	uuid,
 	check,
+	unique,
 } from "drizzle-orm/pg-core";
 
 import { sql } from "drizzle-orm";
@@ -56,6 +57,13 @@ export const christmasQuestCompletions = pgTable(
 
 		completedAt: timestamp("completed_at").defaultNow().notNull(),
 	},
+	(table) => [
+		// Une quête ne se valide qu'une fois par profil
+		unique("christmas_quest_completions_profile_quest_unique").on(
+			table.profileId,
+			table.questId,
+		),
+	],
 ).enableRLS();
 
 export type ChristmasQuestCompletion =

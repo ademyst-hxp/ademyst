@@ -2,6 +2,7 @@ import { useDb } from "#server/db";
 import { profiles } from "#server/db/schema/profiles";
 import { eq } from "drizzle-orm";
 
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { requireAuth } from "#server/utils/middleware/auth";
 
 export default defineEventHandler(async (event) => {
@@ -28,6 +29,9 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "Profile not found",
 		});
 	}
+
+	// Quête de Noël : jour de grève (14), validée par la simple connexion
+	await triggerQuests(event, identity.profileId, [14]);
 
 	const profile = await retrieveCleanProfile(event, identity, _profile);
 

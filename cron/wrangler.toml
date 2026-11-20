@@ -9,13 +9,16 @@ workers_dev = false
 preview_urls = false
 
 # Heures en UTC. Doivent correspondre aux constantes CRON_HOURLY / CRON_DAILY de index.ts :
-#   toutes les heures (whispers + réactions, 24 h) et tous les jours à 03:15 (le reste)
+#   toutes les heures (whispers + réactions, 24 h), tous les jours à 03:15 (le reste)
+#   et le 24/12 à 23:59 (distribution des badges des Quêtes de Noël)
 [triggers]
-crons = ["0 * * * *", "15 3 * * *"]
+crons = ["0 * * * *", "15 3 * * *", "59 23 24 12 *"]
 
 # Conserve les logs des exécutions (résultat du dry-run, lignes supprimées...)
 [observability]
 enabled = true
 
+# Un seul interrupteur pour TOUT le cron (purges + badges de Noël) :
+# passer à "false" avant le 24/12 pour que les badges soient réellement donnés.
 [vars]
 DRY_RUN = "true"

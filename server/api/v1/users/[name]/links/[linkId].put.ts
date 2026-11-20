@@ -4,6 +4,8 @@ import { eq } from "drizzle-orm";
 
 import type { H3Event } from "h3";
 
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
+
 import { resolveProfileLink } from "~~/shared/consts/links";
 
 const validatePayload = (
@@ -178,6 +180,9 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusMessage: "Failed to update link",
 		});
 	}
+
+	// Quête de Noël : mettre à jour un élément de son profil (6)
+	await triggerQuests(event, profile.id, [6]);
 
 	const { profileId: _, ...linkWithoutProfileId } = updatedLink;
 

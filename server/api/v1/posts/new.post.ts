@@ -14,6 +14,7 @@ import {
 	normalizeVisibility,
 } from "~~/server/utils/normalizers/interactions";
 import { getPostSpecs, getHashtagsFromContent } from "~~/shared/utils/interactions";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 
 import type { PostFlag } from "~~/shared/models/interactions";
 
@@ -222,6 +223,18 @@ export default defineEventHandler(async (event: H3Event) => {
 			);
 		}
 	}
+
+	// Quêtes de Noël : publications (1, 7, 12, 15, 16, 19, 22) et réponse (2)
+	await triggerQuests(event, identity.profileId, [
+		1,
+		7,
+		12,
+		15,
+		16,
+		19,
+		22,
+		...(parentId ? [2] : []),
+	]);
 
 	const post = await retrieveCleanPost(event, identity, createdPost);
 

@@ -5,6 +5,7 @@ import { profiles } from "#server/db/schema/profiles";
 import { and, eq } from "drizzle-orm";
 
 import { normalizeId } from "#server/utils/normalizers/ids";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 import { createError } from "h3";
@@ -23,6 +24,8 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusMessage: "Invalid post id",
 		});
 	}
+
+	const liked: { authorId: string | null } = { authorId: null };
 
 	await db.transaction(async (tx) => {
 		const [post] = await tx
@@ -64,6 +67,8 @@ export default defineEventHandler(async (event: H3Event) => {
 				),
 			);
 
+		liked.authorId = post.profileId;
+
 		if (post.profileId !== identity.profileId) {
 			await tx.insert(notifications).values({
 				accountId: post.accountId,
@@ -75,6 +80,12 @@ export default defineEventHandler(async (event: H3Event) => {
 			});
 		}
 	});
+
+	// Quêtes de Noël : réagir à 5 / 3 publications (3, 18, 24), et hit beam
+	// de l'auteur (20). Après la transaction : une seule connexion par requête.
+	await triggerQuests(event, identity.profileId, [3, 18, 24]);
+
+	if (liked.authorId) await triggerQuests(event, liked.authorId, [20]);
 
 	return { status: "ok", liked: true };
 });

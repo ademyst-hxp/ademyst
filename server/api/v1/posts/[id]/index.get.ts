@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { retrieveCleanPost } from "#server/utils/converters/interactions";
 import { normalizeId } from "#server/utils/normalizers/ids";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 
 import type { H3Event } from "h3";
 
@@ -32,6 +33,15 @@ export default defineEventHandler(async (event: H3Event) => {
 			statusMessage: "Post not found",
 		});
 	}
+
+	// Quête de Noël : consulter les statistiques d'une de ses publications (13).
+	// La page /posts/[id]/statistics appelle cet endpoint avec ?context=statistics.
+	if (
+		identity &&
+		getQuery(event).context === "statistics" &&
+		candidate.profileId === identity.profileId
+	)
+		await triggerQuests(event, identity.profileId, [13]);
 
 	const post = await retrieveCleanPost(event, identity, candidate);
 

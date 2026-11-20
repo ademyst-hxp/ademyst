@@ -3,6 +3,7 @@ import { profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { getIdentity } from "#server/utils/auth";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { retrieveCleanProfile } from "~~/server/utils/converters/profiles";
 import { canAccess, getPrivacySettings, getRelationshipStatus } from "~~/server/utils/helpers/privacy";
 
@@ -32,6 +33,10 @@ export default defineEventHandler(async (event) => {
 			statusMessage: "User not found",
 		});
 	}
+
+	// Quête de Noël : faire un tour sur le profil de @ghost (9)
+	if (identity && profile.name === "ghost" && identity.profileId !== profile.id)
+		await triggerQuests(event, identity.profileId, [9]);
 
 	const data = await retrieveCleanProfile(event, identity, profile);
 	const relationships = await getRelationshipStatus(event, identity, profile);

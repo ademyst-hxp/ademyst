@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 
 import { generateHexId } from "#server/utils/ids";
 import { retrieveCleanWhisper } from "~~/server/utils/converters/interactions";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeOptionalText, normalizeVisibility } from "~~/server/utils/normalizers/interactions";
 import { getWhisperSpecs } from "~~/shared/utils/interactions";
@@ -75,6 +76,9 @@ export default defineEventHandler(async (event: H3Event) => {
 			);
 		}
 	}
+
+	// Quêtes de Noël : pensées (4, 11, 17, 21, 25)
+	await triggerQuests(event, identity.profileId, [4, 11, 17, 21, 25]);
 
 	const whisper = await retrieveCleanWhisper(event, identity, createdWhisper);
 

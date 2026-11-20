@@ -6,10 +6,11 @@ import {
 } from "#server/db/schema/accounts";
 import { profiles } from "#server/db/schema/profiles";
 import { levelsEntitlements } from "~~/server/db/schema/entitlements";
-import { referrals } from "~~/server/db/schema/referrals";
+import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 import { eq } from "drizzle-orm";
 
 import { createError, readBody } from "h3";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { giveReferralBadge } from "~~/server/jobs/signup";
 
 function normalizeToken(value: unknown): string | null {
@@ -37,6 +38,9 @@ export default defineEventHandler(async (event) => {
 			},
 		});
 	}
+
+	// Parrain dont le parrainage est confirmé par cette requête (quête de Noël 10)
+	const confirmedReferral: { referrerId: string | null } = { referrerId: null };
 
 	const result = await db.transaction(async (tx) => {
 		const [tokenRow] = await tx
@@ -182,6 +186,14 @@ export default defineEventHandler(async (event) => {
 					.where(eq(referrals.id, myReferral.id));
 
 				await giveReferralBadge(tx, myReferral.code);
+
+				const [referralCode] = await tx
+					.select({ authorId: referralCodes.authorId })
+					.from(referralCodes)
+					.where(eq(referralCodes.code, myReferral.code))
+					.limit(1);
+
+				confirmedReferral.referrerId = referralCode?.authorId ?? null;
 			}
 		} catch {
 			tx.rollback();
@@ -198,6 +210,10 @@ export default defineEventHandler(async (event) => {
 
 		return tokenRow.email;
 	});
+
+	// Quête de Noël : parrainage confirmé (10), côté parrain. Après la transaction.
+	if (confirmedReferral.referrerId)
+		await triggerQuests(event, confirmedReferral.referrerId, [10]);
 
 	return { ok: true, email: result };
 });

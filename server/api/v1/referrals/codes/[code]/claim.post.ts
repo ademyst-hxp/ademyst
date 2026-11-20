@@ -3,6 +3,7 @@ import { referralCodes, referrals } from "~~/server/db/schema/referrals";
 import { eq } from "drizzle-orm";
 
 import { retrieveCleanReferralCode } from "~~/server/utils/converters/referrals";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { giveReferralBadge } from "~~/server/jobs/signup";
 
 import type { H3Event } from "h3";
@@ -56,6 +57,7 @@ export default defineEventHandler(async (event: H3Event) => {
 				referredId: identity.profileId,
 				confirmed: identity.account.confirmedAt ? true : false,
 				createdAt: identity.account.confirmedAt ? new Date() : undefined,
+				confirmedAt: identity.account.confirmedAt ? new Date() : undefined,
 			});
 
 			await giveReferralBadge(tx, result.code);
@@ -67,6 +69,10 @@ export default defineEventHandler(async (event: H3Event) => {
 			});
 		}
 	});
+
+	// Quête de Noël : parrainage confirmé tout de suite (compte déjà confirmé), côté parrain (10)
+	if (identity.account.confirmedAt)
+		await triggerQuests(event, result.authorId, [10]);
 
 	const cleanReferral = await retrieveCleanReferralCode(
 		event,

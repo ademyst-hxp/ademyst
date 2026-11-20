@@ -3,6 +3,7 @@ import { profiles } from "~~/server/db/schema/profiles";
 import { eq } from "drizzle-orm";
 
 import { getIdentity } from "#server/utils/auth";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 
 const validatePayload = (
     payload: any,
@@ -164,6 +165,9 @@ export default defineEventHandler(async (event) => {
         .update(profiles)
         .set(payload)
         .where(eq(profiles.id, profile.id));
+
+    // Quête de Noël : mettre à jour un élément de son profil (6)
+    await triggerQuests(event, profile.id, [6]);
 
     return {
         status: "ok",

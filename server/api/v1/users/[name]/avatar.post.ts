@@ -1,5 +1,6 @@
 import { useDrive } from "~~/server/utils/drive";
 import { processAvatar } from "~~/server/utils/helpers/files";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 
 import { createError, defineEventHandler, readMultipartFormData } from "h3";
 
@@ -54,6 +55,9 @@ export default defineEventHandler(async (event) => {
 	const url = await storage.signedUrl(key, {
 		expiresIn: 60 * 60,
 	});
+
+	// Quête de Noël : mettre à jour un élément de son profil (6)
+	await triggerQuests(event, identity.profileId, [6]);
 
 	return {
 		url,

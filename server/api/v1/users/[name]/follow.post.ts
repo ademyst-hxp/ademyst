@@ -5,6 +5,7 @@ import { follows, requests } from "~~/server/db/schema/relations";
 import { and, eq } from "drizzle-orm/sql/expressions/conditions";
 
 import { canAccess, getPrivacySettings, getRelationshipStatus } from "~~/server/utils/helpers/privacy";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 
 import type { H3Event } from "h3";
@@ -106,6 +107,9 @@ export default defineEventHandler(async (event: H3Event) => {
 			type: "relation.follower",
 			data: {},
 		});
+
+		// Quête de Noël : suivre un nouveau profil (23)
+		await triggerQuests(event, identity.profileId as string, [23]);
 
 		return {
 			status: "ok",

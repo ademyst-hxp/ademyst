@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { convertSeveralAttachments } from "~~/server/utils/converters/drive";
 import { assertAttachmentSlots } from "~~/server/utils/helpers/attachments";
+import { triggerQuests } from "~~/server/jobs/campaigns/christmas";
 import { requireAuth } from "~~/server/utils/middleware/auth";
 import { normalizeId, normalizeUUID } from "~~/server/utils/normalizers/ids";
 import { ATTACHMENT_RULES } from "~~/shared/consts/specs";
@@ -113,6 +114,10 @@ export default defineEventHandler(async (event: H3Event) => {
 		.update(attachments)
 		.set({ postId: post.id, visibility: post.visibility })
 		.where(inArray(attachments.id, ids));
+
+	// Quêtes de Noël : publications avec des liens (5, 8)
+	if (pending.some((attachment) => attachment.type === "link"))
+		await triggerQuests(event, identity.profileId, [5, 8]);
 
 	const result = await db
 		.select()
