@@ -15,7 +15,7 @@ export const WHISPER_COLORS = [
 	{ id: "purple", background: "#f2d8ff", text: "#b627ff" },
 	{ id: "pink", background: "#ffd8fb", text: "#ff27e8" },
 	// Utilisée par la quête du 21/12 (pensée dorée)
-	{ id: "gold", background: "#fff1b8", text: "#b7791f" },
+	{ id: "gold", background: "#d3ad60", text: "#df101f" },
 ] as const;
 
 export type WhisperHue = (typeof WHISPER_COLORS)[number]["id"];

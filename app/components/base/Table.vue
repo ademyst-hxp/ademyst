@@ -4,9 +4,11 @@ const slots = useSlots();
 const props = withDefaults(
 	defineProps<{
 		scale?: "sm" | "md";
+		variant?: "default";
 	}>(),
 	{
 		scale: "sm",
+		variant: "default",
 	},
 );
 </script>
@@ -49,10 +51,16 @@ const props = withDefaults(
 .mystui-table tbody tr:last-child th {
 	@apply border-b-0;
 }
+
 </style>
 <template>
-	<div class="overflow-x-auto rounded-2xl border border-surface-border">
-		<table class="mystui-table min-w-full bg-surface/20">
+	<div
+		class="overflow-x-auto rounded-2xl border border-surface-border"
+	>
+		<table
+			class="mystui-table min-w-full"
+			:class="'bg-surface/20'"
+		>
 			<thead v-if="slots.head">
 				<slot name="head" />
 			</thead>

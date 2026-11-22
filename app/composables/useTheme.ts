@@ -1,8 +1,11 @@
+import type { ThemeScheme } from "~~/shared/models/settings";
+
 export function useTheme() {
 	const { $api } = useNuxtApp();
+	const route = useRoute();
 
-	const theme_value = useState<"light" | "dark" | "system">("theme");
-	const theme_cookie = useCookie<"light" | "dark" | "system">("theme");
+	const theme_value = useState<ThemeScheme>("theme");
+	const theme_cookie = useCookie<ThemeScheme>("theme");
 
 	const alter_value = useState<boolean>("alter");
 	const alter_cookie = useCookie<boolean>("alter");
@@ -23,15 +26,20 @@ export function useTheme() {
 
 		const html = document.documentElement;
 
-		const _theme =
+		const configuredTheme =
 			theme_value.value === "system"
 				? window.matchMedia("(prefers-color-scheme: dark)").matches
 					? "dark"
 					: "light"
 				: theme_value.value;
+		const isChristmasCampaign =
+			route.path === "/campaigns/christmas" ||
+			route.path.startsWith("/campaigns/christmas/");
+		const _theme = isChristmasCampaign ? "christmas" : configuredTheme;
 
 		html.classList.toggle("scheme-light", _theme === "light");
 		html.classList.toggle("scheme-dark", _theme === "dark");
+		html.classList.toggle("scheme-christmas", _theme === "christmas");
 
 		html.classList.toggle("alter", alter_value.value === true);
 
@@ -54,7 +62,7 @@ export function useTheme() {
 	}
 
 	async function setTheme(props: {
-		scheme?: "light" | "dark" | "system";
+		scheme?: ThemeScheme;
 		alter?: boolean;
 		density?: "compact" | "comfortable";
 		fontSize?: number;

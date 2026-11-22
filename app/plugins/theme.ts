@@ -1,5 +1,7 @@
+import type { ThemeScheme } from "~~/shared/models/settings";
+
 export default defineNuxtPlugin(() => {
-	const theme = useCookie<"light" | "dark" | "system">("theme", {
+	const theme = useCookie<ThemeScheme>("theme", {
 		default: () => "system",
 	});
 

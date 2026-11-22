@@ -101,6 +101,58 @@
 	--clr-input-text: #f0f6ff;
 }
 
+
+/* =========================================================
+   CHRISTMAS THEME
+   Thème de Noël, choisi dans Paramètres > Apparence
+   (classe `scheme-christmas` posée par useTheme/initTheme).
+   Placé avant .alter / .high-contrast : ces réglages
+   d'accessibilité gardent la priorité.
+   ========================================================= */
+
+.scheme-christmas {
+	--clr-primary: #d3ad60;
+	--clr-primary-dark: #ca9d41;
+
+	--clr-secondary: #aa822f;
+	--clr-secondary-dark: #8a6e27;
+
+	/* SEMANTIC COLORS */
+	--clr-accent: #ba0d1a;
+	--clr-accent-shaded: #fbcbce;
+	--clr-accent-darkened: #950a15;
+
+	/* Fonds teintés : variantes sombres, comme .scheme-dark */
+	--clr-info-shaded: #002a63;
+	--clr-danger-shaded: #62001a;
+	--clr-warning-shaded: #573600;
+	--clr-success-shaded: #095229;
+
+	/* PAGE */
+	--clr-background-1: #3e0ba1;
+	--clr-background-2: #220657;
+	--clr-background-3: #4d0a8e;
+
+	--clr-page: #22065780;
+	--clr-text: #ffffff;
+	--clr-muted: #ffffffc0;
+	--clr-muted-background: #202020c0;
+
+	--clr-surface: #9c43f240;
+	--clr-surface-text: #ffffff;
+	--clr-surface-border: #d3ad60;
+	--clr-surface-text-muted: #ffffffc0;
+
+	--clr-widget: #552696;
+	--clr-widget-text: #efe8e9;
+	--clr-widget-border: #cfb9ee;
+	--clr-widget-text-muted: #552696c0;
+
+	--clr-input: #0000000d;
+	--clr-input-text: #ffffff;
+}
+
+
 /* =========================================================
    ALTER
    Change uniquement la palette.

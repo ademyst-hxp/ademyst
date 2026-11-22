@@ -3,6 +3,7 @@
 -->
 <script setup lang="ts">
 import Navbar from "~/components/layout/Navbar.vue";
+import ChristmasPromoBanner from "~/components/campaigns/christmas/banners/ChristmasPromoBanner.vue";
 </script>
 <template>
 	<div class="min-h-dvh p-4 pb-22 box-border max-w-dvw md:pb-4">
@@ -74,6 +75,7 @@ import Navbar from "~/components/layout/Navbar.vue";
 			</div>
 
 			<main class="main-content flex flex-col gap-4 min-w-0">
+				<ChristmasPromoBanner />
 				<slot />
 			</main>
 

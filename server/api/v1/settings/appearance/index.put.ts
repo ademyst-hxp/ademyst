@@ -34,7 +34,7 @@ function normalizeAppearanceSettings(
 ): UpdateAppearanceSettingsRequest {
 	if (
 		settings.theme &&
-		!["light", "dark", "system"].includes(settings.theme)
+		!["light", "dark", "system", "christmas"].includes(settings.theme)
 	) {
 		throw createError({
 			statusCode: 400,

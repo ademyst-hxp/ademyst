@@ -5,10 +5,12 @@ const props = withDefaults(
 		layout?:
 			"horizontal" | "vertical" | "horizontal-divide" | "vertical-divide";
 		customColor?: string;
+		variant?: "default";
 	}>(),
 	{
 		scale: "md",
 		layout: "vertical",
+		variant: "default",
 	},
 );
 
@@ -16,7 +18,9 @@ const root = computed<{
 	rootClass: string;
 	rootStyle: Record<string, any>;
 }>(() => {
-	let rootClass = "flex backdrop-blur-lg text-surface-text border";
+	const divider = "divide-surface-border";
+
+	let rootClass = "flex backdrop-blur-lg border";
 
 	switch (props.layout) {
 		case "horizontal":
@@ -27,10 +31,10 @@ const root = computed<{
 			rootClass += " flex-col";
 			break;
 		case "horizontal-divide":
-			rootClass += " flex-row divide-x divide-surface-border";
+			rootClass += ` flex-row divide-x ${divider}`;
 			break;
 		case "vertical-divide":
-			rootClass += " flex-col divide-y divide-surface-border";
+			rootClass += ` flex-col divide-y ${divider}`;
 			break;
 	}
 
@@ -49,18 +53,22 @@ const root = computed<{
 			}
 	}
 
-	return props.customColor
-		? {
-				rootClass,
-				rootStyle: {
-					backgroundColor: props.customColor,
-					borderColor: "#00000020",
-				},
-			}
-		: {
-				rootClass: rootClass + " bg-surface border-surface-border",
-				rootStyle: {},
-			};
+	if (props.customColor) {
+		return {
+			rootClass: rootClass + " text-surface-text",
+			rootStyle: {
+				backgroundColor: props.customColor,
+				borderColor: "#00000020",
+			},
+		};
+	}
+
+	return {
+		rootClass:
+			rootClass +
+			" text-surface-text bg-surface border-surface-border",
+		rootStyle: {},
+	};
 });
 </script>
 <template>

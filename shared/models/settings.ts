@@ -5,6 +5,9 @@ export type Visibility =
 	| "friends"
 	| "me";
 
+/** Valeurs de `AppearanceSettings.theme` ("system" suit le thème du navigateur). */
+export type ThemeScheme = "light" | "dark" | "system" | "christmas";
+
 export type UiDensity = "compact" | "comfortable";
 
 export type AppearanceSettings = {

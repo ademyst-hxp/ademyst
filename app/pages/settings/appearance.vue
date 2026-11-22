@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { defaultAppearanceSettings } from "~~/shared/models/settings";
-import { type AppearanceSettings } from "~~/shared/models/settings";
+import {
+	type AppearanceSettings,
+	type ThemeScheme,
+} from "~~/shared/models/settings";
 
 import { ChevronLeftIcon } from "@heroicons/vue/24/outline";
 
@@ -58,7 +61,7 @@ const { data: settings, refresh: refreshSettings } = await useAsyncData(
 			let r = res.settings;
 
 			entries.value = {
-				scheme: r.theme as "light" | "dark" | "system",
+				scheme: r.theme as ThemeScheme,
 				highContrast: r.highContrast,
 				fontSize: r.fontSize.toString(),
 				density: r.uiDensity,
@@ -76,7 +79,7 @@ onMounted(async () => {
 });
 
 interface UpdateAppearanceSettingsRequest {
-	scheme: "light" | "dark" | "system";
+	scheme: ThemeScheme;
 	highContrast: boolean;
 	fontSize: number;
 	density: "compact" | "comfortable";
@@ -88,8 +91,7 @@ const entries = ref<
 		fontSize: string;
 	}
 >({
-	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as
-		"light" | "dark" | "system",
+	scheme: (settings.value?.theme || defaultAppearanceSettings.theme) as ThemeScheme,
 	highContrast:
 		settings.value?.highContrast || defaultAppearanceSettings.highContrast,
 	fontSize: (
@@ -157,7 +159,7 @@ const saveSettings = async () => {
 				<div class="bg-(--clr-success) grow"></div>
 			</div>
 		</div>
-		<div class="flex gap-4">
+		<div class="flex flex-wrap gap-4">
 			<div
 				key="theme-light-selector"
 				class="flex items-center gap-2 cursor-pointer"
@@ -211,6 +213,24 @@ const saveSettings = async () => {
 					class="bg-gray-900 border-6 border-white rounded-full w-6 h-6"
 				></div>
 				<p class="font-medium">Système</p>
+			</div>
+			<div
+				key="theme-christmas-selector"
+				class="flex items-center gap-2 cursor-pointer"
+				:class="
+					payload.scheme == 'christmas' ? 'text-primary underline' : ''
+				"
+				@click="
+					() => {
+						payload.scheme = 'christmas';
+						saveSettings();
+					}
+				"
+			>
+				<div
+					class="bg-gradient-to-br from-[#df101f] to-[#d3ad60] border-2 border-black/10 rounded-full w-6 h-6"
+				></div>
+				<p class="font-medium">Noël</p>
 			</div>
 		</div>
 		<div class="flex flex-col gap-2">

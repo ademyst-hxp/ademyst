@@ -25,6 +25,7 @@ import WhisperBox from "~/components/interactions/Whisper.vue";
 import ProfileBox from "~/components/profile/ProfileBox.vue";
 
 import WhisperFeatherIcon from "~/assets/whispers-feather.svg";
+import { WHISPER_COLORS } from "~~/shared/consts/whispers";
 
 const { $api } = useNuxtApp();
 
@@ -126,15 +127,9 @@ useHead({
 
 const focusedWhisper = ref<Whisper | null>(null);
 
-const whisperColors = ref<{ background: string; text: string }[]>([
-	{ background: "#fbd1d1", text: "#eb3030" },
-	{ background: "#ffeacf", text: "#ffa732" },
-	{ background: "#def8ea", text: "#2ed07c" },
-	{ background: "#dbf7f8", text: "#29ced2" },
-	{ background: "#d8e0ff", text: "#2757ff" },
-	{ background: "#f2d8ff", text: "#b627ff" },
-	{ background: "#ffd8fb", text: "#ff27e8" },
-]);
+const whisperColors = ref<{ background: string; text: string }[]>(
+	WHISPER_COLORS.map(({ background, text }) => ({ background, text })),
+);
 
 const revertColors = ref<boolean>(false);
 

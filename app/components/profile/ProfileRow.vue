@@ -3,9 +3,17 @@ import type { Profile } from "~~/shared/models/profiles";
 
 import Avatar from "./Avatar.vue";
 
-const props = defineProps<{
-	data?: Profile;
-}>();
+const props = withDefaults(
+	defineProps<{
+		data?: Profile;
+		variant?: "default";
+	}>(),
+	{
+		variant: "default",
+	},
+);
+
+const mutedClass = computed(() => "text-muted");
 </script>
 <template>
 	<div
@@ -26,10 +34,10 @@ const props = defineProps<{
 					:alt="data?.badge?.name"
 					class="h-4 w-4"
 			/></span>
-			<span class="text-muted text-sm" v-if="data?.name"
+			<span class="text-sm" :class="mutedClass" v-if="data?.name"
 				>@{{ data.name }}</span
 			>
-			<span class="text-muted text-sm" v-else>@ghost</span>
+			<span class="text-sm" :class="mutedClass" v-else>@ghost</span>
 		</div>
 	</div>
 </template>

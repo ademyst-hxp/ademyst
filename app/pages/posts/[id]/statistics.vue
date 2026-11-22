@@ -28,6 +28,7 @@ const postAsyncData = useAsyncData<Post | null>(
 		try {
 			const response = await $api<{ status: string; data: Post }>(
 				`/posts/${postId}`,
+				{ query: { context: "statistics" } },
 			);
 			return response.data;
 		} catch (e: any) {
