@@ -121,7 +121,7 @@ const retentions: Retention[] = [
 	</Teleport>
 
 	<header
-		class="flex flex-col gap-3 rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
+		class="flex flex-col gap-3 rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-8"
 	>
 		<div class="flex items-center gap-3 text-secondary">
 			<ShieldCheckIcon class="w-7 h-7" />
@@ -132,12 +132,12 @@ const retentions: Retention[] = [
 			Politique de confidentialité
 		</h2>
 
-		<p class="text-muted">Dernière mise à jour: 14 novembre 2026</p>
-		<p class="text-muted">Entrée en vigueur: 16 novembre 2026</p>
+		<p class="text-surface-text-muted">Dernière mise à jour: 14 novembre 2026</p>
+		<p class="text-surface-text-muted">Entrée en vigueur: 16 novembre 2026</p>
 	</header>
 
 	<article
-		class="rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
+		class="rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-8"
 	>
 		<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
 			<h2 class="font-title">1. Responsable du traitement</h2>
@@ -152,7 +152,7 @@ const retentions: Retention[] = [
 			>
 				<p class="font-bold">Loan JEAN</p>
 				<div>
-					<p class="text-muted">contact@ejnalo.me</p>
+					<p class="text-surface-text-muted">contact@ejnalo.me</p>
 				</div>
 			</div>
 
@@ -308,7 +308,7 @@ const retentions: Retention[] = [
 					<span class="font-semibold"> Région Supabase </span>
 				</div>
 
-				<p class="text-muted m-0!">West EU (Londres) — eu-west-2</p>
+				<p class="text-surface-text-muted m-0!">West EU (Londres) — eu-west-2</p>
 			</div>
 
 			<h2 class="font-title">6. Transferts de données</h2>
@@ -544,7 +544,7 @@ const retentions: Retention[] = [
 
 				<div class="-space-y-1 m-0!">
 					<span class="block font-semibold">Loan JEAN</span>
-					<span class="block text-muted">contact@ejnalo.me</span>
+					<span class="block text-surface-text-muted">contact@ejnalo.me</span>
 				</div>
 			</div>
 		</div>
