@@ -38,7 +38,7 @@ useHead({
 	</Teleport>
 
 	<header
-		class="flex flex-col gap-3 rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
+		class="flex flex-col gap-3 rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-8"
 	>
 		<div class="flex items-center gap-3 text-orange-500">
 			<BuildingOffice2Icon class="w-7 h-7" />
@@ -47,12 +47,12 @@ useHead({
 
 		<h2 class="text-3xl font-bold font-title">Mentions légales</h2>
 
-		<p class="text-muted">Dernière mise à jour: 23 octobre 2026</p>
-		<p class="text-muted">Entrée en vigueur: 23 octobre 2026</p>
+		<p class="text-surface-text-muted">Dernière mise à jour: 23 octobre 2026</p>
+		<p class="text-surface-text-muted">Entrée en vigueur: 23 octobre 2026</p>
 	</header>
 
 	<article
-		class="rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
+		class="rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-8"
 	>
 		<div class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4">
 			<h2 class="font-title">1. Éditeur</h2>
@@ -64,8 +64,8 @@ useHead({
 			>
 				<p class="font-bold text-lg">Loan JEAN</p>
 				<div>
-					<p class="text-muted">Éditeur personne physique</p>
-					<p class="text-muted">E-mail: contact@ejnalo.me</p>
+					<p class="text-surface-text-muted">Éditeur personne physique</p>
+					<p class="text-surface-text-muted">E-mail: contact@ejnalo.me</p>
 				</div>
 			</div>
 
@@ -193,7 +193,7 @@ useHead({
 
 				<div class="-space-y-1 m-0!">
 					<span class="block font-semibold">Ademyst</span>
-					<span class="block text-muted">ademyst@proton.me</span>
+					<span class="block text-surface-text-muted">ademyst@proton.me</span>
 				</div>
 			</div>
 		</div>

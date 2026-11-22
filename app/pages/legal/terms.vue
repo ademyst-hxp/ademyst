@@ -44,7 +44,7 @@ useHead({
 
 	<section class="flex flex-col gap-6">
 		<header
-			class="flex flex-col gap-3 rounded-3xl bg-surface border border-surface-border p-6 md:p-8"
+			class="flex flex-col gap-3 rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-8"
 		>
 			<div class="flex items-center gap-3 text-orange-500">
 				<DocumentTextIcon class="w-7 h-7" />
@@ -55,12 +55,12 @@ useHead({
 				Conditions Générales d'Utilisation
 			</h2>
 
-			<p class="text-muted">Dernière mise à jour: 07 novembre 2026</p>
-			<p class="text-muted">Entrée en vigueur: 07 novembre 2026</p>
+			<p class="text-surface-text-muted">Dernière mise à jour: 07 novembre 2026</p>
+			<p class="text-surface-text-muted">Entrée en vigueur: 07 novembre 2026</p>
 		</header>
 
 		<article
-			class="rounded-3xl bg-surface border border-surface-border p-6 md:p-10"
+			class="rounded-3xl bg-surface text-surface-text border border-surface-border p-6 md:p-10"
 		>
 			<div
 				class="prose prose-surface max-w-none post-content -mx-2 md:-mx-4"
@@ -324,7 +324,7 @@ useHead({
 
 					<div class="-space-y-1 m-0!">
 						<span class="block font-semibold">Ademyst</span>
-						<span class="block text-muted">ademyst@proton.me</span>
+						<span class="block text-surface-text-muted">ademyst@proton.me</span>
 					</div>
 				</div>
 			</div>

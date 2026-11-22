@@ -477,7 +477,7 @@ const focusedBadge = ref<Badge | null>(null);
 					class="bg-muted rounded-full h-3 w-24 animate-pulse"
 				/>
 
-				<span v-else class="text-muted text-lg font-semibold">
+				<span v-else class="text-surface-text-muted text-lg font-semibold">
 					{{ `@${profile?.name ?? "ghost"}` }}
 				</span>
 
@@ -495,21 +495,21 @@ const focusedBadge = ref<Badge | null>(null);
 				<span class="text-2xl font-bold">{{
 					toLitteral(posts.length) + (postsHasNext ? "+" : "")
 				}}</span>
-				<span class="text-muted">Publications</span>
+				<span class="text-surface-text-muted">Publications</span>
 			</div>
 
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
 					toLitteral(stats.following)
 				}}</span>
-				<span class="text-muted">Suivis</span>
+				<span class="text-surface-text-muted">Suivis</span>
 			</div>
 
 			<div class="flex flex-col w-1/3 -space-y-1">
 				<span class="text-2xl font-bold">{{
 					toLitteral(stats.followers)
 				}}</span>
-				<span class="text-muted">Abonnés</span>
+				<span class="text-surface-text-muted">Abonnés</span>
 			</div>
 		</section>
 
@@ -560,17 +560,17 @@ const focusedBadge = ref<Badge | null>(null);
 		>
 			<ul class="flex flex-col">
 				<li v-if="profile.pronouns" class="flex items-center gap-1">
-					<IdentificationIcon class="w-5 h-5 text-muted" />
+					<IdentificationIcon class="w-5 h-5 text-surface-text-muted" />
 					{{ profile.pronouns }}
 				</li>
 
 				<li v-if="profile.corporation" class="flex items-center gap-1">
-					<BuildingOffice2Icon class="w-5 h-5 text-muted" />
+					<BuildingOffice2Icon class="w-5 h-5 text-surface-text-muted" />
 					{{ profile.corporation }}
 				</li>
 
 				<li v-if="profile.location" class="flex items-center gap-1">
-					<MapPinIcon class="w-5 h-5 text-muted" />
+					<MapPinIcon class="w-5 h-5 text-surface-text-muted" />
 					{{ profile.location }}
 				</li>
 
@@ -578,7 +578,7 @@ const focusedBadge = ref<Badge | null>(null);
 					v-if="profile.badges && profile.badges.length > 0"
 					class="flex items-center gap-1"
 				>
-					<ShieldCheckIcon class="w-5 h-5 text-muted" />
+					<ShieldCheckIcon class="w-5 h-5 text-surface-text-muted" />
 					<div class="flex items-center gap-0.5 bg-surface text-surface-text border border-surface-border rounded-full p-1">
 						<img
 							:key="badge.id"
@@ -603,11 +603,11 @@ const focusedBadge = ref<Badge | null>(null);
 			v-if="profile?.bio || (profile?.links && profile?.links.length > 0)"
 			class="flex flex-col gap-2"
 		>
-			<p v-if="profile?.bio" class="text-muted">{{ profile.bio }}</p>
+			<p v-if="profile?.bio" class="text-surface-text-muted">{{ profile.bio }}</p>
 
 			<ul class="flex flex-col items-start gap-1">
 				<a
-					class="flex items-center gap-2 cursor-pointer text-muted group"
+					class="flex items-center gap-2 cursor-pointer text-surface-text-muted group"
 					v-for="link in profile?.links ?? []"
 					:href="link.url"
 					target="_blank"
