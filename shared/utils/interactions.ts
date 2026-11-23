@@ -61,7 +61,7 @@ export const ratingScoreDetails = (
 	const dateMultiplier = 1 / (1 + ageInDays / 7);
 
 	// Un post très court est pénalisé, mais jamais shadow.
-	const lengthMultiplier = 0.25 + 0.75 * Math.min(1, content.length / 300);
+	const lengthMultiplier = 0.25 + 0.75 * Math.min(1, content.length / 500);
 
 	const ethosMultiplier =
 		level < 3
@@ -69,7 +69,7 @@ export const ratingScoreDetails = (
 			: [4, 6, 7, 8].includes(level)
 				? 1.4
 				: [5, 9].includes(level)
-					? 5.5
+					? 2.8
 					: 1;
 
 	// Rendements décroissants sur les likes/réponses.
