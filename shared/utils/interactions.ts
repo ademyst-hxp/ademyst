@@ -18,13 +18,15 @@ export const calculateRatingScore = (
 	flags: {
 		[flag in PostFlagType]: boolean;
 	},
+	links: number = 0,
 	ignore: {
 		dateMultiplier?: boolean;
 		lengthMultiplier?: boolean;
 		ethosMultiplier?: boolean;
 		flagMultiplier?: boolean;
+		linksMultiplier?: boolean;
 	} = {},
-): number => ratingScoreDetails(date, content, level, stats, flags, ignore).score;
+): number => ratingScoreDetails(date, content, level, stats, flags, links, ignore).score;
 
 export const ratingScoreDetails = (
 	date: Date | string,
@@ -37,11 +39,13 @@ export const ratingScoreDetails = (
 	flags: {
 		[flag in PostFlagType]: boolean;
 	},
+	links: number = 0,
 	ignore: {
 		dateMultiplier?: boolean;
 		lengthMultiplier?: boolean;
 		ethosMultiplier?: boolean;
 		flagMultiplier?: boolean;
+		linksMultiplier?: boolean;
 	} = {},
 ): {
 	score: number;
@@ -51,6 +55,7 @@ export const ratingScoreDetails = (
 	reactionScore: number;
 	flagMultiplier: number;
 	repostScore: number;
+	linksMultiplier: number;
 } => {
 	const dateValue = date instanceof Date ? date : new Date(date);
 	const ageInDays =
@@ -92,12 +97,16 @@ export const ratingScoreDetails = (
 		flagMultiplier = 0;
 	}
 
+	// Liens
+	const linksMultiplier = 0.5 + 0.5 * links
+
 	const score =
 		Math.sqrt(approvalScore) *
 		(ignore.ethosMultiplier ? 1 : ethosMultiplier) *
 		(ignore.dateMultiplier ? 1 : dateMultiplier) *
 		(ignore.lengthMultiplier ? 1 : lengthMultiplier) *
 		(ignore.flagMultiplier ? 1 : flagMultiplier) *
+		(ignore.linksMultiplier ? 1 : linksMultiplier) *
 		10;
 
 	return {
@@ -108,6 +117,7 @@ export const ratingScoreDetails = (
 		flagMultiplier,
 		reactionScore,
 		repostScore,
+		linksMultiplier,
 	};
 };
 

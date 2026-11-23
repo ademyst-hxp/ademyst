@@ -122,6 +122,7 @@ const details = computed(() => {
 		post.value.profile.level,
 		post.value.stats,
 		post.value.flags,
+		post.value.attachments.filter((file) => file.type === "link").length,
 	);
 });
 
@@ -293,6 +294,19 @@ const getGradeLabel = (level: number | null): string => {
 						</td>
 						<td>
 							{{ getCoeffPenalty(details.flagMultiplier) }}
+						</td>
+					</tr>
+					<tr>
+						<th class="col-span-2">Liens</th>
+						<td>
+							{{
+								post?.attachments
+									.filter((file) => file.type === "link")
+									.length || 0
+							}}
+						</td>
+						<td>
+							{{ getCoeffPenalty(details.linksMultiplier) }}
 						</td>
 					</tr>
 				</template>
