@@ -256,6 +256,7 @@ export async function retrieveCleanPost(
 
 					reported: pendingReports.length > 3,
 				},
+				files.filter((file) => file.type === "link").length,
 			),
 		},
 
@@ -528,6 +529,7 @@ export async function retrieveSeveralCleanPosts(
 						answers,
 					},
 					computedFlags,
+					files.filter((file) => file.type === "link").length,
 				),
 			},
 
