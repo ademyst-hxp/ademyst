@@ -2,15 +2,15 @@ import type { AttachmentGroup, AttachmentType } from "~~/shared/models/drive";
 
 export const POST_CHAR_LIMITS: Record<number, number> = {
 	0: 0,
-	1: 1000,
-	2: 1000,
-	3: 1000,
-	4: 2000,
-	5: 5000,
+	1: 2000,
+	2: 2000,
+	3: 2000,
+	4: 5000,
+	5: 7500,
 	6: 5000,
 	7: 5000,
 	8: 5000,
-	9: 5000,
+	9: 7500,
 } as const;
 
 export const POST_MEDIA_LIMITS: Record<number, {
