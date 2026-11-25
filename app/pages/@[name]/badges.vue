@@ -66,10 +66,7 @@ useHead({
 		},
 		{
 			name: "robots",
-			content:
-				profile.value && (profile.value?.level ?? 0) > 5
-					? "index, follow"
-					: "noindex, nofollow",
+			content: "noindex, nofollow",
 		},
 		{
 			name: "theme-color",
