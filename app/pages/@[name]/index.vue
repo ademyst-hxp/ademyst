@@ -245,13 +245,8 @@ useHead({
 			name: "viewport",
 			content: "width=device-width, initial-scale=1.0",
 		},
-		{
-			name: "robots",
-			content:
-				profile.value && (profile.value?.level ?? 0) > 5
-					? "index, follow"
-					: "noindex, nofollow",
-		},
+		// Pas de balise robots ici : la directive d'indexation est envoyée
+		// par server/middleware/seo-robots.ts (X-Robots-Tag).
 		{
 			name: "theme-color",
 			content: profile.value?.badge?.color ?? "#ff7050",
