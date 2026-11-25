@@ -19,6 +19,14 @@ import { and, eq, gte, inArray, isNotNull, notExists, sql } from "drizzle-orm";
  *   - aucun flag NFE ni AI
  *   - auteur de niveau >= 3
  *   - visibilité "everyone" ou "outside"
+ *
+ * Une page indexable est servie en "index, nofollow" : les liens présents
+ * dans les profils et les publications (contenu utilisateur) ne sont jamais
+ * suivis.
+ *
+ * Tout autre contenu généré par les utilisateurs (sous-pages de profil et de
+ * publication, tags, recherche, API, pièces jointes, chuchotements, avatars…)
+ * est exclu : "noindex, nofollow" (voir USER_CONTENT_NOINDEX_PATHS).
  */
 
 export const INDEXABLE_PROFILE_LEVELS = [5, 9];
@@ -32,8 +40,22 @@ export const PUBLIC_VISIBILITIES: ("everyone" | "outside")[] = [
 
 export const BLOCKING_POST_FLAGS: ("NFE" | "AI")[] = ["NFE", "AI"];
 
-export const ROBOTS_INDEX = "index, follow";
+export const ROBOTS_INDEX = "index, nofollow";
 export const ROBOTS_NOINDEX = "noindex, nofollow";
+
+// Pages et routes de contenu utilisateur qui ne sont jamais indexables.
+// Les pages indexables (/@nom et /posts/id, sans sous-chemin) sont gérées à
+// part, au cas par cas, par server/middleware/seo-robots.ts.
+export const USER_CONTENT_NOINDEX_PATHS: RegExp[] = [
+	// Sous-pages d'un profil ou d'une publication (badges, statistiques, …)
+	/^\/@[^/]+\/.+/,
+	/^\/posts\/[^/]+\/.+/,
+	// Découverte, tags et recherche
+	/^\/discover(\/|$)/,
+	/^\/search\/?$/,
+	// API : profils, publications, chuchotements, pièces jointes, fils, recherche
+	/^\/api\/v1\/(users|posts|whispers|attachments|feed|search)(\/|$)/,
+];
 
 // `profiles` doit être joint à `privacySettings` (accountId).
 export const profileIndexableCondition = () =>

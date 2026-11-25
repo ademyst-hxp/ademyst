@@ -9,6 +9,7 @@ import {
 	profileIndexableCondition,
 	ROBOTS_INDEX,
 	ROBOTS_NOINDEX,
+	USER_CONTENT_NOINDEX_PATHS,
 } from "#server/utils/seo";
 import { normalizeId } from "#server/utils/normalizers/ids";
 
@@ -21,8 +22,9 @@ import { normalizeId } from "#server/utils/normalizers/ids";
  * Les critères sont dans server/utils/seo.ts. En cas d'erreur ou de cible
  * introuvable : noindex.
  *
- * Les sous-pages (/@nom/badges, /posts/id/statistics, …) ne sont pas
- * concernées par cette étape.
+ * Tout autre contenu utilisateur (sous-pages, tags, recherche, API,
+ * pièces jointes, chuchotements, avatars…) est explicitement exclu :
+ * noindex, nofollow, sans requête SQL.
  */
 
 const PROFILE_PATH = /^\/@([^/?#]+)\/?$/;
@@ -36,7 +38,13 @@ export default defineEventHandler(async (event) => {
 	const profileMatch = PROFILE_PATH.exec(path);
 	const postMatch = POST_PATH.exec(path);
 
-	if (!profileMatch && !postMatch) return;
+	if (!profileMatch && !postMatch) {
+		if (USER_CONTENT_NOINDEX_PATHS.some((pattern) => pattern.test(path))) {
+			setResponseHeader(event, "X-Robots-Tag", ROBOTS_NOINDEX);
+		}
+
+		return;
+	}
 
 	let indexable = false;
 
