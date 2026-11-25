@@ -122,15 +122,10 @@ const { sentinel } = useScrollSentinel(
 	() => answersHasNext.value,
 );
 
-if (!session.value) {
-	navigateTo("/auth/login");
-}
-
 definePageMeta({
 	title: "Publication | Ademyst",
 	description: "Découvrez la publication d'un utilisateur sur Ademyst.",
 	layout: "default",
-	middleware: ["auth"],
 });
 
 useHead({
@@ -165,14 +160,14 @@ const isPrev = ref<boolean>(false);
 const preparingPost = ref<Post>(
 	(() => {
 		const _post = emptyPost();
-		_post.profile = session.value!.profile;
+		if (session.value) _post.profile = session.value.profile;
 		_post.parentId = postId;
 		return _post;
 	})(),
 );
 
 const limit = computed(
-	() => getPostSpecs(session.value!.profile.level).max_length,
+	() => getPostSpecs(session.value?.profile.level ?? 3).max_length,
 );
 
 const isInLimit = computed(() => {
@@ -196,7 +191,7 @@ const handlePublish = async () => {
 </script>
 <template>
 	<Teleport to="#header">
-		<PostBox v-if="post" :data="post" triggerPostVisit />
+		<PostBox v-if="post" :data="post" :triggerPostVisit="!!session" />
 		<template v-else-if="!postPending">
 			<h1 class="text-2xl font-bold font-title">
 				Publication introuvable
@@ -205,7 +200,7 @@ const handlePublish = async () => {
 		</template>
 	</Teleport>
 
-	<section id="compose" class="flex flex-col gap-4 overflow-visible">
+	<section v-if="session" id="compose" class="flex flex-col gap-4 overflow-visible">
 		<h2 class="text-xl font-bold font-title text-center">
 			Répondre à la publication
 		</h2>
@@ -252,7 +247,7 @@ const handlePublish = async () => {
 		</div>
 	</section>
 	<section class="flex flex-col gap-4" v-if="answers.length > 0">
-		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" triggerPostVisit />
+		<PostBox v-for="answer in answers" :key="answer.id" :data="answer" :triggerPostVisit="!!session" />
 	</section>
 
 	<!-- Pagination sentinel -->
