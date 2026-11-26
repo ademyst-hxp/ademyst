@@ -35,8 +35,14 @@ const escapeXml = (value: string) =>
 		.replace(/"/g, "&quot;")
 		.replace(/'/g, "&apos;");
 
+// `runtimeConfig.public.appUrl` est figé au build (nuxt.config.ts) : si APP_URL
+// n'existe pas à ce moment-là, il vaut http://localhost:3000 pour toujours.
+// Sur Cloudflare, les variables n'arrivent qu'au runtime : on les lit en premier.
 export const getAppUrl = (event: H3Event) =>
-	(useRuntimeConfig(event).public.appUrl as string).replace(/\/$/, "");
+	(
+		process.env.APP_URL ||
+		(useRuntimeConfig(event).public.appUrl as string)
+	).replace(/\/$/, "");
 
 export const sendXml = (event: H3Event, xml: string) => {
 	setResponseHeader(event, "Content-Type", "application/xml; charset=utf-8");
