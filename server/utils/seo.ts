@@ -1,7 +1,8 @@
+import { levelsEntitlements } from "~~/server/db/schema/entitlements";
 import { posts, postsFlags } from "~~/server/db/schema/interactions";
 import { profiles } from "~~/server/db/schema/profiles";
 import { privacySettings } from "~~/server/db/schema/settings";
-import { and, eq, gte, inArray, isNotNull, notExists, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, notExists, sql } from "drizzle-orm";
 
 /*
  * Règles de référencement (index only).
@@ -57,10 +58,36 @@ export const USER_CONTENT_NOINDEX_PATHS: RegExp[] = [
 	/^\/api\/v1\/(users|posts|whispers|attachments|feed|search)(\/|$)/,
 ];
 
+/*
+ * Niveau effectif d'un profil. `profiles.level` n'est jamais mis à jour après
+ * l'inscription (2) : le vrai niveau vient des entitlements actifs, comme dans
+ * getLevelFromEntitlements (server/utils/auth.ts) :
+ *   - s'il existe un niveau actif < 3 (restriction), le plus bas l'emporte ;
+ *   - sinon le plus haut niveau actif >= 3 ;
+ *   - sinon 2.
+ */
+const activeLevels = (extra: ReturnType<typeof sql>) => sql`(
+	SELECT ${levelsEntitlements.levelId} FROM ${levelsEntitlements}
+	WHERE ${levelsEntitlements.profileId} = ${profiles.id}
+		AND NOT ${levelsEntitlements.revoked}
+		AND ${levelsEntitlements.enabled}
+		AND (${levelsEntitlements.expiresAt} IS NULL OR ${levelsEntitlements.expiresAt} > now())
+		AND ${extra}
+)`;
+
+export const effectiveProfileLevel = () => sql<number>`COALESCE(
+	(SELECT MIN(l) FROM ${activeLevels(sql`${levelsEntitlements.levelId} < 3`)} AS t(l)),
+	(SELECT MAX(l) FROM ${activeLevels(sql`${levelsEntitlements.levelId} >= 3`)} AS t(l)),
+	2
+)`;
+
 // `profiles` doit être joint à `privacySettings` (accountId).
 export const profileIndexableCondition = () =>
 	and(
-		inArray(profiles.level, INDEXABLE_PROFILE_LEVELS),
+		sql`${effectiveProfileLevel()} IN (${sql.join(
+			INDEXABLE_PROFILE_LEVELS.map((level) => sql`${level}`),
+			sql`, `,
+		)})`,
 		isNotNull(profiles.birthday),
 		sql`${profiles.birthday} <= (CURRENT_DATE - make_interval(years => ${ADULT_AGE}))`,
 		inArray(privacySettings.profileVisibility, PUBLIC_VISIBILITIES),
@@ -72,7 +99,7 @@ export const postIndexableCondition = (db: {
 }) =>
 	and(
 		inArray(posts.visibility, PUBLIC_VISIBILITIES),
-		gte(profiles.level, INDEXABLE_POST_MIN_AUTHOR_LEVEL),
+		sql`${effectiveProfileLevel()} >= ${INDEXABLE_POST_MIN_AUTHOR_LEVEL}`,
 		notExists(
 			db
 				.select({ one: sql`1` })
